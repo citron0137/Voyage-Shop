@@ -11,3 +11,8 @@
 ```bash
 docker-compose up -d
 ```
+
+## 설계 문서
+* [요구사항 분석](./docs/system-design/01-requirement.md)
+* [시퀀스 다이어그램](./docs/system-design/02-sequance-diagram.md)
+* [ERD](./docs/system-design/03-erd.md)
