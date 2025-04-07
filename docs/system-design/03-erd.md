@@ -10,7 +10,7 @@ erDiagram
         string user_id
         number point
     }
-    T_USER_POINT }o..|| T_USER: user_id 
+    T_USER_POINT ||..|| T_USER: user_id 
 ```
 
 ### 상품 도메인
@@ -111,6 +111,6 @@ erDiagram
     T_ORDER }o..|| T_USER: user_id 
     T_ORDER ||..|| T_PAYMENT: payment_id 
     T_ORDER ||--|{ T_ORDER_ITEM: order_id
-    T_ORDER_ITEM ||..|| T_PRODUCT: product_id 
+    T_ORDER_ITEM }o..|| T_PRODUCT: product_id 
 ```
 
