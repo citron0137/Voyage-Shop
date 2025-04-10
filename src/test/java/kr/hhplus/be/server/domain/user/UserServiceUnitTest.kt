@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.UUID
 import java.util.regex.Pattern
 
@@ -31,13 +32,16 @@ class UserServiceUnitTest {
         // then
         verify { userRepository.create(any()) }
         assert(UUID.fromString(actualUser.userId) != null) // UUID 형식 검증
+        assert(actualUser.createdAt != null)
+        assert(actualUser.updatedAt != null)
     }
 
     @Test
     fun `ID로 사용자를 조회할 수 있다`() {
         // given
         val userId = UUID.randomUUID().toString()
-        val expectedUser = User(userId)
+        val now = LocalDateTime.now()
+        val expectedUser = User(userId, now, now)
         every { userRepository.findById(userId) } returns expectedUser
 
         // when
@@ -65,9 +69,10 @@ class UserServiceUnitTest {
     @Test
     fun `모든 사용자를 조회할 수 있다`() {
         // given
+        val now = LocalDateTime.now()
         val users = listOf(
-            User(UUID.randomUUID().toString()),
-            User(UUID.randomUUID().toString())
+            User(UUID.randomUUID().toString(), now, now),
+            User(UUID.randomUUID().toString(), now, now)
         )
         every { userRepository.findAll() } returns users
 
