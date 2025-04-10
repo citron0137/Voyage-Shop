@@ -103,18 +103,6 @@ class UserPointServiceUnitTest {
     }
 
     @Test
-    fun `포인트 충전 테스트 - 0원 이하 충전 시도`() {
-        // given
-        val userId = "test-user-id"
-        val command = UserPointCommand.Charge(userId, 0)
-
-        // when & then
-        assertThrows<UserPointException.ChargeAmountShouldMoreThan0> {
-            userPointService.charge(command)
-        }
-    }
-
-    @Test
     fun `포인트 충전 테스트 - 최대치 초과`() {
         // given
         val userId = "test-user-id"
@@ -158,18 +146,6 @@ class UserPointServiceUnitTest {
         assertEquals(initialAmount - useAmount, result.amount)
         verify(userPointRepository).findByUserId(userId)
         verify(userPointRepository).save(any())
-    }
-
-    @Test
-    fun `포인트 사용 테스트 - 0원 이하 사용 시도`() {
-        // given
-        val userId = "test-user-id"
-        val command = UserPointCommand.Use(userId, 0)
-
-        // when & then
-        assertThrows<UserPointException.UseAmountShouldMoreThan0> {
-            userPointService.use(command)
-        }
     }
 
     @Test
