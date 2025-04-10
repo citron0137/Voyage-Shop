@@ -8,4 +8,5 @@ class UserPointException{
 
     class PointAmountUnderflow(message: String): RuntimeException("Point underflow: $message")
     class UseAmountShouldMoreThan0(message: String): RuntimeException("Use amount should more than 0: $message")
+    class UserIdShouldNotBlank(message: String): RuntimeException("User id should not blank: $message")
 }

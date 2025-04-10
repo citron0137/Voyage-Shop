@@ -28,7 +28,6 @@ class UserPointService(
 
     // Update
     fun charge(command: UserPointCommand.Charge): UserPoint {
-        if (command.amount <= 0) throw UserPointException.ChargeAmountShouldMoreThan0("충전량은 0보다 커야합니다.")
         val userPoint = userPointRepository.findByUserId(userId = command.userId)
             ?: throw UserPointException.NotFound("userId(${command.userId})로 UserPoint를 찾을 수 없습니다.")
         if( userPoint.amount  > MAX_USER_POINT - command.amount )
@@ -38,7 +37,6 @@ class UserPointService(
     }
 
     fun use(command: UserPointCommand.Use): UserPoint {
-        if (command.amount <= 0) throw UserPointException.UseAmountShouldMoreThan0("사용량은 0보다 커야합니다.")
         val userPoint = userPointRepository.findByUserId(userId = command.userId)
             ?: throw UserPointException.NotFound("userId(${command.userId})로 UserPoint를 찾을 수 없습니다.")
         if( userPoint.amount - command.amount < 0 )
