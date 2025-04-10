@@ -10,6 +10,7 @@ class CreateOrderRequestOrderItem(
 )
 
 class CreateOrderRequest (
+    val userId: String,
     val orderItemList: List<CreateOrderRequestOrderItem>,
     val payment: CreateOrderRequestPayment
 )
