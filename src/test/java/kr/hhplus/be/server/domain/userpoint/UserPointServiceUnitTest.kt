@@ -7,6 +7,7 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.*
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import java.time.LocalDateTime
 
 class UserPointServiceUnitTest {
 
@@ -38,6 +39,8 @@ class UserPointServiceUnitTest {
         // then
         assertEquals(expectedUserPoint.userId, result.userId)
         assertEquals(0, result.amount)
+        assertNotNull(result.createdAt)
+        assertNotNull(result.updatedAt)
         verify(userPointRepository).create(any())
     }
 
@@ -59,6 +62,8 @@ class UserPointServiceUnitTest {
         // then
         assertNotNull(result)
         assertEquals(expectedUserPoint, result)
+        assertNotNull(result?.createdAt)
+        assertNotNull(result?.updatedAt)
         verify(userPointRepository).findByUserId(userId)
     }
 
@@ -84,20 +89,37 @@ class UserPointServiceUnitTest {
         val chargeAmount = 500L
         val command = UserPointCommand.Charge(userId, chargeAmount)
         
+        val initialTime = LocalDateTime.now()
+        // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위해 
+        // 시간 차이를 명확히 만들기 위한 지연입니다.
+        Thread.sleep(10) 
+        
         val existingUserPoint = UserPoint(
             userPointId = "test-point-id",
             userId = userId,
-            amount = initialAmount
+            amount = initialAmount,
+            createdAt = initialTime,
+            updatedAt = initialTime
         )
         
+        val initialUpdatedAt = existingUserPoint.updatedAt
+        
         `when`(userPointRepository.findByUserId(userId)).thenReturn(existingUserPoint)
-        `when`(userPointRepository.save(any())).thenAnswer { it.arguments[0] }
+        `when`(userPointRepository.save(any())).thenAnswer {
+            val saved = it.arguments[0] as UserPoint
+            saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
+            saved
+        }
 
         // when
         val result = userPointService.charge(command)
 
         // then
         assertEquals(initialAmount + chargeAmount, result.amount)
+        assertNotNull(result.createdAt)
+        assertNotNull(result.updatedAt)
+        assertNotEquals(initialUpdatedAt, result.updatedAt, "updatedAt이 업데이트되어야 합니다")
+        assertTrue(initialUpdatedAt.isBefore(result.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
         verify(userPointRepository).findByUserId(userId)
         verify(userPointRepository).save(any())
     }
@@ -130,20 +152,37 @@ class UserPointServiceUnitTest {
         val useAmount = 500L
         val command = UserPointCommand.Use(userId, useAmount)
         
+        val initialTime = LocalDateTime.now()
+        // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위해 
+        // 시간 차이를 명확히 만들기 위한 지연입니다.
+        Thread.sleep(10) 
+        
         val existingUserPoint = UserPoint(
             userPointId = "test-point-id",
             userId = userId,
-            amount = initialAmount
+            amount = initialAmount,
+            createdAt = initialTime,
+            updatedAt = initialTime
         )
         
+        val initialUpdatedAt = existingUserPoint.updatedAt
+        
         `when`(userPointRepository.findByUserId(userId)).thenReturn(existingUserPoint)
-        `when`(userPointRepository.save(any())).thenAnswer { it.arguments[0] }
+        `when`(userPointRepository.save(any())).thenAnswer {
+            val saved = it.arguments[0] as UserPoint
+            saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
+            saved
+        }
 
         // when
         val result = userPointService.use(command)
 
         // then
         assertEquals(initialAmount - useAmount, result.amount)
+        assertNotNull(result.createdAt)
+        assertNotNull(result.updatedAt)
+        assertNotEquals(initialUpdatedAt, result.updatedAt, "updatedAt이 업데이트되어야 합니다")
+        assertTrue(initialUpdatedAt.isBefore(result.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
         verify(userPointRepository).findByUserId(userId)
         verify(userPointRepository).save(any())
     }
