@@ -33,4 +33,8 @@ class FakeCouponUserRepository : CouponUserRepository {
         store[couponUser.couponUserId] = couponUser
         return couponUser
     }
+    
+    override fun findAll(): List<CouponUser> {
+        return store.values.toList()
+    }
 } 

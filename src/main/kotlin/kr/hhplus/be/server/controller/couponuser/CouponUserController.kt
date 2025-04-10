@@ -12,11 +12,7 @@ class CouponUserController(
 ) {
     @GetMapping("/coupon-users")
     fun getAllCouponUsers(): BaseResponse<List<CouponUserResponseDTO>> {
-        // 현재 컨트롤러는 userId를 하드코딩하고 있으므로, 실제 구현에서는 이 부분을 개선해야 할 수 있습니다.
-        // 예: 인증된 사용자의 ID를 사용하거나, 쿼리 파라미터로 받는 등
-        val userId = "userId1"
-        
-        val result = couponUserFacade.getAllCouponsByUserId(userId)
+        val result = couponUserFacade.getAllCoupons()
         
         val responseList = result.couponUsers.map { couponUserResult ->
             val type = when (couponUserResult.benefitMethod) {

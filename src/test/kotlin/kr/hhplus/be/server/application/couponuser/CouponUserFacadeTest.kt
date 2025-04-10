@@ -267,4 +267,57 @@ class CouponUserFacadeTest {
         // then
         assertThat(result).isEqualTo(expectedDiscountAmount)
     }
+    
+    @Test
+    @DisplayName("모든 쿠폰을 조회한다")
+    fun getAllCoupons() {
+        // given
+        val couponUsers = listOf(
+            CouponUser(
+                couponUserId = "coupon1",
+                userId = "user1",
+                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitAmount = "1000",
+                usedAt = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            ),
+            CouponUser(
+                couponUserId = "coupon2",
+                userId = "user2",
+                benefitMethod = CouponBenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitAmount = "10",
+                usedAt = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            ),
+            CouponUser(
+                couponUserId = "coupon3",
+                userId = "user1",
+                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitAmount = "2000",
+                usedAt = LocalDateTime.now(),
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
+        )
+        
+        whenever(couponUserService.getAllCouponUsers()).thenReturn(couponUsers)
+        
+        // when
+        val result = couponUserFacade.getAllCoupons()
+        
+        // then
+        assertThat(result.couponUsers).hasSize(3)
+        assertThat(result.couponUsers[0].couponUserId).isEqualTo("coupon1")
+        assertThat(result.couponUsers[1].couponUserId).isEqualTo("coupon2")
+        assertThat(result.couponUsers[2].couponUserId).isEqualTo("coupon3")
+        
+        // 다양한 상태의 쿠폰이 잘 조회되는지 확인
+        assertThat(result.couponUsers.filter { it.userId == "user1" }).hasSize(2)
+        assertThat(result.couponUsers.filter { it.userId == "user2" }).hasSize(1)
+        assertThat(result.couponUsers.filter { it.usedAt != null }).hasSize(1)
+        assertThat(result.couponUsers.filter { it.benefitMethod == CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT }).hasSize(2)
+        assertThat(result.couponUsers.filter { it.benefitMethod == CouponBenefitMethod.DISCOUNT_PERCENTAGE }).hasSize(1)
+    }
 } 

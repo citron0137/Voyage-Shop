@@ -19,6 +19,15 @@ class CouponUserService(
         return repository.findByUserId(userId)
     }
 
+    /**
+     * 모든 쿠폰 사용자 정보를 조회합니다.
+     *
+     * @return 모든 쿠폰 사용자 정보 목록
+     */
+    fun getAllCouponUsers(): List<CouponUser> {
+        return repository.findAll()
+    }
+
     fun use(command: CouponUserCommand.Use): CouponUser {
         val couponUser = getCouponUser(command.couponUserId)
         val usedCouponUser = couponUser.use()

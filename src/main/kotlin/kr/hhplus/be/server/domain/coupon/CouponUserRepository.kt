@@ -5,4 +5,5 @@ interface CouponUserRepository {
     fun findById(couponUserId: String): CouponUser?
     fun findByUserId(userId: String): List<CouponUser>
     fun update(couponUser: CouponUser): CouponUser
+    fun findAll(): List<CouponUser>
 } 

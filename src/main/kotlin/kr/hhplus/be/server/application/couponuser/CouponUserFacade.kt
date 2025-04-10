@@ -126,4 +126,16 @@ class CouponUserFacade(
         
         return couponUser.calculateDiscountAmount(originalAmount)
     }
-} 
+
+    /**
+     * 모든 쿠폰을 조회합니다.
+     *
+     * @return 모든 쿠폰 목록 정보
+     */
+    @Transactional(readOnly = true)
+    fun getAllCoupons(): CouponUserListResult {
+        val couponUsers = couponUserService.getAllCouponUsers()
+        return CouponUserListResult.from(couponUsers)
+    }
+
+}
