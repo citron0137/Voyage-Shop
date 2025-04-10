@@ -9,6 +9,8 @@ erDiagram
         string user_point_id
         string user_id
         number point
+        DateTime created_at
+        DateTime updated_at
     }
     T_USER_POINT ||..|| T_USER: user_id 
 ```
@@ -20,6 +22,8 @@ erDiagram
         string product_id
         number price
         number stock 
+        DateTime created_at
+        DateTime updated_at
     }
 ```
 
@@ -32,6 +36,8 @@ erDiagram
         string benefit_method 
         string benefit_amount
         DateTime used_at
+        DateTime created_at
+        DateTime updated_at
     }
     T_COUPON_USER }o..|| T_USER: user_id 
 ```
@@ -57,6 +63,8 @@ erDiagram
         string benefit_amount
         number total_issue_amount
         number left_issue_amount
+        DateTime created_at
+        DateTime updated_at
     }
 ```
 
@@ -67,29 +75,12 @@ erDiagram
         string payment_id
         string user_id
         number total_payment_amount 
-    }
-    
-    T_PAYMENT_DETAIL {
-        string payment_detail_id
-        string payment_id
-        string payment_method
-        number payment_amount 
-        string payment_detail
+        DateTime created_at
+        DateTime updated_at
     }
 
     T_PAYMENT }o..|| T_USER: user_id 
-    T_PAYMENT ||--|{T_PAYMENT_DETAIL: has
 ```
-
-* payment_detail에는 payment_method별로 상세한 정보가 들어감
-    * e.g.) <br>
-    payment_method = "COUPON" <br>
-    payment_detail = {"couponUserId": "0000-0000-0000-000"} 
-    
-    * e.g.) <br>
-    payment_method = "USER_POINT" <br>
-    payment_detail = {"userPointId": "0000-0000-0000-000"} 
-
 
 ### 주문 도메인   
 ```mermaid
@@ -98,6 +89,11 @@ erDiagram
         string order_id
         string user_id
         string payment_id
+        number total_amount
+        number total_discount_amount
+        number final_amount
+        DateTime created_at
+        DateTime updated_at
     }
     
     T_ORDER_ITEM {
@@ -105,12 +101,32 @@ erDiagram
         string order_id
         string product_id
         number amount 
-        number price
+        number unit_price
+        number total_price
+        DateTime created_at
+        DateTime updated_at
+    }
+
+    T_ORDER_DISCOUNT {
+        string order_discount_id
+        string order_id
+        string discount_type
+        string discount_id
+        number discount_amount
+        DateTime created_at
+        DateTime updated_at
     }
 
     T_ORDER }o..|| T_USER: user_id 
     T_ORDER ||..|| T_PAYMENT: payment_id 
     T_ORDER ||--|{ T_ORDER_ITEM: order_id
     T_ORDER_ITEM }o..|| T_PRODUCT: product_id 
+    T_ORDER ||--|{ T_ORDER_DISCOUNT: order_id
 ```
+
+* discount_type은 아래 값을만을 가짐
+    * COUPON: 쿠폰 할인
+
+* discount_id는 discount_type에 따라 다른 테이블의 ID를 참조
+    * COUPON: T_COUPON_USER의 coupon_user_id
 
