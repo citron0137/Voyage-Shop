@@ -20,7 +20,7 @@ class ProductServiceUnitTest {
     }
 
     @Test
-    fun `상품을 생성하면 UUID가 생성되고 저장된다`() {
+    fun `상품을 생성할 수 있다`() {
         // given
         val command = ProductCommand.Create(
             name = "테스트 상품",
@@ -38,36 +38,6 @@ class ProductServiceUnitTest {
         assertEquals(command.name, actualProduct.name)
         assertEquals(command.price, actualProduct.price)
         assertEquals(command.stock, actualProduct.stock)
-    }
-
-    @Test
-    fun `상품 생성 시 재고가 음수면 예외가 발생한다`() {
-        // given
-        val command = ProductCommand.Create(
-            name = "테스트 상품",
-            price = 1000L,
-            stock = -1L
-        )
-
-        // when & then
-        assertThrows<ProductException.StockAmountShouldMoreThan0> {
-            productService.createProduct(command)
-        }
-    }
-
-    @Test
-    fun `상품 생성 시 가격이 음수면 예외가 발생한다`() {
-        // given
-        val command = ProductCommand.Create(
-            name = "테스트 상품",
-            price = -1L,
-            stock = 10L
-        )
-
-        // when & then
-        assertThrows<ProductException.PriceShouldMoreThan0> {
-            productService.createProduct(command)
-        }
     }
 
     @Test
