@@ -3,10 +3,11 @@ package kr.hhplus.be.server.domain.product
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDateTime
 import java.util.UUID
 
 class ProductServiceUnitTest {
@@ -38,6 +39,8 @@ class ProductServiceUnitTest {
         assertEquals(command.name, actualProduct.name)
         assertEquals(command.price, actualProduct.price)
         assertEquals(command.stock, actualProduct.stock)
+        assertNotNull(actualProduct.createdAt)
+        assertNotNull(actualProduct.updatedAt)
     }
 
     @Test
@@ -58,6 +61,8 @@ class ProductServiceUnitTest {
         // then
         verify { productRepository.findById(productId) }
         assertEquals(expectedProduct, actualProduct)
+        assertNotNull(actualProduct.createdAt)
+        assertNotNull(actualProduct.updatedAt)
     }
 
     @Test
@@ -97,6 +102,10 @@ class ProductServiceUnitTest {
         // then
         verify { productRepository.findAll() }
         assertEquals(products, actualProducts)
+        actualProducts.forEach {
+            assertNotNull(it.createdAt)
+            assertNotNull(it.updatedAt)
+        }
     }
 
     @Test
@@ -107,12 +116,19 @@ class ProductServiceUnitTest {
             productId = productId,
             amount = 20L
         )
+        val initialTime = LocalDateTime.now()
+        Thread.sleep(10) // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위한 지연
+
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L
+            stock = 10L,
+            createdAt = initialTime,
+            updatedAt = initialTime
         )
+        val initialUpdatedAt = existingProduct.updatedAt
+
         every { productRepository.findById(productId) } returns existingProduct
         every { productRepository.update(any()) } answers { firstArg() }
 
@@ -123,6 +139,10 @@ class ProductServiceUnitTest {
         verify { productRepository.findById(productId) }
         verify { productRepository.update(any()) }
         assertEquals(command.amount, actualProduct.stock)
+        assertNotNull(actualProduct.createdAt)
+        assertNotNull(actualProduct.updatedAt)
+        assertNotEquals(initialUpdatedAt, actualProduct.updatedAt, "updatedAt이 업데이트되어야 합니다")
+        assertTrue(initialUpdatedAt.isBefore(actualProduct.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
     }
 
     @Test
@@ -133,12 +153,19 @@ class ProductServiceUnitTest {
             productId = productId,
             amount = 5L
         )
+        val initialTime = LocalDateTime.now()
+        Thread.sleep(10) // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위한 지연
+
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L
+            stock = 10L,
+            createdAt = initialTime,
+            updatedAt = initialTime
         )
+        val initialUpdatedAt = existingProduct.updatedAt
+
         every { productRepository.findById(productId) } returns existingProduct
         every { productRepository.update(any()) } answers { firstArg() }
 
@@ -149,6 +176,10 @@ class ProductServiceUnitTest {
         verify { productRepository.findById(productId) }
         verify { productRepository.update(any()) }
         assertEquals(5L, actualProduct.stock)
+        assertNotNull(actualProduct.createdAt)
+        assertNotNull(actualProduct.updatedAt)
+        assertNotEquals(initialUpdatedAt, actualProduct.updatedAt, "updatedAt이 업데이트되어야 합니다")
+        assertTrue(initialUpdatedAt.isBefore(actualProduct.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
     }
 
     @Test
@@ -159,12 +190,19 @@ class ProductServiceUnitTest {
             productId = productId,
             amount = 5L
         )
+        val initialTime = LocalDateTime.now()
+        Thread.sleep(10) // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위한 지연
+
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L
+            stock = 10L,
+            createdAt = initialTime,
+            updatedAt = initialTime
         )
+        val initialUpdatedAt = existingProduct.updatedAt
+
         every { productRepository.findById(productId) } returns existingProduct
         every { productRepository.update(any()) } answers { firstArg() }
 
@@ -175,6 +213,10 @@ class ProductServiceUnitTest {
         verify { productRepository.findById(productId) }
         verify { productRepository.update(any()) }
         assertEquals(15L, actualProduct.stock)
+        assertNotNull(actualProduct.createdAt)
+        assertNotNull(actualProduct.updatedAt)
+        assertNotEquals(initialUpdatedAt, actualProduct.updatedAt, "updatedAt이 업데이트되어야 합니다")
+        assertTrue(initialUpdatedAt.isBefore(actualProduct.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
     }
 
     @Test
