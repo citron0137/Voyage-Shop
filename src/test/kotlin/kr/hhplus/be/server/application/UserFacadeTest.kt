@@ -1,5 +1,6 @@
-package kr.hhplus.be.server.application.user
+package kr.hhplus.be.server.application
 
+import kr.hhplus.be.server.application.user.UserFacade
 import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.domain.user.UserService

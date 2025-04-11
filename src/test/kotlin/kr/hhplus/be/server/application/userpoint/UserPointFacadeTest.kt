@@ -15,7 +15,6 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.time.LocalDateTime
 
 @DisplayName("UserPointFacade 테스트")
 class UserPointFacadeTest {
