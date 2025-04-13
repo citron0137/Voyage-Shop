@@ -1,6 +1,9 @@
 package kr.hhplus.be.server.application.order
 
-import kr.hhplus.be.server.application.couponuser.CouponUserFacade
+import io.mockk.mockk
+import kr.hhplus.be.server.domain.coupon.CouponUser
+import kr.hhplus.be.server.domain.coupon.CouponUserCommand
+import kr.hhplus.be.server.domain.coupon.CouponUserService
 import kr.hhplus.be.server.domain.order.*
 import kr.hhplus.be.server.domain.payment.Payment
 import kr.hhplus.be.server.domain.payment.PaymentService
@@ -27,7 +30,7 @@ class OrderFacadeTest {
     private lateinit var userService: UserService
     private lateinit var productService: ProductService
     private lateinit var paymentService: PaymentService
-    private lateinit var couponUserFacade: CouponUserFacade
+    private lateinit var couponUserService: CouponUserService
     private lateinit var orderFacade: OrderFacade
     
     @BeforeEach
@@ -36,13 +39,13 @@ class OrderFacadeTest {
         userService = mock()
         productService = mock()
         paymentService = mock()
-        couponUserFacade = mock()
+        couponUserService = mock()
         orderFacade = OrderFacade(
             orderService = orderService,
             userService = userService,
             productService = productService,
             paymentService = paymentService,
-            couponUserFacade = couponUserFacade
+            couponUserService = couponUserService
         )
     }
     
@@ -379,11 +382,14 @@ class OrderFacadeTest {
             )
         )
         
+        val couponUser = mock<CouponUser>()
+        
         whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
         whenever(productService.getProduct("product1")).thenReturn(product)
         whenever(productService.decreaseStock(any())).thenReturn(product)
-        whenever(couponUserFacade.calculateDiscountAmount(couponUserId, 10000)).thenReturn(1000)
-        whenever(couponUserFacade.useCoupon(couponUserId)).thenReturn(mock())
+        whenever(couponUserService.getCouponUser(couponUserId)).thenReturn(couponUser)
+        whenever(couponUser.calculateDiscountAmount(10000)).thenReturn(1000)
+        whenever(couponUserService.use(CouponUserCommand.Use(couponUserId))).thenReturn(couponUser)
         whenever(paymentService.createPayment(any())).thenReturn(payment)
         whenever(orderService.createOrder(any())).thenReturn(order)
         whenever(orderService.getOrderItemsByOrderId(any())).thenReturn(orderItemsResult)
