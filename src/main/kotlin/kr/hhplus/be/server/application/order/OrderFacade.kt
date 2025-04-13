@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.application.order
 
-import kr.hhplus.be.server.application.couponuser.CouponUserFacade
+import kr.hhplus.be.server.domain.coupon.CouponUserCommand
+import kr.hhplus.be.server.domain.coupon.CouponUserService
 import kr.hhplus.be.server.domain.order.*
 import kr.hhplus.be.server.domain.payment.PaymentCommand
 import kr.hhplus.be.server.domain.payment.PaymentService
@@ -22,7 +23,7 @@ class OrderFacade(
     private val userService: UserService,
     private val productService: ProductService,
     private val paymentService: PaymentService,
-    private val couponUserFacade: CouponUserFacade
+    private val couponUserService: CouponUserService
 ) {
     /**
      * 주문 ID로 주문 정보를 조회합니다.
@@ -182,12 +183,14 @@ class OrderFacade(
         val orderDiscountCommands = mutableListOf<OrderDiscountCommand.Create>()
         
         if (couponUserId != null) {
-            // 쿠폰 할인 금액 계산
-            val discountAmount = couponUserFacade.calculateDiscountAmount(couponUserId, totalAmount)
+            // 쿠폰 조회 및 할인 금액 계산
+            val couponUser = couponUserService.getCouponUser(couponUserId)
+            val discountAmount = couponUser.calculateDiscountAmount(totalAmount)
             
             if (discountAmount > 0) {
                 // 쿠폰 사용 처리
-                couponUserFacade.useCoupon(couponUserId)
+                val useCommand = CouponUserCommand.Use(couponUserId)
+                couponUserService.use(useCommand)
                 
                 // 할인 정보 추가
                 totalDiscountAmount += discountAmount
