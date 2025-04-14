@@ -1,10 +1,30 @@
 package kr.hhplus.be.server.application.orderitemrank
 
 /**
- * 주문 아이템 순위 결과 DTO
- * 파사드에서 컨트롤러로 데이터를 전달하기 위한 모델입니다.
+ * 주문 아이템 순위 관련 응답 클래스
  */
-data class OrderItemRankResult(
-    val productId: String,
-    val orderCount: Long
-) 
+sealed class OrderItemRankResult {
+    /**
+     * 단일 주문 아이템 순위 결과
+     */
+    data class Rank(
+        val productId: String,
+        val orderCount: Long
+    ) : OrderItemRankResult()
+    
+    /**
+     * 주문 아이템 순위 목록 결과
+     */
+    data class List(
+        val ranks: kotlin.collections.List<Rank>
+    ) : OrderItemRankResult() {
+        companion object {
+            /**
+             * 개별 순위 항목들을 리스트로 변환합니다.
+             */
+            fun from(ranks: kotlin.collections.List<Rank>): List {
+                return List(ranks)
+            }
+        }
+    }
+} 
