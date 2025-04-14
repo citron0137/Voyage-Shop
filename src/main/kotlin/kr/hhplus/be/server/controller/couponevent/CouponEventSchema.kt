@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
  * 쿠폰 이벤트 도메인 관련 Swagger 스키마 정의
  */
 @Component
-class CouponEventResponseSchema : SchemaProvider {
+class CouponEventSchema : SchemaProvider {
 
     override fun getSchemas(): Map<String, Schema<Any>> {
         val schemas = mutableMapOf<String, Schema<Any>>()

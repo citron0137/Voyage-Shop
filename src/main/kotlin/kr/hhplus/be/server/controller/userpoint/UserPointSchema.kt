@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
  * 사용자 포인트 도메인 관련 Swagger 스키마 정의
  */
 @Component
-class UserPointResponseSchema : SchemaProvider {
+class UserPointSchema : SchemaProvider {
 
     override fun getSchemas(): Map<String, Schema<Any>> {
         val schemas = mutableMapOf<String, Schema<Any>>()
