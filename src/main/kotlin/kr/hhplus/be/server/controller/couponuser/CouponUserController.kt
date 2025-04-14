@@ -1,23 +1,29 @@
 package kr.hhplus.be.server.controller.couponuser
 
 import kr.hhplus.be.server.application.couponuser.CouponUserFacade
-import kr.hhplus.be.server.controller.couponuser.response.*
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
 import org.springframework.web.bind.annotation.*
 
-@RestController()
+/**
+ * 쿠폰 사용자 컨트롤러
+ */
+@RestController
 class CouponUserController(
     private val couponUserFacade: CouponUserFacade
-) {
-    @GetMapping("/coupon-users")
-    fun getAllCouponUsers(): BaseResponse<List<CouponUserResponseDTO>> {
+) : CouponUserControllerApi {
+    /**
+     * 모든 쿠폰 사용자를 조회합니다.
+     *
+     * @return 쿠폰 사용자 목록 응답
+     */
+    override fun getAllCouponUsers(): BaseResponse<List<CouponUserResponse.Single>> {
         val result = couponUserFacade.getAllCoupons()
         
         val responseList = result.couponUsers.map { couponUserResult ->
             val type = when (couponUserResult.benefitMethod) {
-                CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponUserResponseDTOType.DISCOUNT_FIXED_AMOUNT
-                CouponBenefitMethod.DISCOUNT_PERCENTAGE -> CouponUserResponseDTOType.DISCOUNT_PERCENTAGE
+                CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponUserResponse.Type.DISCOUNT_FIXED_AMOUNT
+                CouponBenefitMethod.DISCOUNT_PERCENTAGE -> CouponUserResponse.Type.DISCOUNT_PERCENTAGE
             }
             
             val fixedDiscountAmount = if (couponUserResult.benefitMethod == CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT) {
@@ -32,7 +38,7 @@ class CouponUserController(
                 null
             }
             
-            CouponUserResponseDTO(
+            CouponUserResponse.Single(
                 id = couponUserResult.couponUserId,
                 userId = couponUserResult.userId,
                 type = type,

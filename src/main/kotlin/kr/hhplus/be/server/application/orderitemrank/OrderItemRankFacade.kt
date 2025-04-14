@@ -15,31 +15,42 @@ class OrderItemRankFacade(
     private val orderService: OrderService
 ) {
     /**
-     * 최근 3일간의 주문 아이템 중 상위 5개 순위를 조회합니다.
+     * 최근 N일간의 주문 아이템 중 상위 M개 순위를 조회합니다.
      *
-     * @return 상위 5개 주문 아이템 순위 목록
+     * @param criteria 순위 조회 기준
+     * @return 상위 M개 주문 아이템 순위 목록
      */
     @Transactional(readOnly = true)
-    fun getRecentTopOrderItemRanks(): List<OrderItemRankResult> {
-        // 현재 시간으로부터 3일 전 계산
-        val threeDaysAgo = LocalDateTime.now().minusDays(3)
+    fun getRecentTopOrderItemRanks(criteria: OrderItemRankCriteria.RecentTopRanks = OrderItemRankCriteria.RecentTopRanks()): OrderItemRankResult.List {
+        // 현재 시간으로부터 지정된 일수 전 계산
+        val daysAgo = LocalDateTime.now().minusDays(criteria.days.toLong())
         
-        // 모든 주문 조회 후 3일 이내 주문만 필터링
+        // 모든 주문 조회 후 지정된 일수 이내 주문만 필터링
         val recentOrders = orderService.getAllOrders()
-            .filter { it.createdAt.isAfter(threeDaysAgo) }
+            .filter { it.createdAt.isAfter(daysAgo) }
             
-        // 최근 3일 이내 주문의 아이템만 조회
+        // 최근 주문의 아이템만 조회
         val recentOrderItems = recentOrders.flatMap { order ->
             orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(order.orderId))
         }
         
-        // 상품 ID별로 그룹화하여 주문 횟수를 계산하고 상위 5개만 추출
-        return recentOrderItems
+        // 상품 ID별로 그룹화하여 주문 횟수를 계산하고 상위 M개만 추출
+        val topRanks = recentOrderItems
             .groupBy { it.productId }
             .mapValues { it.value.sumOf { item -> item.amount } }
             .toList()
             .sortedByDescending { it.second }
-            .take(5) // 상위 5개만 추출
-            .map { OrderItemRankResult(productId = it.first, orderCount = it.second) }
+            .take(criteria.limit)
+            .map { OrderItemRankResult.Rank(productId = it.first, orderCount = it.second) }
+            
+        return OrderItemRankResult.List(topRanks)
+    }
+    
+    /**
+     * 최근 3일간의 주문 아이템 중 상위 5개 순위를 조회합니다. (호환성 메서드)
+     */
+    @Transactional(readOnly = true)
+    fun getRecentTopOrderItemRanks(): List<OrderItemRankResult.Rank> {
+        return getRecentTopOrderItemRanks(OrderItemRankCriteria.RecentTopRanks()).ranks
     }
 } 

@@ -18,40 +18,33 @@ class ProductFacade(
     /**
      * 상품 ID로 상품 정보를 조회합니다.
      *
-     * @param productId 조회할 상품 ID
+     * @param criteria 상품 조회 요청 기준
      * @return 상품 정보
      * @throws ProductException.ProductIdShouldNotBlank 상품 ID가 빈 값인 경우
      * @throws ProductException.NotFound 상품을 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    fun getProduct(productId: String): ProductResult {
-        if (productId.isBlank()) {
-            throw ProductException.ProductIdShouldNotBlank("상품 ID는 비어있을 수 없습니다.")
-        }
-        
-        val product = productService.getProduct(productId)
-        
-        return ProductResult.from(product)
+    fun getProduct(criteria: ProductCriteria.GetById): ProductResult.Product {
+        val product = productService.getProduct(criteria.productId)
+        return ProductResult.Product.from(product)
     }
     
     /**
      * 모든 상품 정보를 조회합니다.
      *
+     * @param criteria 상품 조회 요청 기준
      * @return 상품 목록 정보
      */
     @Transactional(readOnly = true)
-    fun getAllProducts(): ProductListResult {
+    fun getAllProducts(criteria: ProductCriteria.GetAll = ProductCriteria.GetAll()): ProductResult.List {
         val products = productService.getAllProducts()
-        
-        return ProductListResult.from(products)
+        return ProductResult.List.from(products)
     }
     
     /**
      * 새로운 상품을 생성합니다.
      *
-     * @param name 상품명
-     * @param price 상품 가격
-     * @param stock 상품 재고
+     * @param criteria 상품 생성 요청 기준
      * @return 생성된 상품 정보
      * @throws ProductException.NameShouldNotBlank 상품명이 빈 값인 경우
      * @throws ProductException.PriceShouldMoreThan0 가격이 0 이하인 경우
@@ -59,24 +52,23 @@ class ProductFacade(
      * @throws ProductException.StockAmountOverflow 재고가 최대치를 초과하는 경우
      */
     @Transactional
-    fun createProduct(name: String, price: Long, stock: Long): ProductResult {
+    fun createProduct(criteria: ProductCriteria.Create): ProductResult.Product {
         val command = ProductCommand.Create(
-            name = name,
-            price = price,
-            stock = stock
+            name = criteria.name,
+            price = criteria.price,
+            stock = criteria.stock
         )
         
         val product = productService.createProduct(command)
             ?: throw ProductException.NotFound("상품 생성 후 상품을 찾을 수 없습니다.")
         
-        return ProductResult.from(product)
+        return ProductResult.Product.from(product)
     }
     
     /**
      * 상품 재고를 업데이트합니다.
      *
-     * @param productId 상품 ID
-     * @param stock 새로운 재고량
+     * @param criteria 상품 재고 업데이트 요청 기준
      * @return 업데이트된 상품 정보
      * @throws ProductException.ProductIdShouldNotBlank 상품 ID가 빈 값인 경우
      * @throws ProductException.NotFound 상품을 찾을 수 없는 경우
@@ -84,23 +76,22 @@ class ProductFacade(
      * @throws ProductException.StockAmountOverflow 재고가 최대치를 초과하는 경우
      */
     @Transactional
-    fun updateStock(productId: String, stock: Long): ProductResult {
+    fun updateStock(criteria: ProductCriteria.UpdateStock): ProductResult.Product {
         val command = ProductCommand.UpdateStock(
-            productId = productId,
-            amount = stock
+            productId = criteria.productId,
+            amount = criteria.stock
         )
         
         val product = productService.updateStock(command)
             ?: throw ProductException.NotFound("재고 업데이트 후 상품을 찾을 수 없습니다.")
         
-        return ProductResult.from(product)
+        return ProductResult.Product.from(product)
     }
     
     /**
      * 상품 재고를 증가시킵니다.
      *
-     * @param productId 상품 ID
-     * @param amount 증가시킬 양
+     * @param criteria 상품 재고 증가 요청 기준
      * @return 증가 후 상품 정보
      * @throws ProductException.ProductIdShouldNotBlank 상품 ID가 빈 값인 경우
      * @throws ProductException.NotFound 상품을 찾을 수 없는 경우
@@ -108,23 +99,22 @@ class ProductFacade(
      * @throws ProductException.StockAmountOverflow 증가 후 재고가 최대치를 초과하는 경우
      */
     @Transactional
-    fun increaseStock(productId: String, amount: Long): ProductResult {
+    fun increaseStock(criteria: ProductCriteria.IncreaseStock): ProductResult.Product {
         val command = ProductCommand.IncreaseStock(
-            productId = productId,
-            amount = amount
+            productId = criteria.productId,
+            amount = criteria.amount
         )
         
         val product = productService.increaseStock(command)
             ?: throw ProductException.NotFound("재고 증가 후 상품을 찾을 수 없습니다.")
         
-        return ProductResult.from(product)
+        return ProductResult.Product.from(product)
     }
     
     /**
      * 상품 재고를 감소시킵니다.
      *
-     * @param productId 상품 ID
-     * @param amount 감소시킬 양
+     * @param criteria 상품 재고 감소 요청 기준
      * @return 감소 후 상품 정보
      * @throws ProductException.ProductIdShouldNotBlank 상품 ID가 빈 값인 경우
      * @throws ProductException.NotFound 상품을 찾을 수 없는 경우
@@ -132,15 +122,15 @@ class ProductFacade(
      * @throws ProductException.StockAmountUnderflow 감소 후 재고가 0 미만인 경우
      */
     @Transactional
-    fun decreaseStock(productId: String, amount: Long): ProductResult {
+    fun decreaseStock(criteria: ProductCriteria.DecreaseStock): ProductResult.Product {
         val command = ProductCommand.DecreaseStock(
-            productId = productId,
-            amount = amount
+            productId = criteria.productId,
+            amount = criteria.amount
         )
         
         val product = productService.decreaseStock(command)
             ?: throw ProductException.NotFound("재고 감소 후 상품을 찾을 수 없습니다.")
         
-        return ProductResult.from(product)
+        return ProductResult.Product.from(product)
     }
 } 

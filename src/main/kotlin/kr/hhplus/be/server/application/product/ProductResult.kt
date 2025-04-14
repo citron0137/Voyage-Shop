@@ -4,47 +4,52 @@ import kr.hhplus.be.server.domain.product.Product
 import java.time.LocalDateTime
 
 /**
- * 상품 결과 DTO
+ * 상품 관련 응답 결과를 담는 클래스
  */
-data class ProductResult(
-    val productId: String,
-    val name: String,
-    val price: Long,
-    val stock: Long,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
-) {
-    companion object {
-        /**
-         * Product 도메인 객체를 ProductResult DTO로 변환합니다.
-         */
-        fun from(product: Product): ProductResult {
-            return ProductResult(
-                productId = product.productId,
-                name = product.name,
-                price = product.price,
-                stock = product.stock,
-                createdAt = product.createdAt,
-                updatedAt = product.updatedAt
-            )
+class ProductResult {
+    /**
+     * 단일 상품 정보 응답
+     */
+    data class Product(
+        val productId: String,
+        val name: String,
+        val price: Long,
+        val stock: Long,
+        val createdAt: LocalDateTime,
+        val updatedAt: LocalDateTime
+    ) {
+        companion object {
+            /**
+             * 도메인 Product 객체를 ProductResult.Product DTO로 변환합니다.
+             */
+            fun from(product: kr.hhplus.be.server.domain.product.Product): Product {
+                return Product(
+                    productId = product.productId,
+                    name = product.name,
+                    price = product.price,
+                    stock = product.stock,
+                    createdAt = product.createdAt,
+                    updatedAt = product.updatedAt
+                )
+            }
         }
     }
-}
 
-/**
- * 상품 목록 결과 DTO
- */
-data class ProductListResult(
-    val products: List<ProductResult>
-) {
-    companion object {
-        /**
-         * Product 도메인 객체 목록을 ProductListResult DTO로 변환합니다.
-         */
-        fun from(products: List<Product>): ProductListResult {
-            return ProductListResult(
-                products = products.map { ProductResult.from(it) }
-            )
+    /**
+     * 상품 목록 응답
+     */
+    data class List(
+        val products: kotlin.collections.List<Product>
+    ) {
+        companion object {
+            /**
+             * 도메인 Product 객체 목록을 ProductResult.List DTO로 변환합니다.
+             */
+            fun from(products: kotlin.collections.List<kr.hhplus.be.server.domain.product.Product>): List {
+                return List(
+                    products = products.map { Product.from(it) }
+                )
+            }
         }
     }
 } 

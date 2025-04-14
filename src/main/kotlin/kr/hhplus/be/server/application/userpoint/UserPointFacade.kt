@@ -20,29 +20,28 @@ class UserPointFacade(
     /**
      * 사용자 ID로 포인트 정보를 조회합니다.
      *
-     * @param userId 조회할 사용자 ID
+     * @param criteria 사용자 포인트 조회 요청 기준
      * @return 사용자 포인트 정보
      * @throws UserException.UserIdShouldNotBlank 사용자 ID가 빈 값인 경우
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우
      * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    fun getUserPoint(userId: String): UserPointResult {
+    fun getUserPoint(criteria: UserPointCriteria.GetByUserId): UserPointResult.Point {
         // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(userId)
+        userService.findUserByIdOrThrow(criteria.userId)
         
         // 사용자 포인트 조회
-        val userPoint = userPointService.findByUserId(userId) 
-            ?: throw UserPointException.NotFound("userId($userId)로 UserPoint를 찾을 수 없습니다.")
+        val userPoint = userPointService.findByUserId(criteria.userId) 
+            ?: throw UserPointException.NotFound("userId(${criteria.userId})로 UserPoint를 찾을 수 없습니다.")
         
-        return UserPointResult.from(userPoint)
+        return UserPointResult.Point.from(userPoint)
     }
     
     /**
      * 사용자 포인트를 충전합니다.
      *
-     * @param userId 사용자 ID
-     * @param amount 충전할 포인트 금액
+     * @param criteria 사용자 포인트 충전 요청 기준
      * @return 충전 후 사용자 포인트 정보
      * @throws UserException.UserIdShouldNotBlank 사용자 ID가 빈 값인 경우
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우
@@ -51,17 +50,17 @@ class UserPointFacade(
      * @throws UserPointException.PointAmountOverflow 충전 후 포인트가 최대치를 초과하는 경우
      */
     @Transactional
-    fun chargePoint(userId: String, amount: Long): UserPointResult {
+    fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Point {
         // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(userId)
+        userService.findUserByIdOrThrow(criteria.userId)
         
         // 포인트 충전 명령 생성
-        val command = UserPointCommand.Charge(userId = userId, amount = amount)
+        val command = UserPointCommand.Charge(userId = criteria.userId, amount = criteria.amount)
         
         // 포인트 충전
         val userPoint = userPointService.charge(command)
-            ?: throw UserPointException.NotFound("userId($userId)로 UserPoint를 찾을 수 없습니다.")
+            ?: throw UserPointException.NotFound("userId(${criteria.userId})로 UserPoint를 찾을 수 없습니다.")
         
-        return UserPointResult.from(userPoint)
+        return UserPointResult.Point.from(userPoint)
     }
 } 

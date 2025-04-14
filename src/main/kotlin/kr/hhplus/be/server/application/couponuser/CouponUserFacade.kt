@@ -22,9 +22,9 @@ class CouponUserFacade(
      * @return 유저의 쿠폰 목록 정보
      */
     @Transactional(readOnly = true)
-    fun getAllCouponsByUserId(userId: String): CouponUserListResult {
+    fun getAllCouponsByUserId(userId: String): CouponUserResult.List {
         val couponUsers = couponUserService.getAllCouponsByUserId(userId, userService)
-        return CouponUserListResult.from(couponUsers)
+        return CouponUserResult.List.from(couponUsers)
     }
     
     /**
@@ -34,9 +34,9 @@ class CouponUserFacade(
      * @return 쿠폰 정보
      */
     @Transactional(readOnly = true)
-    fun getCouponUser(couponUserId: String): CouponUserResult {
+    fun getCouponUser(couponUserId: String): CouponUserResult.User {
         val couponUser = couponUserService.getCouponUserWithValidation(couponUserId)
-        return CouponUserResult.from(couponUser)
+        return CouponUserResult.User.from(couponUser)
     }
     
     /**
@@ -48,9 +48,9 @@ class CouponUserFacade(
      * @return 발급된 쿠폰 정보
      */
     @Transactional
-    fun issueCoupon(userId: String, benefitMethod: CouponBenefitMethod, benefitAmount: String): CouponUserResult {
+    fun issueCoupon(userId: String, benefitMethod: CouponBenefitMethod, benefitAmount: String): CouponUserResult.User {
         val couponUser = couponUserService.issueCoupon(userId, benefitMethod, benefitAmount, userService)
-        return CouponUserResult.from(couponUser)
+        return CouponUserResult.User.from(couponUser)
     }
     
     /**
@@ -60,9 +60,9 @@ class CouponUserFacade(
      * @return 사용된 쿠폰 정보
      */
     @Transactional
-    fun useCoupon(couponUserId: String): CouponUserResult {
+    fun useCoupon(couponUserId: String): CouponUserResult.User {
         val couponUser = couponUserService.useCoupon(couponUserId)
-        return CouponUserResult.from(couponUser)
+        return CouponUserResult.User.from(couponUser)
     }
     
     /**
@@ -83,8 +83,8 @@ class CouponUserFacade(
      * @return 모든 쿠폰 목록 정보
      */
     @Transactional(readOnly = true)
-    fun getAllCoupons(): CouponUserListResult {
+    fun getAllCoupons(): CouponUserResult.List {
         val couponUsers = couponUserService.getAllCouponUsers()
-        return CouponUserListResult.from(couponUsers)
+        return CouponUserResult.List.from(couponUsers)
     }
 }

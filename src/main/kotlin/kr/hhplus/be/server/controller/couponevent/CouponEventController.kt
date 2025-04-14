@@ -1,24 +1,28 @@
 package kr.hhplus.be.server.controller.couponevent
 
+import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
 import kr.hhplus.be.server.application.couponevent.CouponEventFacade
-import kr.hhplus.be.server.application.couponevent.dto.CreateCouponEventCriteria
-import kr.hhplus.be.server.application.couponevent.dto.IssueCouponCriteria
-import kr.hhplus.be.server.controller.couponevent.request.CreateCouponEventRequest
-import kr.hhplus.be.server.controller.couponevent.request.IssueCouponEventCouponUserRequest
-import kr.hhplus.be.server.controller.couponevent.response.CouponEventIssueCouponResponseDTO
-import kr.hhplus.be.server.controller.couponevent.response.CouponEventResponseDTO
+import kr.hhplus.be.server.application.couponevent.CouponEventResult
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
-@RestController()
+/**
+ * 쿠폰 이벤트 컨트롤러
+ */
+@RestController
 class CouponEventController(
     private val couponEventFacade: CouponEventFacade
-) {
-    @PostMapping("/coupon-events")
-    fun createCouponEvent(
-        @RequestBody req: CreateCouponEventRequest
-    ): BaseResponse<CouponEventResponseDTO>{
-        val criteria = CreateCouponEventCriteria(
+) : CouponEventControllerApi {
+    /**
+     * 쿠폰 이벤트를 생성합니다.
+     *
+     * @param req 쿠폰 이벤트 생성 요청
+     * @return 생성된 쿠폰 이벤트 정보
+     */
+    override fun createCouponEvent(
+        req: CouponEventRequest.Create
+    ): BaseResponse<CouponEventResponse.Event> {
+        val criteria = CouponEventCriteria.Create(
             benefitMethod = req.benefitMethod,
             benefitAmount = req.benefitAmount,
             totalIssueAmount = req.totalIssueAmount.toLong()
@@ -27,9 +31,9 @@ class CouponEventController(
         val result = couponEventFacade.createCouponEvent(criteria)
         
         return BaseResponse.success(
-            CouponEventResponseDTO(
+            CouponEventResponse.Event(
                 id = result.id,
-                benefitMethod = result.benefitMethod,
+                benefitMethod = result.benefitMethod.name,
                 benefitAmount = result.benefitAmount,
                 totalIssueAmount = result.totalIssueAmount,
                 leftIssueAmount = result.leftIssueAmount
@@ -37,34 +41,47 @@ class CouponEventController(
         )
     }
 
-    @GetMapping("/coupon-events")
-    fun getAllCouponEvents(): BaseResponse<List<CouponEventResponseDTO>>{
-        val couponEvents = couponEventFacade.getAllCouponEvents()
+    /**
+     * 모든 쿠폰 이벤트를 조회합니다.
+     *
+     * @return 쿠폰 이벤트 목록
+     */
+    override fun getAllCouponEvents(): BaseResponse<List<CouponEventResponse.Event>> {
+        val result = couponEventFacade.getAllCouponEvents()
         
-        val responseList = couponEvents.map {
-            CouponEventResponseDTO(
-                id = it.id,
-                benefitMethod = it.benefitMethod,
-                benefitAmount = it.benefitAmount,
-                totalIssueAmount = it.totalIssueAmount,
-                leftIssueAmount = it.leftIssueAmount
+        val responseList = result.couponEvents.map { event ->
+            CouponEventResponse.Event(
+                id = event.id,
+                benefitMethod = event.benefitMethod.name,
+                benefitAmount = event.benefitAmount,
+                totalIssueAmount = event.totalIssueAmount,
+                leftIssueAmount = event.leftIssueAmount
             )
         }
         
         return BaseResponse.success(responseList)
     }
 
-    @PostMapping("/coupon-events/{couponEventId}/issue-coupon-user")
-    fun issueCouponUser(
-        @PathVariable couponEventId: String,
-        @RequestBody req: IssueCouponEventCouponUserRequest
-    ): BaseResponse<CouponEventIssueCouponResponseDTO>{
-        val criteria = IssueCouponCriteria(userId = req.userId)
+    /**
+     * 사용자에게 쿠폰을 발급합니다.
+     *
+     * @param couponEventId 쿠폰 이벤트 ID
+     * @param req 쿠폰 발급 요청
+     * @return 발급된 쿠폰 정보
+     */
+    override fun issueCouponUser(
+        couponEventId: String,
+        req: CouponEventRequest.IssueCoupon
+    ): BaseResponse<CouponEventResponse.IssueCoupon> {
+        val criteria = CouponEventCriteria.IssueCoupon(
+            couponEventId = couponEventId,
+            userId = req.userId
+        )
         
-        val result = couponEventFacade.issueCouponUser(couponEventId, criteria)
+        val result = couponEventFacade.issueCouponUser(criteria)
         
         return BaseResponse.success(
-            CouponEventIssueCouponResponseDTO(
+            CouponEventResponse.IssueCoupon(
                 couponUserId = result.couponUserId
             )
         )

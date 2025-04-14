@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import kr.hhplus.be.server.controller.shared.BaseResponse
-import kr.hhplus.be.server.controller.user.response.UserResponseDTO
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -60,7 +59,7 @@ interface UserControllerApi {
         ]
     )
     @PostMapping
-    fun createUser(): BaseResponse<UserResponseDTO>
+    fun createUser(): BaseResponse<UserResponse.Single>
 
     /**
      * 사용자 ID로 사용자 정보를 조회합니다.
@@ -104,7 +103,7 @@ interface UserControllerApi {
     fun getUserById(
         @Parameter(description = "조회할 사용자 ID", required = true)
         @PathVariable userId: String
-    ): BaseResponse<UserResponseDTO>
+    ): BaseResponse<UserResponse.Single>
 
     /**
      * 모든 사용자 목록을 조회합니다.
@@ -136,5 +135,5 @@ interface UserControllerApi {
         ]
     )
     @GetMapping
-    fun getAllUsers(): BaseResponse<List<UserResponseDTO>>
+    fun getAllUsers(): BaseResponse<UserResponse.List>
 } 

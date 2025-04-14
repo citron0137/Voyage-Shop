@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.application
 
+import kr.hhplus.be.server.application.user.UserCriteria
 import kr.hhplus.be.server.application.user.UserFacade
 import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserException
@@ -59,11 +60,12 @@ class UserFacadeTest {
         // given
         val userId = "test-user-id"
         val mockUser = User(userId = userId)
+        val criteria = UserCriteria.GetById(userId)
         
         `when`(userService.findUserByIdOrThrow(userId)).thenReturn(mockUser)
         
         // when
-        val result = userFacade.findUserById(userId)
+        val result = userFacade.findUserById(criteria)
         
         // then
         verify(userService).findUserByIdOrThrow(userId)
@@ -76,12 +78,13 @@ class UserFacadeTest {
     fun `ID로 사용자 조회 시 존재하지 않는 경우 예외가 발생한다`() {
         // given
         val userId = "non-existent-user-id"
+        val criteria = UserCriteria.GetById(userId)
         
         `when`(userService.findUserByIdOrThrow(userId)).thenThrow(UserException.NotFound("userId($userId)로 User를 찾을 수 없습니다."))
         
         // when & then
         assertThrows(UserException.NotFound::class.java) {
-            userFacade.findUserById(userId)
+            userFacade.findUserById(criteria)
         }
         
         verify(userService).findUserByIdOrThrow(userId)

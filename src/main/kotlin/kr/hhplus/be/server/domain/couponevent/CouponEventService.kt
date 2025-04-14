@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.couponevent
 
-import kr.hhplus.be.server.application.couponevent.dto.CreateCouponEventCriteria
-import kr.hhplus.be.server.application.couponevent.dto.IssueCouponCriteria
+import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
 import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
 import kr.hhplus.be.server.domain.coupon.CouponUser
 import kr.hhplus.be.server.domain.coupon.CouponUserCommand
@@ -24,7 +23,7 @@ class CouponEventService(
      * @return 생성된 쿠폰 이벤트
      * @throws CEInvalidBenefitMethodException 유효하지 않은 혜택 방식인 경우
      */
-    fun createCouponEventWithValidation(criteria: CreateCouponEventCriteria): CouponEvent {
+    fun createCouponEventWithValidation(criteria: CouponEventCriteria.Create): CouponEvent {
         val benefitMethod = try {
             when (criteria.benefitMethod) {
                 "DISCOUNT_FIXED_AMOUNT" -> BenefitMethod.DISCOUNT_FIXED_AMOUNT
@@ -83,7 +82,7 @@ class CouponEventService(
     @Transactional
     fun issueCouponFromEvent(
         couponEventId: String,
-        criteria: IssueCouponCriteria,
+        criteria: CouponEventCriteria.IssueCoupon,
         couponUserService: CouponUserService
     ): CouponUser {
         // 1. 쿠폰 이벤트 조회 및 존재 여부 확인

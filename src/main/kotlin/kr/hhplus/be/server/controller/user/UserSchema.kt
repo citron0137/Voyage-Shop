@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.controller.user.swagger
+package kr.hhplus.be.server.controller.user
 
 import io.swagger.v3.oas.models.media.Schema
 import kr.hhplus.be.server.config.swagger.SchemaProvider
@@ -8,25 +8,28 @@ import org.springframework.stereotype.Component
  * 사용자 도메인 관련 Swagger 스키마 정의
  */
 @Component
-class UserSwaggerSchema : SchemaProvider {
+class UserSchema : SchemaProvider {
 
     override fun getSchemas(): Map<String, Schema<Any>> {
         val schemas = mutableMapOf<String, Schema<Any>>()
         
-        // UserResponseDTO 스키마 정의
-        schemas["UserResponseDTO"] = createUserResponseDtoSchema()
+        // 단일 사용자 응답 스키마 정의
+        schemas["UserResponse.Single"] = createUserSingleResponseSchema()
+        
+        // 사용자 목록 응답 스키마 정의
+        schemas["UserResponse.List"] = createUserListResponseSchema()
         
         return schemas
     }
     
     /**
-     * UserResponseDTO 스키마를 정의합니다.
+     * UserResponse.Single 스키마를 정의합니다.
      */
     @Suppress("UNCHECKED_CAST")
-    private fun createUserResponseDtoSchema(): Schema<Any> {
+    private fun createUserSingleResponseSchema(): Schema<Any> {
         return Schema<Any>()
             .type("object")
-            .description("사용자 응답 DTO")
+            .description("단일 사용자 응답")
             .addProperty("id", 
                 Schema<String>()
                     .type("string")
@@ -44,5 +47,20 @@ class UserSwaggerSchema : SchemaProvider {
                     .format("date-time")
                     .description("수정 시간")
                     .example("2023-01-01T00:00:00"))
+    }
+    
+    /**
+     * UserResponse.List 스키마를 정의합니다.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun createUserListResponseSchema(): Schema<Any> {
+        return Schema<Any>()
+            .type("object")
+            .description("사용자 목록 응답")
+            .addProperty("items", 
+                Schema<Any>()
+                    .type("array")
+                    .items(createUserSingleResponseSchema())
+                    .description("사용자 목록"))
     }
 } 

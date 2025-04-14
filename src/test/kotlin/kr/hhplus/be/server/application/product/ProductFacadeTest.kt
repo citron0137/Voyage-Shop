@@ -31,6 +31,7 @@ class ProductFacadeTest {
     fun getProduct() {
         // given
         val productId = "product1"
+        val criteria = ProductCriteria.GetById(productId)
         val product = Product(
             productId = productId,
             name = "테스트 상품",
@@ -41,7 +42,7 @@ class ProductFacadeTest {
         whenever(productService.getProduct(productId)).thenReturn(product)
         
         // when
-        val result = productFacade.getProduct(productId)
+        val result = productFacade.getProduct(criteria)
         
         // then
         assertThat(result.productId).isEqualTo(productId)
@@ -51,28 +52,17 @@ class ProductFacadeTest {
     }
     
     @Test
-    @DisplayName("빈 상품 ID로 조회하면 예외가 발생한다")
-    fun getProductWithBlankId() {
-        // given
-        val productId = ""
-        
-        // when, then
-        assertThrows<ProductException.ProductIdShouldNotBlank> {
-            productFacade.getProduct(productId)
-        }
-    }
-    
-    @Test
     @DisplayName("존재하지 않는 상품을 조회하면 예외가 발생한다")
     fun getProductWithNonExistingId() {
         // given
         val productId = "non-existing-id"
+        val criteria = ProductCriteria.GetById(productId)
         
         whenever(productService.getProduct(productId)).thenThrow(ProductException.NotFound("상품을 찾을 수 없습니다"))
         
         // when, then
         assertThrows<ProductException.NotFound> {
-            productFacade.getProduct(productId)
+            productFacade.getProduct(criteria)
         }
     }
     
@@ -80,6 +70,7 @@ class ProductFacadeTest {
     @DisplayName("모든 상품을 조회한다")
     fun getAllProducts() {
         // given
+        val criteria = ProductCriteria.GetAll()
         val products = listOf(
             Product(
                 productId = "product1",
@@ -98,7 +89,7 @@ class ProductFacadeTest {
         whenever(productService.getAllProducts()).thenReturn(products)
         
         // when
-        val result = productFacade.getAllProducts()
+        val result = productFacade.getAllProducts(criteria)
         
         // then
         assertThat(result.products).hasSize(2)
@@ -115,6 +106,7 @@ class ProductFacadeTest {
         val name = "새 상품"
         val price = 15000L
         val stock = 50L
+        val criteria = ProductCriteria.Create(name, price, stock)
         
         val createdProduct = Product(
             productId = "new-product-id",
@@ -126,7 +118,7 @@ class ProductFacadeTest {
         whenever(productService.createProduct(any<ProductCommand.Create>())).thenReturn(createdProduct)
         
         // when
-        val result = productFacade.createProduct(name, price, stock)
+        val result = productFacade.createProduct(criteria)
         
         // then
         assertThat(result.productId).isEqualTo("new-product-id")
@@ -141,6 +133,7 @@ class ProductFacadeTest {
         // given
         val productId = "product1"
         val newStock = 200L
+        val criteria = ProductCriteria.UpdateStock(productId, newStock)
         
         val updatedProduct = Product(
             productId = productId,
@@ -152,7 +145,7 @@ class ProductFacadeTest {
         whenever(productService.updateStock(any<ProductCommand.UpdateStock>())).thenReturn(updatedProduct)
         
         // when
-        val result = productFacade.updateStock(productId, newStock)
+        val result = productFacade.updateStock(criteria)
         
         // then
         assertThat(result.productId).isEqualTo(productId)
@@ -165,6 +158,7 @@ class ProductFacadeTest {
         // given
         val productId = "product1"
         val amount = 50L
+        val criteria = ProductCriteria.IncreaseStock(productId, amount)
         val initialStock = 100L
         val expectedStock = initialStock + amount
         
@@ -178,7 +172,7 @@ class ProductFacadeTest {
         whenever(productService.increaseStock(any<ProductCommand.IncreaseStock>())).thenReturn(updatedProduct)
         
         // when
-        val result = productFacade.increaseStock(productId, amount)
+        val result = productFacade.increaseStock(criteria)
         
         // then
         assertThat(result.productId).isEqualTo(productId)
@@ -191,6 +185,7 @@ class ProductFacadeTest {
         // given
         val productId = "product1"
         val amount = 30L
+        val criteria = ProductCriteria.DecreaseStock(productId, amount)
         val initialStock = 100L
         val expectedStock = initialStock - amount
         
@@ -204,7 +199,7 @@ class ProductFacadeTest {
         whenever(productService.decreaseStock(any<ProductCommand.DecreaseStock>())).thenReturn(updatedProduct)
         
         // when
-        val result = productFacade.decreaseStock(productId, amount)
+        val result = productFacade.decreaseStock(criteria)
         
         // then
         assertThat(result.productId).isEqualTo(productId)

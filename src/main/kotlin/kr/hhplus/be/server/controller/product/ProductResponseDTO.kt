@@ -1,15 +1,14 @@
-package kr.hhplus.be.server.controller.product.response
+package kr.hhplus.be.server.controller.product
 
-import kr.hhplus.be.server.application.product.ProductListResult
 import kr.hhplus.be.server.application.product.ProductResult
 import java.time.LocalDateTime
 
 /**
- * 상품 응답 DTO
+ * 상품 응답
  */
-sealed class ProductResponseDTO {
+sealed class ProductResponse {
     /**
-     * 단일 상품 응답 DTO
+     * 단일 상품 응답
      */
     data class Single(
         val productId: String,
@@ -18,12 +17,12 @@ sealed class ProductResponseDTO {
         val stock: Long,
         val createdAt: LocalDateTime,
         val updatedAt: LocalDateTime
-    ) : ProductResponseDTO() {
+    ) : ProductResponse() {
         companion object {
             /**
-             * ProductResult를 ProductResponseDTO.Single로 변환합니다.
+             * ProductResult.Product를 ProductResponse.Single로 변환합니다.
              */
-            fun from(result: ProductResult): Single {
+            fun from(result: ProductResult.Product): Single {
                 return Single(
                     productId = result.productId,
                     name = result.name,
@@ -37,16 +36,16 @@ sealed class ProductResponseDTO {
     }
     
     /**
-     * 상품 목록 응답 DTO
+     * 상품 목록 응답
      */
     data class List(
         val products: kotlin.collections.List<Single>
-    ) : ProductResponseDTO() {
+    ) : ProductResponse() {
         companion object {
             /**
-             * ProductListResult를 ProductResponseDTO.List로 변환합니다.
+             * ProductResult.List를 ProductResponse.List로 변환합니다.
              */
-            fun from(result: ProductListResult): List {
+            fun from(result: ProductResult.List): List {
                 return List(
                     products = result.products.map { Single.from(it) }
                 )
