@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.controller.order
 
+import kr.hhplus.be.server.application.order.OrderCriteria
 import kr.hhplus.be.server.application.order.OrderFacade
-import kr.hhplus.be.server.application.order.OrderItemRequest
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
@@ -18,20 +18,9 @@ class OrderController(
     override fun createOrder(
         @RequestBody req: OrderRequest.Create
     ): BaseResponse<OrderResponse.Order> {
-        // 주문 항목 변환
-        val orderItems = req.orderItemList.map { item ->
-            OrderItemRequest(
-                productId = item.productId,
-                amount = item.count
-            )
-        }
-        
         // 주문 생성
-        val result = orderFacade.createOrder(
-            userId = req.userId,
-            orderItems = orderItems,
-            couponUserId = req.payment.couponId
-        )
+        val criteria = OrderCriteria.Create.from(req)
+        val result = orderFacade.createOrder(criteria)
         
         return BaseResponse.success(OrderResponse.Order.from(result))
     }
