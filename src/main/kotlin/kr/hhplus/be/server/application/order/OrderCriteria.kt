@@ -1,7 +1,5 @@
 package kr.hhplus.be.server.application.order
 
-import kr.hhplus.be.server.controller.order.OrderRequest
-
 /**
  * 주문 관련 요청 기준을 담는 클래스
  */
@@ -56,21 +54,6 @@ sealed class OrderCriteria {
             init {
                 require(productId.isNotBlank()) { "productId must not be blank" }
                 require(amount > 0) { "amount must be positive" }
-            }
-        }
-
-        companion object {
-            fun from(request: OrderRequest.Create): Create {
-                return Create(
-                    userId = request.userId,
-                    items = request.orderItemList.map {
-                        OrderItem(
-                            productId = it.productId,
-                            amount = it.count
-                        )
-                    },
-                    couponUserId = request.payment.couponId
-                )
             }
         }
     }
