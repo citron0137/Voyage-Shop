@@ -5,11 +5,16 @@ import kr.hhplus.be.server.domain.coupon.CouponUser
 import kr.hhplus.be.server.domain.coupon.CouponUserCommand
 import kr.hhplus.be.server.domain.coupon.CouponUserService
 import kr.hhplus.be.server.domain.couponevent.BenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
+import kr.hhplus.be.server.domain.couponevent.CENotFoundException
+import kr.hhplus.be.server.domain.couponevent.CEOutOfStockException
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
+import kr.hhplus.be.server.domain.couponevent.CreateCouponEventCommand
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -62,7 +67,7 @@ class CouponEventFacadeTest {
             totalIssueAmount = 100
         )
         
-        `when`(couponEventService.createCouponEventWithValidation(criteria)).thenReturn(sampleCouponEvent)
+        `when`(couponEventService.createCouponEvent(any())).thenReturn(sampleCouponEvent)
         
         // when
         val result = couponEventFacade.createCouponEvent(criteria)
@@ -74,7 +79,7 @@ class CouponEventFacadeTest {
         assertThat(result.totalIssueAmount).isEqualTo(sampleCouponEvent.totalIssueAmount)
         assertThat(result.leftIssueAmount).isEqualTo(sampleCouponEvent.leftIssueAmount)
         
-        verify(couponEventService, times(1)).createCouponEvent(any<CreateCouponEventCommand>())
+        verify(couponEventService, times(1)).createCouponEvent(any())
     }
     
     @Test
@@ -88,7 +93,7 @@ class CouponEventFacadeTest {
         )
         
         // when & then
-        assertThrows(CEInvalidBenefitMethodException::class.java) {
+        assertThrows<CEInvalidBenefitMethodException> {
             couponEventFacade.createCouponEvent(criteria)
         }
     }
@@ -147,7 +152,9 @@ class CouponEventFacadeTest {
             updatedAt = now
         )
         
-        `when`(couponEventService.issueCouponFromEvent(couponEventId, criteria, couponUserService)).thenReturn(couponUser)
+        `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(sampleCouponEvent)
+        `when`(couponEventService.decreaseStock(couponEventId)).thenReturn(sampleCouponEvent)
+        `when`(couponUserService.create(any<CouponUserCommand.Create>())).thenReturn(couponUser)
         
         // when
         val result = couponEventFacade.issueCouponUser(criteria)
@@ -173,7 +180,7 @@ class CouponEventFacadeTest {
         `when`(couponEventService.getCouponEvent(couponEventId)).thenThrow(CENotFoundException(couponEventId))
         
         // when & then
-        assertThrows(CENotFoundException::class.java) {
+        assertThrows<CENotFoundException> {
             couponEventFacade.issueCouponUser(criteria)
         }
     }
@@ -201,7 +208,7 @@ class CouponEventFacadeTest {
         `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(emptyStockEvent)
         
         // when & then
-        assertThrows(CEStockEmptyException::class.java) {
+        assertThrows<CEOutOfStockException> {
             couponEventFacade.issueCouponUser(criteria)
         }
     }
