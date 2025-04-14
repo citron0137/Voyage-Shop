@@ -3,6 +3,7 @@ package kr.hhplus.be.server.controller.couponevent
 import io.swagger.v3.oas.models.media.Schema
 import kr.hhplus.be.server.config.swagger.SchemaProvider
 import org.springframework.stereotype.Component
+import java.util.ArrayList
 
 /**
  * 쿠폰 이벤트 도메인 관련 Swagger 스키마 정의
@@ -103,14 +104,21 @@ class CouponEventSchema : SchemaProvider {
      */
     @Suppress("UNCHECKED_CAST")
     private fun createCouponEventCreateRequestSchema(): Schema<Any> {
+        val benefitMethodSchema = Schema<String>()
+            .type("string")
+            .description("혜택 방식")
+            .example("DISCOUNT_PERCENTAGE")
+        
+        // enum 값 설정
+        val enumValues = ArrayList<String>()
+        enumValues.add("DISCOUNT_FIXED_AMOUNT")
+        enumValues.add("DISCOUNT_PERCENTAGE")
+        benefitMethodSchema._enum(enumValues)
+        
         val schema = Schema<Any>()
             .type("object")
             .description("쿠폰 이벤트 생성 요청")
-            .addProperty("benefitMethod", 
-                Schema<String>()
-                    .type("string")
-                    .description("혜택 방식")
-                    .example("DISCOUNT_PERCENTAGE"))
+            .addProperty("benefitMethod", benefitMethodSchema)
             .addProperty("benefitAmount", 
                 Schema<String>()
                     .type("string")
@@ -122,10 +130,6 @@ class CouponEventSchema : SchemaProvider {
                     .format("int32")
                     .description("총 발급 수량")
                     .example(100))
-        
-        // benefitMethod 프로퍼티에 enum 값 설정
-        val benefitMethodSchema = schema.getProperties()["benefitMethod"] as Schema<*>
-        benefitMethodSchema.enum = listOf("DISCOUNT_FIXED_AMOUNT", "DISCOUNT_PERCENTAGE")
         
         return schema
     }

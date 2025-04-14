@@ -3,10 +3,6 @@ package kr.hhplus.be.server.controller.couponevent
 import kr.hhplus.be.server.application.couponevent.CouponEventFacade
 import kr.hhplus.be.server.application.couponevent.dto.CreateCouponEventCriteria
 import kr.hhplus.be.server.application.couponevent.dto.IssueCouponCriteria
-import kr.hhplus.be.server.controller.couponevent.request.CreateCouponEventRequest
-import kr.hhplus.be.server.controller.couponevent.request.IssueCouponEventCouponUserRequest
-import kr.hhplus.be.server.controller.couponevent.response.CouponEventIssueCouponResponseDTO
-import kr.hhplus.be.server.controller.couponevent.response.CouponEventResponseDTO
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 

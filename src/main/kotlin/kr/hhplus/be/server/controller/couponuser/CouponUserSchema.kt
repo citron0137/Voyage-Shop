@@ -3,6 +3,7 @@ package kr.hhplus.be.server.controller.couponuser
 import io.swagger.v3.oas.models.media.Schema
 import kr.hhplus.be.server.config.swagger.SchemaProvider
 import org.springframework.stereotype.Component
+import java.util.ArrayList
 
 /**
  * 쿠폰 사용자 도메인 관련 Swagger 스키마 정의
@@ -27,7 +28,18 @@ class CouponUserSchema : SchemaProvider {
      */
     @Suppress("UNCHECKED_CAST")
     private fun createCouponUserSingleResponseSchema(): Schema<Any> {
-        val schema = Schema<Any>()
+        val typeSchema = Schema<String>()
+            .type("string")
+            .description("쿠폰 유형")
+            .example("DISCOUNT_FIXED_AMOUNT")
+        
+        // enum 값 설정
+        val enumValues = ArrayList<String>()
+        enumValues.add("DISCOUNT_FIXED_AMOUNT")
+        enumValues.add("DISCOUNT_PERCENTAGE")
+        typeSchema._enum(enumValues)
+        
+        return Schema<Any>()
             .type("object")
             .description("쿠폰 사용자 정보")
             .addProperty("id", 
@@ -40,11 +52,7 @@ class CouponUserSchema : SchemaProvider {
                     .type("string")
                     .description("사용자 ID")
                     .example("550e8400-e29b-41d4-a716-446655440001"))
-            .addProperty("type", 
-                Schema<String>()
-                    .type("string")
-                    .description("쿠폰 유형")
-                    .example("DISCOUNT_FIXED_AMOUNT"))
+            .addProperty("type", typeSchema)
             .addProperty("discountPercentage", 
                 Schema<Number>()
                     .type("integer")
@@ -57,12 +65,6 @@ class CouponUserSchema : SchemaProvider {
                     .format("int64")
                     .description("고정 할인 금액")
                     .example(1000))
-        
-        // type 프로퍼티에 enum 값 설정
-        val typeSchema = schema.getProperties()["type"] as Schema<*>
-        typeSchema.enum = listOf("DISCOUNT_FIXED_AMOUNT", "DISCOUNT_PERCENTAGE")
-        
-        return schema
     }
     
     /**
