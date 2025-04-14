@@ -35,6 +35,7 @@ class UserPointFacadeTest {
     fun getUserPoint() {
         // given
         val userId = "user1"
+        val criteria = UserPointCriteria.GetByUserId(userId)
         val user = User(userId = userId)
         val userPoint = UserPoint(
             userPointId = "point1",
@@ -46,7 +47,7 @@ class UserPointFacadeTest {
         whenever(userPointService.findByUserId(userId)).thenReturn(userPoint)
         
         // when
-        val result = userPointFacade.getUserPoint(userId)
+        val result = userPointFacade.getUserPoint(criteria)
         
         // then
         assertThat(result.userId).isEqualTo(userId)
@@ -58,12 +59,13 @@ class UserPointFacadeTest {
     fun getUserPointWithNonExistingUser() {
         // given
         val userId = "non-existing-user"
+        val criteria = UserPointCriteria.GetByUserId(userId)
         
         whenever(userService.findUserByIdOrThrow(userId)).thenThrow(UserException.NotFound("사용자를 찾을 수 없습니다"))
         
         // when, then
         assertThrows<UserException.NotFound> {
-            userPointFacade.getUserPoint(userId)
+            userPointFacade.getUserPoint(criteria)
         }
     }
     
@@ -72,6 +74,7 @@ class UserPointFacadeTest {
     fun getUserPointWithNoPoint() {
         // given
         val userId = "user1"
+        val criteria = UserPointCriteria.GetByUserId(userId)
         val user = User(userId = userId)
         
         whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
@@ -79,7 +82,7 @@ class UserPointFacadeTest {
         
         // when, then
         assertThrows<UserPointException.NotFound> {
-            userPointFacade.getUserPoint(userId)
+            userPointFacade.getUserPoint(criteria)
         }
     }
     
@@ -89,6 +92,7 @@ class UserPointFacadeTest {
         // given
         val userId = "user1"
         val amount = 1000L
+        val criteria = UserPointCriteria.Charge(userId, amount)
         val user = User(userId = userId)
         val userPointBefore = UserPoint(
             userPointId = "point1",
@@ -105,7 +109,7 @@ class UserPointFacadeTest {
         whenever(userPointService.charge(any<UserPointCommand.Charge>())).thenReturn(userPointAfter)
         
         // when
-        val result = userPointFacade.chargePoint(userId, amount)
+        val result = userPointFacade.chargePoint(criteria)
         
         // then
         assertThat(result.userId).isEqualTo(userId)

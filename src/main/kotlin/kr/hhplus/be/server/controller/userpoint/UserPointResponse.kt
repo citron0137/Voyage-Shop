@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.controller.userpoint
 
-import kr.hhplus.be.server.application.userpoint.UserPointListResult
 import kr.hhplus.be.server.application.userpoint.UserPointResult
 import java.time.LocalDateTime
 
@@ -20,9 +19,9 @@ sealed class UserPointResponse {
     ) : UserPointResponse() {
         companion object {
             /**
-             * UserPointResult를 UserPointResponse.Single로 변환합니다.
+             * UserPointResult.Point를 UserPointResponse.Single로 변환합니다.
              */
-            fun from(result: UserPointResult): Single {
+            fun from(result: UserPointResult.Point): Single {
                 return Single(
                     id = result.userPointId,
                     userId = result.userId,
@@ -42,9 +41,9 @@ sealed class UserPointResponse {
     ) : UserPointResponse() {
         companion object {
             /**
-             * UserPointListResult를 UserPointResponse.List로 변환합니다.
+             * UserPointResult.List를 UserPointResponse.List로 변환합니다.
              */
-            fun from(result: UserPointListResult): List {
+            fun from(result: UserPointResult.List): List {
                 return List(
                     points = result.userPoints.map { Single.from(it) }
                 )

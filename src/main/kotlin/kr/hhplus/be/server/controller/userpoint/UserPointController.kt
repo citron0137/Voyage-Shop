@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.controller.userpoint
 
+import kr.hhplus.be.server.application.userpoint.UserPointCriteria
 import kr.hhplus.be.server.application.userpoint.UserPointFacade
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,7 +19,8 @@ class UserPointController(
      * @return 사용자 포인트 정보
      */
     override fun getUserPoint(@PathVariable userId: String): ResponseEntity<UserPointResponse.Single> {
-        val result = userPointFacade.getUserPoint(userId)
+        val criteria = UserPointCriteria.GetByUserId(userId)
+        val result = userPointFacade.getUserPoint(criteria)
         return ResponseEntity.ok(UserPointResponse.Single.from(result))
     }
 
@@ -33,7 +35,8 @@ class UserPointController(
         @PathVariable userId: String,
         @RequestBody request: UserPointRequest.Charge
     ): ResponseEntity<UserPointResponse.Single> {
-        val result = userPointFacade.chargePoint(userId, request.amount)
+        val criteria = UserPointCriteria.Charge(userId, request.amount)
+        val result = userPointFacade.chargePoint(criteria)
         return ResponseEntity.ok(UserPointResponse.Single.from(result))
     }
 } 
