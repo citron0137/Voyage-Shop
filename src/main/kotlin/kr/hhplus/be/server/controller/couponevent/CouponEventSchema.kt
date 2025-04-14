@@ -103,16 +103,14 @@ class CouponEventSchema : SchemaProvider {
      */
     @Suppress("UNCHECKED_CAST")
     private fun createCouponEventCreateRequestSchema(): Schema<Any> {
-        return Schema<Any>()
+        val schema = Schema<Any>()
             .type("object")
             .description("쿠폰 이벤트 생성 요청")
             .addProperty("benefitMethod", 
                 Schema<String>()
                     .type("string")
                     .description("혜택 방식")
-                    .example("DISCOUNT_PERCENTAGE")
-                    .addEnumItem("DISCOUNT_FIXED_AMOUNT")
-                    .addEnumItem("DISCOUNT_PERCENTAGE"))
+                    .example("DISCOUNT_PERCENTAGE"))
             .addProperty("benefitAmount", 
                 Schema<String>()
                     .type("string")
@@ -124,6 +122,12 @@ class CouponEventSchema : SchemaProvider {
                     .format("int32")
                     .description("총 발급 수량")
                     .example(100))
+        
+        // benefitMethod 프로퍼티에 enum 값 설정
+        val benefitMethodSchema = schema.getProperties()["benefitMethod"] as Schema<*>
+        benefitMethodSchema.enum = listOf("DISCOUNT_FIXED_AMOUNT", "DISCOUNT_PERCENTAGE")
+        
+        return schema
     }
     
     /**

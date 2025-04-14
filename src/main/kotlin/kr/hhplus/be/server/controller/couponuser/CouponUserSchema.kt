@@ -27,7 +27,7 @@ class CouponUserSchema : SchemaProvider {
      */
     @Suppress("UNCHECKED_CAST")
     private fun createCouponUserSingleResponseSchema(): Schema<Any> {
-        return Schema<Any>()
+        val schema = Schema<Any>()
             .type("object")
             .description("쿠폰 사용자 정보")
             .addProperty("id", 
@@ -44,9 +44,7 @@ class CouponUserSchema : SchemaProvider {
                 Schema<String>()
                     .type("string")
                     .description("쿠폰 유형")
-                    .example("DISCOUNT_FIXED_AMOUNT")
-                    .addEnumItem("DISCOUNT_FIXED_AMOUNT")
-                    .addEnumItem("DISCOUNT_PERCENTAGE"))
+                    .example("DISCOUNT_FIXED_AMOUNT"))
             .addProperty("discountPercentage", 
                 Schema<Number>()
                     .type("integer")
@@ -59,6 +57,12 @@ class CouponUserSchema : SchemaProvider {
                     .format("int64")
                     .description("고정 할인 금액")
                     .example(1000))
+        
+        // type 프로퍼티에 enum 값 설정
+        val typeSchema = schema.getProperties()["type"] as Schema<*>
+        typeSchema.enum = listOf("DISCOUNT_FIXED_AMOUNT", "DISCOUNT_PERCENTAGE")
+        
+        return schema
     }
     
     /**
