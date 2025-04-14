@@ -18,11 +18,10 @@ class UserService (
      * 사용자 생성 명령을 처리합니다.
      * 
      * @param command 사용자 생성 명령
-     * @return 생성된 사용자 정보
+     * @return 생성된 사용자
      */
-    fun handle(command: UserCommand.Create): UserInfo.UserDetail {
-        val user = createUser()
-        return UserInfo.UserDetail.from(user)
+    fun handle(command: UserCommand.Create): User {
+        return createUser()
     }
 
     // Read
@@ -34,22 +33,20 @@ class UserService (
      * ID로 사용자 조회 쿼리를 처리합니다.
      * 
      * @param query ID로 사용자 조회 쿼리
-     * @return 조회된 사용자 정보(없으면 null)
+     * @return 조회된 사용자(없으면 null)
      */
-    fun handle(query: UserQuery.GetById): UserInfo.UserDetail? {
-        val user = findUserById(query.userId)
-        return user?.let { UserInfo.UserDetail.from(it) }
+    fun handle(query: UserQuery.GetById): User? {
+        return findUserById(query.userId)
     }
     
     /**
      * 모든 사용자 조회 쿼리를 처리합니다.
      * 
      * @param query 모든 사용자 조회 쿼리
-     * @return 모든 사용자 목록 정보
+     * @return 모든 사용자 목록
      */
-    fun handle(query: UserQuery.GetAll): UserInfo.UserList {
-        val users = getAllUsers()
-        return UserInfo.UserList.from(users)
+    fun handle(query: UserQuery.GetAll): List<User> {
+        return getAllUsers()
     }
     
     /**

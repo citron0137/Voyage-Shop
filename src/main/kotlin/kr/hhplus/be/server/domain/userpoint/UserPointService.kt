@@ -22,14 +22,13 @@ class UserPointService(
     }
 
     /**
-     * 사용자 포인트 생성 명령을 처리하고 정보를 반환합니다.
+     * 사용자 포인트 생성 명령을 처리합니다.
      * 
      * @param command 사용자 포인트 생성 명령
-     * @return 생성된 사용자 포인트 정보
+     * @return 생성된 사용자 포인트
      */
-    fun handle(command: UserPointCommand.Create): UserPointInfo.UserPointDetail {
-        val userPoint = create(command)
-        return UserPointInfo.UserPointDetail.from(userPoint)
+    fun handle(command: UserPointCommand.Create): UserPoint {
+        return create(command)
     }
 
     // Get
@@ -41,11 +40,10 @@ class UserPointService(
      * 사용자 ID로 포인트 조회 쿼리를 처리합니다.
      * 
      * @param query 사용자 ID로 포인트 조회 쿼리
-     * @return 조회된 사용자 포인트 정보(없으면 null)
+     * @return 조회된 사용자 포인트(없으면 null)
      */
-    fun handle(query: UserPointQuery.GetByUserId): UserPointInfo.UserPointDetail? {
-        val userPoint = findByUserId(query.userId)
-        return userPoint?.let { UserPointInfo.UserPointDetail.from(it) }
+    fun handle(query: UserPointQuery.GetByUserId): UserPoint? {
+        return findByUserId(query.userId)
     }
 
     // Update
@@ -59,16 +57,15 @@ class UserPointService(
     }
 
     /**
-     * 사용자 포인트 충전 명령을 처리하고 정보를 반환합니다.
+     * 사용자 포인트 충전 명령을 처리합니다.
      * 
      * @param command 사용자 포인트 충전 명령
-     * @return 충전 후 사용자 포인트 정보
+     * @return 충전 후 사용자 포인트
      * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
      * @throws UserPointException.PointAmountOverflow 충전 가능 최대치를 초과한 경우
      */
-    fun handle(command: UserPointCommand.Charge): UserPointInfo.UserPointDetail {
-        val userPoint = charge(command)
-        return UserPointInfo.UserPointDetail.from(userPoint)
+    fun handle(command: UserPointCommand.Charge): UserPoint {
+        return charge(command)
     }
 
     fun use(command: UserPointCommand.Use): UserPoint {
@@ -81,15 +78,14 @@ class UserPointService(
     }
 
     /**
-     * 사용자 포인트 사용 명령을 처리하고 정보를 반환합니다.
+     * 사용자 포인트 사용 명령을 처리합니다.
      * 
      * @param command 사용자 포인트 사용 명령
-     * @return 사용 후 사용자 포인트 정보
+     * @return 사용 후 사용자 포인트
      * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
      * @throws UserPointException.PointAmountUnderflow 사용 가능한 포인트가 부족한 경우
      */
-    fun handle(command: UserPointCommand.Use): UserPointInfo.UserPointDetail {
-        val userPoint = use(command)
-        return UserPointInfo.UserPointDetail.from(userPoint)
+    fun handle(command: UserPointCommand.Use): UserPoint {
+        return use(command)
     }
 }
