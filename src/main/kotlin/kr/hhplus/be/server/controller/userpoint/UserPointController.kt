@@ -8,18 +8,16 @@ import org.springframework.web.bind.annotation.*
  * 사용자 포인트 컨트롤러
  */
 @RestController
-@RequestMapping("/api/v1/user-points")
 class UserPointController(
     private val userPointFacade: UserPointFacade
-) {
+) : UserPointControllerApi {
     /**
      * 사용자의 포인트 정보를 조회합니다.
      *
      * @param userId 사용자 ID
      * @return 사용자 포인트 정보
      */
-    @GetMapping("/{userId}")
-    fun getUserPoint(@PathVariable userId: String): ResponseEntity<UserPointResponse.Single> {
+    override fun getUserPoint(@PathVariable userId: String): ResponseEntity<UserPointResponse.Single> {
         val result = userPointFacade.getUserPoint(userId)
         return ResponseEntity.ok(UserPointResponse.Single.from(result))
     }
@@ -31,8 +29,7 @@ class UserPointController(
      * @param request 포인트 충전 요청
      * @return 충전 후 사용자 포인트 정보
      */
-    @PostMapping("/{userId}/charge")
-    fun chargePoint(
+    override fun chargePoint(
         @PathVariable userId: String,
         @RequestBody request: UserPointRequest.Charge
     ): ResponseEntity<UserPointResponse.Single> {
