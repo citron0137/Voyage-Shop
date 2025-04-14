@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.controller.couponevent
 
+import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
 import kr.hhplus.be.server.application.couponevent.CouponEventFacade
-import kr.hhplus.be.server.application.couponevent.dto.CreateCouponEventCriteria
-import kr.hhplus.be.server.application.couponevent.dto.IssueCouponCriteria
+import kr.hhplus.be.server.application.couponevent.CouponEventResult
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
@@ -22,7 +22,7 @@ class CouponEventController(
     override fun createCouponEvent(
         req: CouponEventRequest.Create
     ): BaseResponse<CouponEventResponse.Event> {
-        val criteria = CreateCouponEventCriteria(
+        val criteria = CouponEventCriteria.Create(
             benefitMethod = req.benefitMethod,
             benefitAmount = req.benefitAmount,
             totalIssueAmount = req.totalIssueAmount.toLong()
@@ -33,7 +33,7 @@ class CouponEventController(
         return BaseResponse.success(
             CouponEventResponse.Event(
                 id = result.id,
-                benefitMethod = result.benefitMethod,
+                benefitMethod = result.benefitMethod.name,
                 benefitAmount = result.benefitAmount,
                 totalIssueAmount = result.totalIssueAmount,
                 leftIssueAmount = result.leftIssueAmount
@@ -47,15 +47,15 @@ class CouponEventController(
      * @return 쿠폰 이벤트 목록
      */
     override fun getAllCouponEvents(): BaseResponse<List<CouponEventResponse.Event>> {
-        val couponEvents = couponEventFacade.getAllCouponEvents()
+        val result = couponEventFacade.getAllCouponEvents()
         
-        val responseList = couponEvents.map {
+        val responseList = result.couponEvents.map { event ->
             CouponEventResponse.Event(
-                id = it.id,
-                benefitMethod = it.benefitMethod,
-                benefitAmount = it.benefitAmount,
-                totalIssueAmount = it.totalIssueAmount,
-                leftIssueAmount = it.leftIssueAmount
+                id = event.id,
+                benefitMethod = event.benefitMethod.name,
+                benefitAmount = event.benefitAmount,
+                totalIssueAmount = event.totalIssueAmount,
+                leftIssueAmount = event.leftIssueAmount
             )
         }
         
@@ -73,9 +73,12 @@ class CouponEventController(
         couponEventId: String,
         req: CouponEventRequest.IssueCoupon
     ): BaseResponse<CouponEventResponse.IssueCoupon> {
-        val criteria = IssueCouponCriteria(userId = req.userId)
+        val criteria = CouponEventCriteria.IssueCoupon(
+            couponEventId = couponEventId,
+            userId = req.userId
+        )
         
-        val result = couponEventFacade.issueCouponUser(couponEventId, criteria)
+        val result = couponEventFacade.issueCouponUser(criteria)
         
         return BaseResponse.success(
             CouponEventResponse.IssueCoupon(
