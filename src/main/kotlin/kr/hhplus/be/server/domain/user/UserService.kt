@@ -2,22 +2,54 @@ package kr.hhplus.be.server.domain.user
 
 import org.springframework.stereotype.Service
 import java.util.UUID
-import kotlin.uuid.Uuid
 
 @Service
 class UserService (
     private val userRepository: UserRepository
 ){
     // Create
-    fun createUser():User{
+    fun createUser(): User {
         val user = User(userId = UUID.randomUUID().toString())
         userRepository.create(user)
         return user
     }
 
+    /**
+     * 사용자 생성 명령을 처리합니다.
+     * 
+     * @param command 사용자 생성 명령
+     * @return 생성된 사용자 정보
+     */
+    fun handle(command: UserCommand.Create): UserInfo.UserDetail {
+        val user = createUser()
+        return UserInfo.UserDetail.from(user)
+    }
+
     // Read
-    fun findUserById(userId:String):User?{
+    fun findUserById(userId: String): User? {
         return userRepository.findById(userId)
+    }
+    
+    /**
+     * ID로 사용자 조회 쿼리를 처리합니다.
+     * 
+     * @param query ID로 사용자 조회 쿼리
+     * @return 조회된 사용자 정보(없으면 null)
+     */
+    fun handle(query: UserQuery.GetById): UserInfo.UserDetail? {
+        val user = findUserById(query.userId)
+        return user?.let { UserInfo.UserDetail.from(it) }
+    }
+    
+    /**
+     * 모든 사용자 조회 쿼리를 처리합니다.
+     * 
+     * @param query 모든 사용자 조회 쿼리
+     * @return 모든 사용자 목록 정보
+     */
+    fun handle(query: UserQuery.GetAll): UserInfo.UserList {
+        val users = getAllUsers()
+        return UserInfo.UserList.from(users)
     }
     
     /**
@@ -31,7 +63,7 @@ class UserService (
         return findUserById(userId) ?: throw UserException.NotFound("userId($userId)로 User를 찾을 수 없습니다.")
     }
     
-    fun getAllUsers(): List<User>{
+    fun getAllUsers(): List<User> {
         return userRepository.findAll()
     }
 }
