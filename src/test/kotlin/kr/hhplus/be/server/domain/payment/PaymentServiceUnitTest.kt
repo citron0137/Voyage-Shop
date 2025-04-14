@@ -50,7 +50,6 @@ class PaymentServiceUnitTest {
     fun `ID로 결제를 조회할 수 있다`() {
         // given
         val paymentId = UUID.randomUUID().toString()
-        val command = PaymentCommand.GetById(paymentId)
         
         val expectedPayment = Payment(
             paymentId = paymentId,
@@ -61,7 +60,7 @@ class PaymentServiceUnitTest {
         every { paymentRepository.findById(paymentId) } returns expectedPayment
 
         // when
-        val result = paymentService.getPaymentById(command)
+        val result = paymentService.getPaymentById(paymentId)
 
         // then
         verify { paymentRepository.findById(paymentId) }
@@ -74,13 +73,12 @@ class PaymentServiceUnitTest {
     fun `존재하지 않는 ID로 조회하면 예외가 발생한다`() {
         // given
         val paymentId = UUID.randomUUID().toString()
-        val command = PaymentCommand.GetById(paymentId)
         
         every { paymentRepository.findById(paymentId) } returns null
 
         // when & then
         assertThrows<PaymentException.NotFound> {
-            paymentService.getPaymentById(command)
+            paymentService.getPaymentById(paymentId)
         }
     }
 
@@ -88,7 +86,6 @@ class PaymentServiceUnitTest {
     fun `사용자 ID로 결제 목록을 조회할 수 있다`() {
         // given
         val userId = "test-user-id"
-        val command = PaymentCommand.GetByUserId(userId)
         
         val expectedPayments = listOf(
             Payment(
@@ -106,7 +103,7 @@ class PaymentServiceUnitTest {
         every { paymentRepository.findByUserId(userId) } returns expectedPayments
 
         // when
-        val results = paymentService.getPaymentsByUserId(command)
+        val results = paymentService.getPaymentsByUserId(userId)
 
         // then
         verify { paymentRepository.findByUserId(userId) }
