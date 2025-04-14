@@ -16,8 +16,8 @@ sealed class CouponEventResult {
         val id: String,
         val benefitMethod: BenefitMethod,
         val benefitAmount: String,
-        val totalIssueAmount: Int,
-        val leftIssueAmount: Int,
+        val totalIssueAmount: Long,
+        val leftIssueAmount: Long,
         val createdAt: LocalDateTime,
         val updatedAt: LocalDateTime
     ) : CouponEventResult() {

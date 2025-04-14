@@ -26,7 +26,7 @@ sealed class CouponEventCriteria {
     data class Create(
         val benefitMethod: String,
         val benefitAmount: String,
-        val totalIssueAmount: Int
+        val totalIssueAmount: Long
     ) : CouponEventCriteria() {
         init {
             require(benefitMethod.isNotBlank()) { "혜택 방식은 비어있을 수 없습니다." }

@@ -3,7 +3,10 @@ package kr.hhplus.be.server.application.couponevent
 import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
 import kr.hhplus.be.server.domain.coupon.CouponUserCommand
 import kr.hhplus.be.server.domain.coupon.CouponUserService
+import kr.hhplus.be.server.domain.couponevent.BenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
+import kr.hhplus.be.server.domain.couponevent.CreateCouponEventCommand
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
