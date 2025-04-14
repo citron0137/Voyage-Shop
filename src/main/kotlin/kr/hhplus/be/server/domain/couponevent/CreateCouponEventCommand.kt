@@ -1,22 +1,26 @@
 package kr.hhplus.be.server.domain.couponevent
 
+import java.time.LocalDateTime
+import java.util.UUID
+
 /**
  * 쿠폰 이벤트 생성 명령
- * @param benefitMethod 혜택 방식 (고정 금액 할인 또는 퍼센트 할인)
- * @param benefitAmount 혜택 양 (금액 또는 퍼센트)
- * @param totalIssueAmount 총 발급 수량
  */
 data class CreateCouponEventCommand(
     val benefitMethod: BenefitMethod,
     val benefitAmount: String,
-    val totalIssueAmount: Int
+    val totalIssueAmount: Long
 ) {
-    fun toCouponEvent(): CouponEvent {
+    fun toEntity(): CouponEvent {
+        val now = LocalDateTime.now()
         return CouponEvent(
+            id = UUID.randomUUID().toString(),
             benefitMethod = benefitMethod,
             benefitAmount = benefitAmount,
             totalIssueAmount = totalIssueAmount,
-            leftIssueAmount = totalIssueAmount
+            leftIssueAmount = totalIssueAmount,
+            createdAt = now,
+            updatedAt = now
         )
     }
 } 

@@ -16,7 +16,7 @@ class CouponEventCommandTest {
         )
 
         // when
-        val entity = command.toCouponEvent()
+        val entity = command.toEntity()
 
         // then
         assertEquals(command.benefitMethod, entity.benefitMethod)

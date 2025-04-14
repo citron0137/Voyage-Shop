@@ -4,6 +4,6 @@ data class CouponEventResponseDTO(
     val id: String,
     val benefitMethod: String,
     val benefitAmount: String,
-    val totalIssueAmount: Int,
-    val leftIssueAmount: Int
+    val totalIssueAmount: Long,
+    val leftIssueAmount: Long
 )

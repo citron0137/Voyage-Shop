@@ -31,6 +31,16 @@ class CEStockEmptyException(
 )
 
 /**
+ * 쿠폰 재고가 없을 때 발생하는 예외 (리팩토링 버전)
+ */
+class CEOutOfStockException(
+    message: String
+) : CEException(
+    errorCode = "CE_OUT_OF_STOCK",
+    errorMessage = message
+)
+
+/**
  * 잘못된 혜택 방식 값이 입력되었을 때 발생하는 예외
  */
 class CEInvalidBenefitMethodException(
