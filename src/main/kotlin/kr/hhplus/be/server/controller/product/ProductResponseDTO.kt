@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.controller.product
 
-import kr.hhplus.be.server.application.product.ProductListResult
 import kr.hhplus.be.server.application.product.ProductResult
 import java.time.LocalDateTime
 
@@ -21,9 +20,9 @@ sealed class ProductResponse {
     ) : ProductResponse() {
         companion object {
             /**
-             * ProductResult를 ProductResponse.Single로 변환합니다.
+             * ProductResult.Product를 ProductResponse.Single로 변환합니다.
              */
-            fun from(result: ProductResult): Single {
+            fun from(result: ProductResult.Product): Single {
                 return Single(
                     productId = result.productId,
                     name = result.name,
@@ -44,9 +43,9 @@ sealed class ProductResponse {
     ) : ProductResponse() {
         companion object {
             /**
-             * ProductListResult를 ProductResponse.List로 변환합니다.
+             * ProductResult.List를 ProductResponse.List로 변환합니다.
              */
-            fun from(result: ProductListResult): List {
+            fun from(result: ProductResult.List): List {
                 return List(
                     products = result.products.map { Single.from(it) }
                 )

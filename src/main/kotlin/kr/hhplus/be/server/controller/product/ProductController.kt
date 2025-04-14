@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.controller.product
 
+import kr.hhplus.be.server.application.product.ProductCriteria
 import kr.hhplus.be.server.application.product.ProductFacade
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,7 +18,8 @@ class ProductController(
      * @return 상품 목록 정보
      */
     override fun getAllProducts(): ResponseEntity<ProductResponse.List> {
-        val result = productFacade.getAllProducts()
+        val criteria = ProductCriteria.GetAll()
+        val result = productFacade.getAllProducts(criteria)
         return ResponseEntity.ok(ProductResponse.List.from(result))
     }
     
@@ -28,7 +30,8 @@ class ProductController(
      * @return 상품 정보
      */
     override fun getProduct(@PathVariable productId: String): ResponseEntity<ProductResponse.Single> {
-        val result = productFacade.getProduct(productId)
+        val criteria = ProductCriteria.GetById(productId)
+        val result = productFacade.getProduct(criteria)
         return ResponseEntity.ok(ProductResponse.Single.from(result))
     }
     
@@ -39,11 +42,12 @@ class ProductController(
      * @return 생성된 상품 정보
      */
     override fun createProduct(@RequestBody request: ProductRequest.Create): ResponseEntity<ProductResponse.Single> {
-        val result = productFacade.createProduct(
+        val criteria = ProductCriteria.Create(
             name = request.name,
             price = request.price,
             stock = request.stock
         )
+        val result = productFacade.createProduct(criteria)
         return ResponseEntity.ok(ProductResponse.Single.from(result))
     }
     
@@ -58,7 +62,11 @@ class ProductController(
         @PathVariable productId: String,
         @RequestBody request: ProductRequest.UpdateStock
     ): ResponseEntity<ProductResponse.Single> {
-        val result = productFacade.updateStock(productId, request.stock)
+        val criteria = ProductCriteria.UpdateStock(
+            productId = productId,
+            stock = request.stock
+        )
+        val result = productFacade.updateStock(criteria)
         return ResponseEntity.ok(ProductResponse.Single.from(result))
     }
     
@@ -73,7 +81,11 @@ class ProductController(
         @PathVariable productId: String,
         @RequestBody request: ProductRequest.IncreaseStock
     ): ResponseEntity<ProductResponse.Single> {
-        val result = productFacade.increaseStock(productId, request.amount)
+        val criteria = ProductCriteria.IncreaseStock(
+            productId = productId,
+            amount = request.amount
+        )
+        val result = productFacade.increaseStock(criteria)
         return ResponseEntity.ok(ProductResponse.Single.from(result))
     }
     
@@ -88,7 +100,11 @@ class ProductController(
         @PathVariable productId: String,
         @RequestBody request: ProductRequest.DecreaseStock
     ): ResponseEntity<ProductResponse.Single> {
-        val result = productFacade.decreaseStock(productId, request.amount)
+        val criteria = ProductCriteria.DecreaseStock(
+            productId = productId,
+            amount = request.amount
+        )
+        val result = productFacade.decreaseStock(criteria)
         return ResponseEntity.ok(ProductResponse.Single.from(result))
     }
 }
