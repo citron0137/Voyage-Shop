@@ -7,140 +7,187 @@ import kr.hhplus.be.server.domain.order.OrderItem
 import java.time.LocalDateTime
 
 /**
- * 주문 결과 DTO
+ * 주문 관련 응답 클래스
  */
-data class OrderResult(
-    val orderId: String,
-    val userId: String,
-    val paymentId: String,
-    val totalAmount: Long,
-    val totalDiscountAmount: Long,
-    val finalAmount: Long,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
-    val items: List<OrderItemResult> = emptyList(),
-    val discounts: List<OrderDiscountResult> = emptyList()
-) {
-    companion object {
+sealed class OrderResult {
+    /**
+     * 단일 주문 조회 결과
+     */
+    data class Get(
+        val orderId: String,
+        val userId: String,
+        val totalPrice: Long,
+        val status: String,
+        val items: List<OrderItemDTO>,
+        val couponUserId: String?,
+        val discountAmount: Long,
+        val finalPrice: Long,
+        val createdAt: LocalDateTime,
+        val updatedAt: LocalDateTime
+    ) : OrderResult() {
         /**
-         * Order 도메인 객체와 관련 항목을 OrderResult DTO로 변환합니다.
+         * 주문 항목 응답 클래스
          */
-        fun from(
-            order: Order,
-            items: List<OrderItem> = emptyList(),
-            discounts: List<OrderDiscount> = emptyList()
-        ): OrderResult {
-            return OrderResult(
-                orderId = order.orderId,
-                userId = order.userId,
-                paymentId = order.paymentId,
-                totalAmount = order.totalAmount,
-                totalDiscountAmount = order.totalDiscountAmount,
-                finalAmount = order.finalAmount,
-                createdAt = order.createdAt,
-                updatedAt = order.updatedAt,
-                items = items.map { OrderItemResult.from(it) },
-                discounts = discounts.map { OrderDiscountResult.from(it) }
-            )
+        data class OrderItemDTO(
+            val orderItemId: String,
+            val productId: String,
+            val amount: Long,
+            val price: Long,
+            val totalPrice: Long
+        )
+
+        companion object {
+            /**
+             * Order 도메인 객체로부터 Get DTO를 생성합니다.
+             */
+            fun from(order: Order): Get {
+                return Get(
+                    orderId = order.id,
+                    userId = order.userId,
+                    totalPrice = order.totalPrice,
+                    status = order.status.name,
+                    items = order.items.map { mapOrderItem(it) },
+                    couponUserId = order.couponUserId,
+                    discountAmount = order.discountAmount,
+                    finalPrice = order.finalPrice,
+                    createdAt = order.createdAt,
+                    updatedAt = order.updatedAt
+                )
+            }
+
+            /**
+             * OrderItem 도메인 객체로부터 OrderItemDTO를 생성합니다.
+             */
+            private fun mapOrderItem(item: OrderItem): OrderItemDTO {
+                return OrderItemDTO(
+                    orderItemId = item.id,
+                    productId = item.productId,
+                    amount = item.amount,
+                    price = item.price,
+                    totalPrice = item.totalPrice
+                )
+            }
+            
+            /**
+             * Order와 별도의 items, discounts로부터 Get DTO를 생성합니다.
+             */
+            fun from(
+                order: Order,
+                items: kotlin.collections.List<OrderItem>,
+                discounts: kotlin.collections.List<OrderDiscount>
+            ): Get {
+                return Get(
+                    orderId = order.id,
+                    userId = order.userId,
+                    totalPrice = order.totalPrice,
+                    status = order.status.name,
+                    items = items.map { mapOrderItem(it) },
+                    couponUserId = order.couponUserId,
+                    discountAmount = order.discountAmount,
+                    finalPrice = order.finalPrice,
+                    createdAt = order.createdAt,
+                    updatedAt = order.updatedAt
+                )
+            }
         }
     }
-}
 
-/**
- * 주문 항목 결과 DTO
- */
-data class OrderItemResult(
-    val orderItemId: String,
-    val orderId: String,
-    val productId: String,
-    val amount: Long,
-    val unitPrice: Long,
-    val totalPrice: Long,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
-) {
-    companion object {
-        /**
-         * OrderItem 도메인 객체를 OrderItemResult DTO로 변환합니다.
-         */
-        fun from(orderItem: OrderItem): OrderItemResult {
-            return OrderItemResult(
-                orderItemId = orderItem.orderItemId,
-                orderId = orderItem.orderId,
-                productId = orderItem.productId,
-                amount = orderItem.amount,
-                unitPrice = orderItem.unitPrice,
-                totalPrice = orderItem.totalPrice,
-                createdAt = orderItem.createdAt,
-                updatedAt = orderItem.updatedAt
-            )
+    /**
+     * 주문 항목 결과 DTO
+     */
+    data class OrderItem(
+        val orderItemId: String,
+        val orderId: String,
+        val productId: String,
+        val amount: Long,
+        val unitPrice: Long,
+        val totalPrice: Long,
+        val createdAt: LocalDateTime,
+        val updatedAt: LocalDateTime
+    ) : OrderResult() {
+        companion object {
+            /**
+             * OrderItem 도메인 객체를 OrderResult.OrderItem DTO로 변환합니다.
+             */
+            fun from(orderItem: kr.hhplus.be.server.domain.order.OrderItem): OrderItem {
+                return OrderItem(
+                    orderItemId = orderItem.orderItemId,
+                    orderId = orderItem.orderId,
+                    productId = orderItem.productId,
+                    amount = orderItem.amount,
+                    unitPrice = orderItem.unitPrice,
+                    totalPrice = orderItem.totalPrice,
+                    createdAt = orderItem.createdAt,
+                    updatedAt = orderItem.updatedAt
+                )
+            }
         }
     }
-}
 
-/**
- * 주문 할인 결과 DTO
- */
-data class OrderDiscountResult(
-    val orderDiscountId: String,
-    val orderId: String,
-    val discountType: DiscountType,
-    val discountId: String,
-    val discountAmount: Long,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
-) {
-    companion object {
-        /**
-         * OrderDiscount 도메인 객체를 OrderDiscountResult DTO로 변환합니다.
-         */
-        fun from(orderDiscount: OrderDiscount): OrderDiscountResult {
-            return OrderDiscountResult(
-                orderDiscountId = orderDiscount.orderDiscountId,
-                orderId = orderDiscount.orderId,
-                discountType = orderDiscount.discountType,
-                discountId = orderDiscount.discountId,
-                discountAmount = orderDiscount.discountAmount,
-                createdAt = orderDiscount.createdAt,
-                updatedAt = orderDiscount.updatedAt
-            )
+    /**
+     * 주문 할인 결과 DTO
+     */
+    data class OrderDiscount(
+        val orderDiscountId: String,
+        val orderId: String,
+        val discountType: DiscountType,
+        val discountId: String,
+        val discountAmount: Long,
+        val createdAt: LocalDateTime,
+        val updatedAt: LocalDateTime
+    ) : OrderResult() {
+        companion object {
+            /**
+             * OrderDiscount 도메인 객체를 OrderResult.OrderDiscount DTO로 변환합니다.
+             */
+            fun from(orderDiscount: kr.hhplus.be.server.domain.order.OrderDiscount): OrderDiscount {
+                return OrderDiscount(
+                    orderDiscountId = orderDiscount.orderDiscountId,
+                    orderId = orderDiscount.orderId,
+                    discountType = orderDiscount.discountType,
+                    discountId = orderDiscount.discountId,
+                    discountAmount = orderDiscount.discountAmount,
+                    createdAt = orderDiscount.createdAt,
+                    updatedAt = orderDiscount.updatedAt
+                )
+            }
         }
     }
-}
 
-/**
- * 주문 목록 결과 DTO
- */
-data class OrderListResult(
-    val orders: List<OrderResult>
-) {
-    companion object {
-        /**
-         * Order 도메인 객체 목록을 OrderListResult DTO로 변환합니다.
-         */
-        fun from(orders: List<Order>): OrderListResult {
-            return OrderListResult(
-                orders = orders.map { OrderResult.from(it) }
-            )
-        }
-        
-        /**
-         * 주문과 관련 항목을 포함하여 OrderListResult DTO로 변환합니다.
-         */
-        fun fromWithDetails(
-            orders: List<Order>,
-            itemsByOrderId: Map<String, List<OrderItem>>,
-            discountsByOrderId: Map<String, List<OrderDiscount>>
-        ): OrderListResult {
-            return OrderListResult(
-                orders = orders.map { order ->
-                    OrderResult.from(
-                        order = order,
-                        items = itemsByOrderId[order.orderId] ?: emptyList(),
-                        discounts = discountsByOrderId[order.orderId] ?: emptyList()
-                    )
-                }
-            )
+    /**
+     * 주문 목록 조회 결과
+     */
+    data class List(
+        val orders: kotlin.collections.List<Get>
+    ) : OrderResult() {
+        companion object {
+            /**
+             * Order 도메인 객체 목록으로부터 List DTO를 생성합니다.
+             */
+            fun from(orders: kotlin.collections.List<Order>): List {
+                return List(
+                    orders = orders.map { Get.from(it) }
+                )
+            }
+            
+            /**
+             * Order 목록과 각 주문의 항목, 할인 정보로부터 List DTO를 생성합니다.
+             */
+            fun fromWithDetails(
+                orders: kotlin.collections.List<Order>,
+                itemsByOrderId: Map<String, kotlin.collections.List<OrderItem>>,
+                discountsByOrderId: Map<String, kotlin.collections.List<OrderDiscount>>
+            ): List {
+                return List(
+                    orders = orders.map { order ->
+                        Get.from(
+                            order = order,
+                            items = itemsByOrderId[order.id] ?: emptyList(),
+                            discounts = discountsByOrderId[order.id] ?: emptyList()
+                        )
+                    }
+                )
+            }
         }
     }
 } 

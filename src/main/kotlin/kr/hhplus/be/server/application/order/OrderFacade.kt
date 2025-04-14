@@ -28,58 +28,50 @@ class OrderFacade(
     /**
      * 주문 ID로 주문 정보를 조회합니다.
      *
-     * @param orderId 조회할 주문 ID
+     * @param criteria 주문 조회 기준
      * @return 주문 정보
      * @throws OrderException.OrderIdShouldNotBlank 주문 ID가 빈 값인 경우
      * @throws OrderException.NotFound 주문을 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    fun getOrder(orderId: String): OrderResult {
-        if (orderId.isBlank()) {
-            throw OrderException.OrderIdShouldNotBlank("주문 ID는 비어있을 수 없습니다.")
-        }
-        
-        val command = OrderCommand.GetById(orderId)
+    fun getOrder(criteria: OrderCriteria.GetById): OrderResult.Get {
+        val command = OrderCommand.GetById(criteria.orderId)
         val order = orderService.getOrderById(command)
         
         // 주문 항목 조회
-        val itemsCommand = OrderItemCommand.GetByOrderId(orderId)
+        val itemsCommand = OrderItemCommand.GetByOrderId(criteria.orderId)
         val items = orderService.getOrderItemsByOrderId(itemsCommand)
         
         // 주문 할인 조회
-        val discountsCommand = OrderDiscountCommand.GetByOrderId(orderId)
+        val discountsCommand = OrderDiscountCommand.GetByOrderId(criteria.orderId)
         val discounts = orderService.getOrderDiscountsByOrderId(discountsCommand)
         
-        return OrderResult.from(order, items, discounts)
+        return OrderResult.Get.from(order, items, discounts)
     }
     
     /**
      * 사용자 ID로 주문 목록을 조회합니다.
      *
-     * @param userId 조회할 사용자 ID
+     * @param criteria 주문 조회 기준
      * @return 주문 목록
      * @throws UserException.UserIdShouldNotBlank 사용자 ID가 빈 값인 경우
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    fun getOrdersByUserId(userId: String): OrderListResult {
-        if (userId.isBlank()) {
-            throw UserException.UserIdShouldNotBlank("사용자 ID는 비어있을 수 없습니다.")
-        }
-        
+    fun getOrdersByUserId(criteria: OrderCriteria.GetByUserId): OrderResult.List {
         // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(userId)
+        userService.findUserByIdOrThrow(criteria.userId)
         
-        val command = OrderCommand.GetByUserId(userId)
+        val command = OrderCommand.GetByUserId(criteria.userId)
         val orders = orderService.getOrdersByUserId(command)
         
         // 주문이 없으면 빈 목록 반환
         if (orders.isEmpty()) {
-            return OrderListResult(emptyList())
+            return OrderResult.List(emptyList())
         }
         
         // 각 주문의 항목과 할인 정보 조회
-        val orderIds = orders.map { it.orderId }
+        val orderIds = orders.map { it.id }
         val allItems = orderIds.flatMap { 
             orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(it)) 
         }
@@ -91,25 +83,26 @@ class OrderFacade(
         val itemsByOrderId = allItems.groupBy { it.orderId }
         val discountsByOrderId = allDiscounts.groupBy { it.orderId }
         
-        return OrderListResult.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
+        return OrderResult.List.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
     }
     
     /**
      * 모든 주문 목록을 조회합니다.
      *
+     * @param criteria 주문 조회 기준
      * @return 주문 목록
      */
     @Transactional(readOnly = true)
-    fun getAllOrders(): OrderListResult {
+    fun getAllOrders(criteria: OrderCriteria.GetAll): OrderResult.List {
         val orders = orderService.getAllOrders()
         
         // 주문이 없으면 빈 목록 반환
         if (orders.isEmpty()) {
-            return OrderListResult(emptyList())
+            return OrderResult.List(emptyList())
         }
         
         // 각 주문의 항목과 할인 정보 조회
-        val orderIds = orders.map { it.orderId }
+        val orderIds = orders.map { it.id }
         val allItems = orderIds.flatMap { 
             orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(it)) 
         }
@@ -121,15 +114,13 @@ class OrderFacade(
         val itemsByOrderId = allItems.groupBy { it.orderId }
         val discountsByOrderId = allDiscounts.groupBy { it.orderId }
         
-        return OrderListResult.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
+        return OrderResult.List.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
     }
     
     /**
      * 새로운 주문을 생성합니다.
      *
-     * @param userId 사용자 ID
-     * @param orderItems 주문 항목 목록
-     * @param couponUserId 사용할 쿠폰 ID (optional)
+     * @param criteria 주문 생성 기준
      * @return 생성된 주문 정보
      * @throws UserException.UserIdShouldNotBlank 사용자 ID가 빈 값인 경우
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우
@@ -139,20 +130,12 @@ class OrderFacade(
      * @throws OrderException.FinalAmountShouldMoreThan0 최종 결제 금액이 0 이하인 경우
      */
     @Transactional
-    fun createOrder(
-        userId: String,
-        orderItems: List<OrderItemRequest>,
-        couponUserId: String? = null
-    ): OrderResult {
+    fun createOrder(criteria: OrderCriteria.Create): OrderResult.Get {
         // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(userId)
-        
-        if (orderItems.isEmpty()) {
-            throw OrderException.OrderItemRequired("최소 1개 이상의 주문 상품이 필요합니다.")
-        }
+        userService.findUserByIdOrThrow(criteria.userId)
         
         // 주문 항목 생성 및 상품 재고 확인/감소
-        val orderItemCommands = orderItems.map { item ->
+        val orderItemCommands = criteria.items.map { item ->
             // 상품 존재 여부와 가격 확인
             val product = productService.getProduct(item.productId)
             
@@ -182,14 +165,14 @@ class OrderFacade(
         var totalDiscountAmount = 0L
         val orderDiscountCommands = mutableListOf<OrderDiscountCommand.Create>()
         
-        if (couponUserId != null) {
+        if (criteria.couponUserId != null) {
             // 쿠폰 조회 및 할인 금액 계산
-            val couponUser = couponUserService.getCouponUser(couponUserId)
+            val couponUser = couponUserService.getCouponUser(criteria.couponUserId)
             val discountAmount = couponUser.calculateDiscountAmount(totalAmount)
             
             if (discountAmount > 0) {
                 // 쿠폰 사용 처리
-                val useCommand = CouponUserCommand.Use(couponUserId)
+                val useCommand = CouponUserCommand.Use(criteria.couponUserId)
                 couponUserService.use(useCommand)
                 
                 // 할인 정보 추가
@@ -197,7 +180,7 @@ class OrderFacade(
                 orderDiscountCommands.add(
                     OrderDiscountCommand.Create(
                         discountType = DiscountType.COUPON,
-                        discountId = couponUserId,
+                        discountId = criteria.couponUserId,
                         discountAmount = discountAmount
                     )
                 )
@@ -207,14 +190,14 @@ class OrderFacade(
         // 결제 처리
         val finalAmount = totalAmount - totalDiscountAmount
         val paymentCommand = PaymentCommand.Create(
-            userId = userId,
+            userId = criteria.userId,
             totalPaymentAmount = finalAmount
         )
         val payment = paymentService.createPayment(paymentCommand)
         
         // 주문 생성
         val orderCommand = OrderCommand.Create(
-            userId = userId,
+            userId = criteria.userId,
             paymentId = payment.paymentId,
             orderItems = orderItemCommands,
             orderDiscounts = orderDiscountCommands
@@ -223,13 +206,13 @@ class OrderFacade(
         val order = orderService.createOrder(orderCommand)
         
         // 주문 항목 및 할인 조회
-        val itemsCommand = OrderItemCommand.GetByOrderId(order.orderId)
+        val itemsCommand = OrderItemCommand.GetByOrderId(order.id)
         val items = orderService.getOrderItemsByOrderId(itemsCommand)
         
-        val discountsCommand = OrderDiscountCommand.GetByOrderId(order.orderId)
+        val discountsCommand = OrderDiscountCommand.GetByOrderId(order.id)
         val discounts = orderService.getOrderDiscountsByOrderId(discountsCommand)
         
-        return OrderResult.from(order, items, discounts)
+        return OrderResult.Get.from(order, items, discounts)
     }
 }
 
