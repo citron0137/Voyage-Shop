@@ -7,12 +7,8 @@ import kr.hhplus.be.server.domain.coupon.CouponUser
 import kr.hhplus.be.server.domain.coupon.CouponUserCommand
 import kr.hhplus.be.server.domain.coupon.CouponUserService
 import kr.hhplus.be.server.domain.couponevent.BenefitMethod
-import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
-import kr.hhplus.be.server.domain.couponevent.CENotFoundException
-import kr.hhplus.be.server.domain.couponevent.CEStockEmptyException
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
-import kr.hhplus.be.server.domain.couponevent.CreateCouponEventCommand
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -24,7 +20,6 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.LocalDateTime
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.mockito.Mockito.times
 import org.mockito.kotlin.any
 import java.util.UUID
@@ -69,7 +64,7 @@ class CouponEventFacadeTest {
             totalIssueAmount = 100
         )
         
-        `when`(couponEventService.createCouponEvent(any<CreateCouponEventCommand>())).thenReturn(sampleCouponEvent)
+        `when`(couponEventService.createCouponEventWithValidation(criteria)).thenReturn(sampleCouponEvent)
         
         // when
         val result = couponEventFacade.createCouponEvent(criteria)
@@ -81,23 +76,7 @@ class CouponEventFacadeTest {
         assertThat(result.totalIssueAmount).isEqualTo(sampleCouponEvent.totalIssueAmount)
         assertThat(result.leftIssueAmount).isEqualTo(sampleCouponEvent.leftIssueAmount)
         
-        verify(couponEventService, times(1)).createCouponEvent(any<CreateCouponEventCommand>())
-    }
-    
-    @Test
-    @DisplayName("잘못된 혜택 방식으로 쿠폰 이벤트를 생성하면 예외가 발생한다")
-    fun `잘못된 혜택 방식으로 쿠폰 이벤트를 생성하면 예외가 발생한다`() {
-        // given
-        val criteria = CreateCouponEventCriteria(
-            benefitMethod = "INVALID_METHOD",
-            benefitAmount = "1000",
-            totalIssueAmount = 100
-        )
-        
-        // when & then
-        assertThrows(CEInvalidBenefitMethodException::class.java) {
-            couponEventFacade.createCouponEvent(criteria)
-        }
+        verify(couponEventService, times(1)).createCouponEventWithValidation(criteria)
     }
     
     @Test
@@ -150,9 +129,7 @@ class CouponEventFacadeTest {
             updatedAt = now
         )
         
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(sampleCouponEvent)
-        `when`(couponEventService.decreaseStock(couponEventId)).thenReturn(sampleCouponEvent.copy(leftIssueAmount = 49))
-        `when`(couponUserService.create(any<CouponUserCommand.Create>())).thenReturn(couponUser)
+        `when`(couponEventService.issueCouponFromEvent(couponEventId, criteria, couponUserService)).thenReturn(couponUser)
         
         // when
         val result = couponEventFacade.issueCouponUser(couponEventId, criteria)
@@ -160,64 +137,6 @@ class CouponEventFacadeTest {
         // then
         assertThat(result.couponUserId).isEqualTo(couponUser.couponUserId)
         
-        verify(couponEventService, times(1)).getCouponEvent(couponEventId)
-        verify(couponEventService, times(1)).decreaseStock(couponEventId)
-        verify(couponUserService, times(1)).create(any<CouponUserCommand.Create>())
-    }
-    
-    @Test
-    @DisplayName("존재하지 않는 쿠폰 이벤트에서 쿠폰을 발급하면 예외가 발생한다")
-    fun `존재하지 않는 쿠폰 이벤트에서 쿠폰을 발급하면 예외가 발생한다`() {
-        // given
-        val couponEventId = "non-existing-event-id"
-        val criteria = IssueCouponCriteria(userId = "user-id")
-        
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenThrow(CENotFoundException(couponEventId))
-        
-        // when & then
-        assertThrows(CENotFoundException::class.java) {
-            couponEventFacade.issueCouponUser(couponEventId, criteria)
-        }
-    }
-    
-    @Test
-    @DisplayName("재고가 없는 쿠폰 이벤트에서 쿠폰을 발급하면 예외가 발생한다")
-    fun `재고가 없는 쿠폰 이벤트에서 쿠폰을 발급하면 예외가 발생한다`() {
-        // given
-        val couponEventId = "event-id-no-stock"
-        val criteria = IssueCouponCriteria(userId = "user-id")
-        
-        val emptyStockEvent = CouponEvent(
-            id = couponEventId,
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
-            benefitAmount = "1000",
-            totalIssueAmount = 100,
-            leftIssueAmount = 0,
-            createdAt = now,
-            updatedAt = now
-        )
-        
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(emptyStockEvent)
-        
-        // when & then
-        assertThrows(CEStockEmptyException::class.java) {
-            couponEventFacade.issueCouponUser(couponEventId, criteria)
-        }
-    }
-    
-    @Test
-    @DisplayName("재고 감소 시 예외가 발생하면 쿠폰 발급이 실패한다")
-    fun `재고 감소 시 예외가 발생하면 쿠폰 발급이 실패한다`() {
-        // given
-        val couponEventId = "event-id"
-        val criteria = IssueCouponCriteria(userId = "user-id")
-        
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(sampleCouponEvent)
-        `when`(couponEventService.decreaseStock(couponEventId)).thenThrow(CEStockEmptyException(couponEventId))
-        
-        // when & then
-        assertThrows(CEStockEmptyException::class.java) {
-            couponEventFacade.issueCouponUser(couponEventId, criteria)
-        }
+        verify(couponEventService, times(1)).issueCouponFromEvent(couponEventId, criteria, couponUserService)
     }
 } 

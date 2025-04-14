@@ -1,10 +1,7 @@
 package kr.hhplus.be.server.application.couponuser
 
 import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponException
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
 import kr.hhplus.be.server.domain.coupon.CouponUserService
-import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.domain.user.UserService
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -23,20 +20,10 @@ class CouponUserFacade(
      *
      * @param userId 조회할 유저 ID
      * @return 유저의 쿠폰 목록 정보
-     * @throws UserException.UserIdShouldNotBlank 유저 ID가 빈 값인 경우
-     * @throws UserException.NotFound 유저를 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
     fun getAllCouponsByUserId(userId: String): CouponUserListResult {
-        if (userId.isBlank()) {
-            throw UserException.UserIdShouldNotBlank("유저 ID는 비어있을 수 없습니다.")
-        }
-        
-        // 유저 존재 여부 확인
-        userService.findUserByIdOrThrow(userId)
-        
-        val couponUsers = couponUserService.getCouponUsersByUserId(userId)
-        
+        val couponUsers = couponUserService.getAllCouponsByUserId(userId, userService)
         return CouponUserListResult.from(couponUsers)
     }
     
@@ -45,17 +32,10 @@ class CouponUserFacade(
      *
      * @param couponUserId 조회할 쿠폰 ID
      * @return 쿠폰 정보
-     * @throws CouponException.CouponUserIdShouldNotBlank 쿠폰 ID가 빈 값인 경우
-     * @throws CouponException.NotFound 쿠폰을 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
     fun getCouponUser(couponUserId: String): CouponUserResult {
-        if (couponUserId.isBlank()) {
-            throw CouponException.CouponUserIdShouldNotBlank("쿠폰 ID는 비어있을 수 없습니다.")
-        }
-        
-        val couponUser = couponUserService.getCouponUser(couponUserId)
-        
+        val couponUser = couponUserService.getCouponUserWithValidation(couponUserId)
         return CouponUserResult.from(couponUser)
     }
     
@@ -66,26 +46,10 @@ class CouponUserFacade(
      * @param benefitMethod 혜택 방식 (고정 금액 할인, 퍼센트 할인)
      * @param benefitAmount 혜택 금액 (고정 금액 또는 할인율)
      * @return 발급된 쿠폰 정보
-     * @throws UserException.UserIdShouldNotBlank 유저 ID가 빈 값인 경우
-     * @throws UserException.NotFound 유저를 찾을 수 없는 경우
-     * @throws CouponException.BenefitAmountShouldNotBlank 혜택 금액이 빈 값인 경우
-     * @throws CouponException.BenefitAmountShouldBeNumeric 혜택 금액이 숫자가 아닌 경우
-     * @throws CouponException.BenefitAmountShouldMoreThan0 혜택 금액이 0 이하인 경우
-     * @throws CouponException.DiscountPercentageExceeds100 할인율이 100%를 초과하는 경우
      */
     @Transactional
     fun issueCoupon(userId: String, benefitMethod: CouponBenefitMethod, benefitAmount: String): CouponUserResult {
-        // 유저 존재 여부 확인
-        userService.findUserByIdOrThrow(userId)
-        
-        val command = CouponUserCommand.Create(
-            userId = userId,
-            benefitMethod = benefitMethod,
-            benefitAmount = benefitAmount
-        )
-        
-        val couponUser = couponUserService.create(command)
-        
+        val couponUser = couponUserService.issueCoupon(userId, benefitMethod, benefitAmount, userService)
         return CouponUserResult.from(couponUser)
     }
     
@@ -94,16 +58,10 @@ class CouponUserFacade(
      *
      * @param couponUserId 사용할 쿠폰 ID
      * @return 사용된 쿠폰 정보
-     * @throws CouponException.CouponUserIdShouldNotBlank 쿠폰 ID가 빈 값인 경우
-     * @throws CouponException.NotFound 쿠폰을 찾을 수 없는 경우
-     * @throws CouponException.AlreadyUsed 이미 사용된 쿠폰인 경우
      */
     @Transactional
     fun useCoupon(couponUserId: String): CouponUserResult {
-        val command = CouponUserCommand.Use(couponUserId = couponUserId)
-        
-        val couponUser = couponUserService.use(command)
-        
+        val couponUser = couponUserService.useCoupon(couponUserId)
         return CouponUserResult.from(couponUser)
     }
     
@@ -113,18 +71,10 @@ class CouponUserFacade(
      * @param couponUserId 사용할 쿠폰 ID
      * @param originalAmount 원래 금액
      * @return 할인 금액
-     * @throws CouponException.CouponUserIdShouldNotBlank 쿠폰 ID가 빈 값인 경우
-     * @throws CouponException.NotFound 쿠폰을 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
     fun calculateDiscountAmount(couponUserId: String, originalAmount: Long): Long {
-        if (couponUserId.isBlank()) {
-            throw CouponException.CouponUserIdShouldNotBlank("쿠폰 ID는 비어있을 수 없습니다.")
-        }
-        
-        val couponUser = couponUserService.getCouponUser(couponUserId)
-        
-        return couponUser.calculateDiscountAmount(originalAmount)
+        return couponUserService.calculateDiscountAmount(couponUserId, originalAmount)
     }
 
     /**
@@ -137,5 +87,4 @@ class CouponUserFacade(
         val couponUsers = couponUserService.getAllCouponUsers()
         return CouponUserListResult.from(couponUsers)
     }
-
 }

@@ -11,7 +11,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import java.time.LocalDateTime
-import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
@@ -40,7 +39,7 @@ class CouponEventServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponEventRepository.save(any<CouponEvent>())).thenReturn(expectedCouponEvent)
+        `when`(couponEventRepository.create(any())).thenReturn(expectedCouponEvent)
 
         // when
         val result = couponEventService.createCouponEvent(command)
@@ -67,7 +66,7 @@ class CouponEventServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponEventRepository.findById(id)).thenReturn(Optional.of(expectedCouponEvent))
+        `when`(couponEventRepository.findById(id)).thenReturn(expectedCouponEvent)
 
         // when
         val result = couponEventService.getCouponEvent(id)
@@ -85,7 +84,7 @@ class CouponEventServiceUnitTest {
     fun `존재하지 않는 ID로 조회하면 예외가 발생한다`() {
         // given
         val id = UUID.randomUUID().toString()
-        `when`(couponEventRepository.findById(id)).thenReturn(Optional.empty())
+        `when`(couponEventRepository.findById(id)).thenReturn(null)
 
         // when & then
         assertThrows<CENotFoundException> {
@@ -143,10 +142,18 @@ class CouponEventServiceUnitTest {
             updatedAt = LocalDateTime.now()
         )
         
-        val expectedUpdatedCouponEvent = initialCouponEvent.copy(leftIssueAmount = 9)
+        val expectedUpdatedCouponEvent = CouponEvent(
+            id = id,
+            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitAmount = "1000",
+            totalIssueAmount = 100,
+            leftIssueAmount = 9,
+            createdAt = initialCouponEvent.createdAt,
+            updatedAt = LocalDateTime.now()
+        )
         
-        `when`(couponEventRepository.findById(id)).thenReturn(Optional.of(initialCouponEvent))
-        `when`(couponEventRepository.save(any<CouponEvent>())).thenReturn(expectedUpdatedCouponEvent)
+        `when`(couponEventRepository.findById(id)).thenReturn(initialCouponEvent)
+        `when`(couponEventRepository.decreaseStock(id)).thenReturn(expectedUpdatedCouponEvent)
 
         // when
         val result = couponEventService.decreaseStock(id)
@@ -161,7 +168,7 @@ class CouponEventServiceUnitTest {
     fun `재고가 없는 쿠폰 이벤트의 재고를 감소시키면 예외가 발생한다`() {
         // given
         val id = UUID.randomUUID().toString()
-        val couponEvent = CouponEvent(
+        val emptyStockCouponEvent = CouponEvent(
             id = id,
             benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
@@ -170,21 +177,20 @@ class CouponEventServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponEventRepository.findById(id)).thenReturn(Optional.of(couponEvent))
+        `when`(couponEventRepository.findById(id)).thenReturn(emptyStockCouponEvent)
 
         // when & then
-        assertThrows<CEStockEmptyException> {
+        assertThrows<CEOutOfStockException> {
             couponEventService.decreaseStock(id)
         }
     }
 
     @Test
-    @DisplayName("쿠폰 발급 가능 여부를 확인할 수 있다")
-    fun `쿠폰 발급 가능 여부를 확인할 수 있다`() {
+    @DisplayName("재고가 있는 쿠폰 이벤트는 검증을 통과한다")
+    fun `재고가 있는 쿠폰 이벤트는 검증을 통과한다`() {
         // given
-        val id = UUID.randomUUID().toString()
         val couponEvent = CouponEvent(
-            id = id,
+            id = UUID.randomUUID().toString(),
             benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
@@ -192,22 +198,18 @@ class CouponEventServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponEventRepository.findById(id)).thenReturn(Optional.of(couponEvent))
 
-        // when
-        val result = couponEventService.canIssue(id)
-
-        // then
-        assertEquals(true, result)
+        // when & then
+        // 예외가 발생하지 않으면 테스트 통과
+        couponEvent.validateCanIssue()
     }
 
     @Test
-    @DisplayName("재고가 없는 쿠폰 이벤트는 발급 불가능함을 확인할 수 있다")
-    fun `재고가 없는 쿠폰 이벤트는 발급 불가능함을 확인할 수 있다`() {
+    @DisplayName("재고가 없는 쿠폰 이벤트는 검증 시 예외가 발생한다")
+    fun `재고가 없는 쿠폰 이벤트는 검증 시 예외가 발생한다`() {
         // given
-        val id = UUID.randomUUID().toString()
         val couponEvent = CouponEvent(
-            id = id,
+            id = UUID.randomUUID().toString(),
             benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
@@ -215,12 +217,10 @@ class CouponEventServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponEventRepository.findById(id)).thenReturn(Optional.of(couponEvent))
 
-        // when
-        val result = couponEventService.canIssue(id)
-
-        // then
-        assertEquals(false, result)
+        // when & then
+        assertThrows<CEOutOfStockException> {
+            couponEvent.validateCanIssue()
+        }
     }
 } 

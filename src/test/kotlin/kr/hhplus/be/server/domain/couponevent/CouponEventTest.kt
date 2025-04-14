@@ -45,7 +45,7 @@ class CouponEventTest {
         )
 
         // when & then
-        assertThrows<CEStockEmptyException> {
+        assertThrows<CEOutOfStockException> {
             couponEvent.decreaseLeftIssueAmount()
         }
     }
@@ -119,7 +119,7 @@ class CouponEventTest {
         )
 
         // when & then
-        assertThrows<CEStockEmptyException> {
+        assertThrows<CEOutOfStockException> {
             couponEvent.validateCanIssue()
         }
     }

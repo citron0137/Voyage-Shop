@@ -21,7 +21,7 @@ class CouponEventController(
         val criteria = CreateCouponEventCriteria(
             benefitMethod = req.benefitMethod,
             benefitAmount = req.benefitAmount,
-            totalIssueAmount = req.totalIssueAmount
+            totalIssueAmount = req.totalIssueAmount.toLong()
         )
         
         val result = couponEventFacade.createCouponEvent(criteria)
