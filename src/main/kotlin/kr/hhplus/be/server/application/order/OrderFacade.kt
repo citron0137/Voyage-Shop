@@ -26,6 +26,17 @@ class OrderFacade(
     private val couponUserService: CouponUserService
 ) {
     /**
+     * 주문 ID로 주문 정보를 조회합니다. (호환성 메서드)
+     */
+    @Transactional(readOnly = true)
+    fun getOrder(orderId: String): OrderResult.Get {
+        if (orderId.isBlank()) {
+            throw OrderException.OrderIdShouldNotBlank("주문 ID는 비어있을 수 없습니다.")
+        }
+        return getOrder(OrderCriteria.GetById(orderId))
+    }
+    
+    /**
      * 주문 ID로 주문 정보를 조회합니다.
      *
      * @param criteria 주문 조회 기준
@@ -50,6 +61,17 @@ class OrderFacade(
     }
     
     /**
+     * 사용자 ID로 주문 목록을 조회합니다. (호환성 메서드)
+     */
+    @Transactional(readOnly = true)
+    fun getOrdersByUserId(userId: String): OrderResult.Orders {
+        if (userId.isBlank()) {
+            throw UserException.UserIdShouldNotBlank("사용자 ID는 비어있을 수 없습니다.")
+        }
+        return getOrdersByUserId(OrderCriteria.GetByUserId(userId))
+    }
+    
+    /**
      * 사용자 ID로 주문 목록을 조회합니다.
      *
      * @param criteria 주문 조회 기준
@@ -58,7 +80,7 @@ class OrderFacade(
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    fun getOrdersByUserId(criteria: OrderCriteria.GetByUserId): OrderResult.List {
+    fun getOrdersByUserId(criteria: OrderCriteria.GetByUserId): OrderResult.Orders {
         // 사용자 존재 여부 확인
         userService.findUserByIdOrThrow(criteria.userId)
         
@@ -67,11 +89,11 @@ class OrderFacade(
         
         // 주문이 없으면 빈 목록 반환
         if (orders.isEmpty()) {
-            return OrderResult.List(emptyList())
+            return OrderResult.Orders(emptyList())
         }
         
         // 각 주문의 항목과 할인 정보 조회
-        val orderIds = orders.map { it.id }
+        val orderIds = orders.map { it.orderId }
         val allItems = orderIds.flatMap { 
             orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(it)) 
         }
@@ -83,7 +105,15 @@ class OrderFacade(
         val itemsByOrderId = allItems.groupBy { it.orderId }
         val discountsByOrderId = allDiscounts.groupBy { it.orderId }
         
-        return OrderResult.List.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
+        return OrderResult.Orders.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
+    }
+    
+    /**
+     * 모든 주문 목록을 조회합니다. (호환성 메서드)
+     */
+    @Transactional(readOnly = true)
+    fun getAllOrders(): OrderResult.Orders {
+        return getAllOrders(OrderCriteria.GetAll)
     }
     
     /**
@@ -93,16 +123,16 @@ class OrderFacade(
      * @return 주문 목록
      */
     @Transactional(readOnly = true)
-    fun getAllOrders(criteria: OrderCriteria.GetAll): OrderResult.List {
+    fun getAllOrders(criteria: OrderCriteria.GetAll): OrderResult.Orders {
         val orders = orderService.getAllOrders()
         
         // 주문이 없으면 빈 목록 반환
         if (orders.isEmpty()) {
-            return OrderResult.List(emptyList())
+            return OrderResult.Orders(emptyList())
         }
         
         // 각 주문의 항목과 할인 정보 조회
-        val orderIds = orders.map { it.id }
+        val orderIds = orders.map { it.orderId }
         val allItems = orderIds.flatMap { 
             orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(it)) 
         }
@@ -114,7 +144,38 @@ class OrderFacade(
         val itemsByOrderId = allItems.groupBy { it.orderId }
         val discountsByOrderId = allDiscounts.groupBy { it.orderId }
         
-        return OrderResult.List.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
+        return OrderResult.Orders.fromWithDetails(orders, itemsByOrderId, discountsByOrderId)
+    }
+    
+    /**
+     * 새로운 주문을 생성합니다. (호환성 메서드)
+     */
+    @Transactional
+    fun createOrder(
+        userId: String,
+        orderItems: List<OrderItemRequest>,
+        couponUserId: String? = null
+    ): OrderResult.Get {
+        if (userId.isBlank()) {
+            throw UserException.UserIdShouldNotBlank("사용자 ID는 비어있을 수 없습니다.")
+        }
+        
+        if (orderItems.isEmpty()) {
+            throw OrderException.OrderItemRequired("최소 1개 이상의 주문 상품이 필요합니다.")
+        }
+        
+        val criteria = OrderCriteria.Create(
+            userId = userId,
+            items = orderItems.map { 
+                OrderCriteria.Create.OrderItem(
+                    productId = it.productId,
+                    amount = it.amount
+                ) 
+            },
+            couponUserId = couponUserId
+        )
+        
+        return createOrder(criteria)
     }
     
     /**
@@ -206,10 +267,10 @@ class OrderFacade(
         val order = orderService.createOrder(orderCommand)
         
         // 주문 항목 및 할인 조회
-        val itemsCommand = OrderItemCommand.GetByOrderId(order.id)
+        val itemsCommand = OrderItemCommand.GetByOrderId(order.orderId)
         val items = orderService.getOrderItemsByOrderId(itemsCommand)
         
-        val discountsCommand = OrderDiscountCommand.GetByOrderId(order.id)
+        val discountsCommand = OrderDiscountCommand.GetByOrderId(order.orderId)
         val discounts = orderService.getOrderDiscountsByOrderId(discountsCommand)
         
         return OrderResult.Get.from(order, items, discounts)

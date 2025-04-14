@@ -23,9 +23,9 @@ class OrderResponse {
     ) {
         companion object {
             /**
-             * OrderResult DTO를 Order로 변환합니다.
+             * OrderResult.Get DTO를 Order로 변환합니다.
              */
-            fun from(orderResult: OrderResult): Order {
+            fun from(orderResult: OrderResult.Get): Order {
                 return Order(
                     id = orderResult.orderId,
                     userId = orderResult.userId,
@@ -37,6 +37,13 @@ class OrderResponse {
                     items = orderResult.items.map { OrderItem.from(it) },
                     discounts = orderResult.discounts.map { OrderDiscount.from(it) }
                 )
+            }
+            
+            /**
+             * 하위 호환성을 위한 메서드
+             */
+            fun from(orderResult: OrderResult): Order {
+                return from(orderResult as OrderResult.Get)
             }
         }
     }
@@ -53,9 +60,9 @@ class OrderResponse {
     ) {
         companion object {
             /**
-             * OrderItemResult를 OrderItem으로 변환합니다.
+             * OrderResult.OrderItem을 OrderItem으로 변환합니다.
              */
-            fun from(orderItemResult: kr.hhplus.be.server.application.order.OrderItemResult): OrderItem {
+            fun from(orderItemResult: OrderResult.OrderItem): OrderItem {
                 return OrderItem(
                     id = orderItemResult.orderItemId,
                     productId = orderItemResult.productId,
@@ -78,9 +85,9 @@ class OrderResponse {
     ) {
         companion object {
             /**
-             * OrderDiscountResult를 OrderDiscount로 변환합니다.
+             * OrderResult.OrderDiscount를 OrderDiscount로 변환합니다.
              */
-            fun from(orderDiscountResult: kr.hhplus.be.server.application.order.OrderDiscountResult): OrderDiscount {
+            fun from(orderDiscountResult: OrderResult.OrderDiscount): OrderDiscount {
                 return OrderDiscount(
                     id = orderDiscountResult.orderDiscountId,
                     type = orderDiscountResult.discountType.name,
@@ -96,5 +103,23 @@ class OrderResponse {
      */
     data class OrderList(
         val items: kotlin.collections.List<Order>
-    )
+    ) {
+        companion object {
+            /**
+             * OrderResult.Orders를 OrderList로 변환합니다.
+             */
+            fun from(orderListResult: OrderResult.Orders): OrderList {
+                return OrderList(
+                    items = orderListResult.orders.map { Order.from(it) }
+                )
+            }
+            
+            /**
+             * 하위 호환성을 위한 메서드
+             */
+            fun from(orderListResult: OrderResult): OrderList {
+                return from(orderListResult as OrderResult.Orders)
+            }
+        }
+    }
 } 

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.order
 
-import kr.hhplus.be.server.controller.order.OrderRequestDTO
+import kr.hhplus.be.server.controller.order.OrderRequest
 
 /**
  * 주문 관련 요청 기준을 담는 클래스
@@ -38,7 +38,8 @@ sealed class OrderCriteria {
      */
     data class Create(
         val userId: String,
-        val items: List<OrderItem>
+        val items: List<OrderItem>,
+        val couponUserId: String? = null
     ) : OrderCriteria() {
         init {
             require(userId.isNotBlank()) { "userId must not be blank" }
@@ -59,15 +60,16 @@ sealed class OrderCriteria {
         }
 
         companion object {
-            fun from(request: OrderRequestDTO.CreateOrderRequest): Create {
+            fun from(request: OrderRequest.Create): Create {
                 return Create(
                     userId = request.userId,
-                    items = request.items.map {
+                    items = request.orderItemList.map {
                         OrderItem(
                             productId = it.productId,
-                            amount = it.amount
+                            amount = it.count
                         )
-                    }
+                    },
+                    couponUserId = request.payment.couponId
                 )
             }
         }

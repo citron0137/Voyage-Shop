@@ -16,55 +16,29 @@ sealed class OrderResult {
     data class Get(
         val orderId: String,
         val userId: String,
-        val totalPrice: Long,
-        val status: String,
-        val items: List<OrderItemDTO>,
-        val couponUserId: String?,
-        val discountAmount: Long,
-        val finalPrice: Long,
+        val paymentId: String,
+        val totalAmount: Long,
+        val totalDiscountAmount: Long,
+        val finalAmount: Long,
         val createdAt: LocalDateTime,
-        val updatedAt: LocalDateTime
+        val updatedAt: LocalDateTime,
+        val items: kotlin.collections.List<OrderItem> = emptyList(),
+        val discounts: kotlin.collections.List<OrderDiscount> = emptyList()
     ) : OrderResult() {
-        /**
-         * 주문 항목 응답 클래스
-         */
-        data class OrderItemDTO(
-            val orderItemId: String,
-            val productId: String,
-            val amount: Long,
-            val price: Long,
-            val totalPrice: Long
-        )
-
         companion object {
             /**
              * Order 도메인 객체로부터 Get DTO를 생성합니다.
              */
             fun from(order: Order): Get {
                 return Get(
-                    orderId = order.id,
+                    orderId = order.orderId,
                     userId = order.userId,
-                    totalPrice = order.totalPrice,
-                    status = order.status.name,
-                    items = order.items.map { mapOrderItem(it) },
-                    couponUserId = order.couponUserId,
-                    discountAmount = order.discountAmount,
-                    finalPrice = order.finalPrice,
+                    paymentId = order.paymentId,
+                    totalAmount = order.totalAmount,
+                    totalDiscountAmount = order.totalDiscountAmount,
+                    finalAmount = order.finalAmount,
                     createdAt = order.createdAt,
                     updatedAt = order.updatedAt
-                )
-            }
-
-            /**
-             * OrderItem 도메인 객체로부터 OrderItemDTO를 생성합니다.
-             */
-            private fun mapOrderItem(item: OrderItem): OrderItemDTO {
-                return OrderItemDTO(
-                    orderItemId = item.id,
-                    productId = item.productId,
-                    amount = item.amount,
-                    price = item.price,
-                    totalPrice = item.totalPrice
                 )
             }
             
@@ -73,20 +47,20 @@ sealed class OrderResult {
              */
             fun from(
                 order: Order,
-                items: kotlin.collections.List<OrderItem>,
-                discounts: kotlin.collections.List<OrderDiscount>
+                items: kotlin.collections.List<kr.hhplus.be.server.domain.order.OrderItem>,
+                discounts: kotlin.collections.List<kr.hhplus.be.server.domain.order.OrderDiscount>
             ): Get {
                 return Get(
-                    orderId = order.id,
+                    orderId = order.orderId,
                     userId = order.userId,
-                    totalPrice = order.totalPrice,
-                    status = order.status.name,
-                    items = items.map { mapOrderItem(it) },
-                    couponUserId = order.couponUserId,
-                    discountAmount = order.discountAmount,
-                    finalPrice = order.finalPrice,
+                    paymentId = order.paymentId,
+                    totalAmount = order.totalAmount,
+                    totalDiscountAmount = order.totalDiscountAmount,
+                    finalAmount = order.finalAmount,
                     createdAt = order.createdAt,
-                    updatedAt = order.updatedAt
+                    updatedAt = order.updatedAt,
+                    items = items.map { OrderItem.from(it) },
+                    discounts = discounts.map { OrderDiscount.from(it) }
                 )
             }
         }
@@ -157,33 +131,33 @@ sealed class OrderResult {
     /**
      * 주문 목록 조회 결과
      */
-    data class List(
+    data class Orders(
         val orders: kotlin.collections.List<Get>
     ) : OrderResult() {
         companion object {
             /**
-             * Order 도메인 객체 목록으로부터 List DTO를 생성합니다.
+             * Order 도메인 객체 목록으로부터 Orders DTO를 생성합니다.
              */
-            fun from(orders: kotlin.collections.List<Order>): List {
-                return List(
+            fun from(orders: kotlin.collections.List<Order>): Orders {
+                return Orders(
                     orders = orders.map { Get.from(it) }
                 )
             }
             
             /**
-             * Order 목록과 각 주문의 항목, 할인 정보로부터 List DTO를 생성합니다.
+             * Order 목록과 각 주문의 항목, 할인 정보로부터 Orders DTO를 생성합니다.
              */
             fun fromWithDetails(
                 orders: kotlin.collections.List<Order>,
-                itemsByOrderId: Map<String, kotlin.collections.List<OrderItem>>,
-                discountsByOrderId: Map<String, kotlin.collections.List<OrderDiscount>>
-            ): List {
-                return List(
+                itemsByOrderId: Map<String, kotlin.collections.List<kr.hhplus.be.server.domain.order.OrderItem>>,
+                discountsByOrderId: Map<String, kotlin.collections.List<kr.hhplus.be.server.domain.order.OrderDiscount>>
+            ): Orders {
+                return Orders(
                     orders = orders.map { order ->
                         Get.from(
                             order = order,
-                            items = itemsByOrderId[order.id] ?: emptyList(),
-                            discounts = discountsByOrderId[order.id] ?: emptyList()
+                            items = itemsByOrderId[order.orderId] ?: emptyList(),
+                            discounts = discountsByOrderId[order.orderId] ?: emptyList()
                         )
                     }
                 )
