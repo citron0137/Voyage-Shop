@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.controller.user
 
+import kr.hhplus.be.server.application.user.UserCriteria
 import kr.hhplus.be.server.application.user.UserFacade
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.RestController
@@ -29,7 +30,8 @@ class UserController(
      * @return 조회된 사용자 정보
      */
     override fun getUserById(userId: String): BaseResponse<UserResponse.Single> {
-        val result = userFacade.findUserById(userId)
+        val criteria = UserCriteria.GetById(userId)
+        val result = userFacade.findUserById(criteria)
         return BaseResponse.success(UserResponse.Single.from(result))
     }
     

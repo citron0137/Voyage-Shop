@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.controller.user
 
-import kr.hhplus.be.server.application.user.UserListResult
 import kr.hhplus.be.server.application.user.UserResult
 import java.time.LocalDateTime
 
@@ -17,7 +16,7 @@ sealed class UserResponse {
         val updatedAt: LocalDateTime
     ) : UserResponse() {
         companion object {
-            fun from(result: UserResult): Single {
+            fun from(result: UserResult.User): Single {
                 return Single(
                     id = result.userId,
                     createdAt = result.createdAt,
@@ -34,7 +33,7 @@ sealed class UserResponse {
         val items: kotlin.collections.List<Single>
     ) : UserResponse() {
         companion object {
-            fun from(result: UserListResult): List {
+            fun from(result: UserResult.List): List {
                 return List(
                     items = result.users.map { Single.from(it) }
                 )
