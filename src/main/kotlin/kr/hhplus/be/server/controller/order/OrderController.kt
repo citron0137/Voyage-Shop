@@ -19,7 +19,16 @@ class OrderController(
         @RequestBody req: OrderRequest.Create
     ): BaseResponse<OrderResponse.Order> {
         // 주문 생성
-        val criteria = OrderCriteria.Create.from(req)
+        val criteria = OrderCriteria.Create(
+            userId = req.userId,
+            items = req.orderItemList.map {
+                OrderCriteria.Create.OrderItem(
+                    productId = it.productId,
+                    amount = it.count
+                )
+            },
+            couponUserId = req.payment.couponId
+        )
         val result = orderFacade.createOrder(criteria)
         
         return BaseResponse.success(OrderResponse.Order.from(result))
