@@ -56,6 +56,14 @@ dependencies {
 
 	// Swagger
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+	
+	// OpenTelemetry
+	implementation("io.opentelemetry:opentelemetry-api:1.36.0")
+	implementation("io.opentelemetry:opentelemetry-sdk:1.36.0")
+	implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.36.0")
+	implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.3.0")
+	implementation("io.micrometer:micrometer-registry-prometheus:1.12.4")
+	implementation("io.opentelemetry.javaagent:opentelemetry-javaagent:2.3.0")
 
 	// Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -71,4 +79,33 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 	systemProperty("user.timezone", "UTC")
+}
+
+// OpenTelemetry 에이전트 다운로드 태스크
+tasks.register<DefaultTask>("downloadOpenTelemetryAgent") {
+    doLast {
+        val agentVersion = "2.3.0"
+        val agentFile = project.file("opentelemetry-javaagent.jar")
+        if (!agentFile.exists()) {
+            val url = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${agentVersion}/opentelemetry-javaagent.jar"
+            println("OpenTelemetry 에이전트 다운로드 중: $url")
+            
+            val connection = java.net.URL(url).openConnection()
+            connection.connect()
+            connection.getInputStream().use { input ->
+                java.io.FileOutputStream(agentFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            
+            println("OpenTelemetry 에이전트가 다운로드되었습니다: ${agentFile.absolutePath}")
+        } else {
+            println("OpenTelemetry 에이전트가 이미 존재합니다: ${agentFile.absolutePath}")
+        }
+    }
+}
+
+// 부트런 작업 시 에이전트 자동 다운로드
+tasks.named("bootRun") {
+    dependsOn("downloadOpenTelemetryAgent")
 }

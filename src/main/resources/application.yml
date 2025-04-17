@@ -26,6 +26,41 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+    baggage:
+      correlation:
+        enabled: true
+
+# OpenTelemetry 설정
+otel:
+  exporter:
+    otlp:
+      endpoint: http://otel-collector:4317
+  service:
+    name: ${spring.application.name}
+    namespace: kr.hhplus
+    version: 1.0.0
+  traces:
+    exporter: otlp
+  metrics:
+    exporter: prometheus
+  logs:
+    exporter: otlp
+
 ---
 spring.config.activate.on-profile: local, test
 
