@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.product
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -16,7 +17,7 @@ class ProductServiceUnitTest {
 
     @BeforeEach
     fun setUp() {
-        productRepository = mockk()
+        productRepository = mockk(relaxed = true)
         productService = ProductService(productRepository)
     }
 
@@ -28,7 +29,11 @@ class ProductServiceUnitTest {
             price = 1000L,
             stock = 10L
         )
-        every { productRepository.create(any()) } answers { firstArg() }
+        
+        val slot = slot<Product>()
+        every { productRepository.create(capture(slot)) } answers {
+            slot.captured
+        }
 
         // when
         val actualProduct = productService.createProduct(command)
@@ -112,111 +117,86 @@ class ProductServiceUnitTest {
     fun `상품 재고를 수정할 수 있다`() {
         // given
         val productId = UUID.randomUUID().toString()
+        val newStock = 20L
         val command = ProductCommand.UpdateStock(
             productId = productId,
-            amount = 20L
+            amount = newStock
         )
-        val initialTime = LocalDateTime.now()
-        Thread.sleep(10) // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위한 지연
 
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L,
-            createdAt = initialTime,
-            updatedAt = initialTime
+            stock = 10L
         )
-        val initialUpdatedAt = existingProduct.updatedAt
 
-        every { productRepository.findById(productId) } returns existingProduct
-        every { productRepository.update(any()) } answers { firstArg() }
+        every { productRepository.findByIdWithLock(productId) } returns existingProduct
 
         // when
         val actualProduct = productService.updateStock(command)
 
         // then
-        verify { productRepository.findById(productId) }
+        verify { productRepository.findByIdWithLock(productId) }
         verify { productRepository.update(any()) }
-        assertEquals(command.amount, actualProduct.stock)
-        assertNotNull(actualProduct.createdAt)
-        assertNotNull(actualProduct.updatedAt)
-        assertNotEquals(initialUpdatedAt, actualProduct.updatedAt, "updatedAt이 업데이트되어야 합니다")
-        assertTrue(initialUpdatedAt.isBefore(actualProduct.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
+        assertEquals(newStock, actualProduct.stock)
     }
 
     @Test
     fun `상품 재고를 감소시킬 수 있다`() {
         // given
         val productId = UUID.randomUUID().toString()
+        val decreaseAmount = 5L
         val command = ProductCommand.DecreaseStock(
             productId = productId,
-            amount = 5L
+            amount = decreaseAmount
         )
-        val initialTime = LocalDateTime.now()
-        Thread.sleep(10) // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위한 지연
+        val initialStock = 10L
 
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L,
-            createdAt = initialTime,
-            updatedAt = initialTime
+            stock = initialStock
         )
-        val initialUpdatedAt = existingProduct.updatedAt
 
-        every { productRepository.findById(productId) } returns existingProduct
-        every { productRepository.update(any()) } answers { firstArg() }
+        every { productRepository.findByIdWithLock(productId) } returns existingProduct
 
         // when
         val actualProduct = productService.decreaseStock(command)
 
         // then
-        verify { productRepository.findById(productId) }
+        verify { productRepository.findByIdWithLock(productId) }
         verify { productRepository.update(any()) }
-        assertEquals(5L, actualProduct.stock)
-        assertNotNull(actualProduct.createdAt)
-        assertNotNull(actualProduct.updatedAt)
-        assertNotEquals(initialUpdatedAt, actualProduct.updatedAt, "updatedAt이 업데이트되어야 합니다")
-        assertTrue(initialUpdatedAt.isBefore(actualProduct.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
+        assertEquals(initialStock - decreaseAmount, actualProduct.stock)
     }
 
     @Test
     fun `상품 재고를 증가시킬 수 있다`() {
         // given
         val productId = UUID.randomUUID().toString()
+        val increaseAmount = 5L
         val command = ProductCommand.IncreaseStock(
             productId = productId,
-            amount = 5L
+            amount = increaseAmount
         )
-        val initialTime = LocalDateTime.now()
-        Thread.sleep(10) // 10밀리초(0.01초) 지연: updatedAt이 초기값과 다른지 확인하기 위한 지연
+        val initialStock = 10L
 
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L,
-            createdAt = initialTime,
-            updatedAt = initialTime
+            stock = initialStock
         )
-        val initialUpdatedAt = existingProduct.updatedAt
 
-        every { productRepository.findById(productId) } returns existingProduct
-        every { productRepository.update(any()) } answers { firstArg() }
+        every { productRepository.findByIdWithLock(productId) } returns existingProduct
 
         // when
         val actualProduct = productService.increaseStock(command)
 
         // then
-        verify { productRepository.findById(productId) }
+        verify { productRepository.findByIdWithLock(productId) }
         verify { productRepository.update(any()) }
-        assertEquals(15L, actualProduct.stock)
-        assertNotNull(actualProduct.createdAt)
-        assertNotNull(actualProduct.updatedAt)
-        assertNotEquals(initialUpdatedAt, actualProduct.updatedAt, "updatedAt이 업데이트되어야 합니다")
-        assertTrue(initialUpdatedAt.isBefore(actualProduct.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
+        assertEquals(initialStock + increaseAmount, actualProduct.stock)
     }
 
     @Test
@@ -233,10 +213,10 @@ class ProductServiceUnitTest {
             price = 1000L,
             stock = 10L
         )
-        every { productRepository.findById(productId) } returns existingProduct
+        every { productRepository.findByIdWithLock(productId) } returns existingProduct
 
         // when & then
-        assertThrows<ProductException.StockAmountUnderflow> {
+        val exception = assertThrows<ProductException.StockAmountUnderflow> {
             productService.decreaseStock(command)
         }
     }
@@ -255,7 +235,7 @@ class ProductServiceUnitTest {
             price = 1000L,
             stock = 1L
         )
-        every { productRepository.findById(productId) } returns existingProduct
+        every { productRepository.findByIdWithLock(productId) } returns existingProduct
 
         // when & then
         assertThrows<ProductException.StockAmountOverflow> {

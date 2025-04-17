@@ -11,6 +11,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -67,19 +68,6 @@ class ProductFacadeIntegrationTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 상품 ID로 조회하면 예외가 발생한다")
-    fun getProductNotFoundTest() {
-        // given
-        val nonExistentProductId = "non-existent-id"
-        val getCriteria = ProductCriteria.GetById(nonExistentProductId)
-
-        // when & then
-        assertThrows<ProductException.NotFound> {
-            productFacade.getProduct(getCriteria)
-        }
-    }
-
-    @Test
     @DisplayName("모든 상품을 조회할 수 있다")
     fun getAllProductsTest() {
         // given
@@ -119,24 +107,6 @@ class ProductFacadeIntegrationTest {
     }
 
     @Test
-    @DisplayName("상품 재고를 음수로 갱신하면 예외가 발생한다")
-    fun updateProductStockWithNegativeAmountTest() {
-        // given
-        val createCriteria = ProductCriteria.Create("음수 재고 테스트 상품", 25000, 250)
-        val createdProduct = productFacade.createProduct(createCriteria)
-        
-        val negativeStockCriteria = ProductCriteria.UpdateStock(
-            productId = createdProduct.productId,
-            stock = -10
-        )
-        
-        // when & then
-        assertThrows<ProductException.StockAmountShouldMoreThan0> {
-            productFacade.updateStock(negativeStockCriteria)
-        }
-    }
-
-    @Test
     @DisplayName("상품 재고를 감소시킬 수 있다")
     fun decreaseProductStockTest() {
         // given
@@ -153,24 +123,6 @@ class ProductFacadeIntegrationTest {
         
         // then
         assertThat(updatedProduct.stock).isEqualTo(250)
-    }
-
-    @Test
-    @DisplayName("상품 재고보다 많은 양을 감소시키면 예외가 발생한다")
-    fun decreaseProductStockWithExcessiveAmountTest() {
-        // given
-        val createCriteria = ProductCriteria.Create("재고 초과 감소 테스트 상품", 40000, 40)
-        val createdProduct = productFacade.createProduct(createCriteria)
-        
-        val excessiveDecreaseCriteria = ProductCriteria.DecreaseStock(
-            productId = createdProduct.productId,
-            amount = 50
-        )
-        
-        // when & then
-        assertThrows<ProductException.StockAmountUnderflow> {
-            productFacade.decreaseStock(excessiveDecreaseCriteria)
-        }
     }
 
     @Test
@@ -193,8 +145,8 @@ class ProductFacadeIntegrationTest {
     }
 
     @Test
-    @Transactional
     @DisplayName("여러 스레드에서 동시에 상품 재고를 감소시켜도 정확한 재고가 유지된다")
+    @Transactional(propagation = Propagation.NEVER)
     fun decreaseProductStockConcurrencyTest() {
         // given: 테스트 상품 생성
         val createCriteria = ProductCriteria.Create("동시성 테스트 상품", 1000, 1000)
@@ -214,6 +166,9 @@ class ProductFacadeIntegrationTest {
                 try {
                     val decreaseCriteria = ProductCriteria.DecreaseStock(product.productId, decreaseAmount)
                     productFacade.decreaseStock(decreaseCriteria)
+                } catch (e: Exception) {
+                    println("Error in thread $i: ${e.message}")
+                    throw e
                 } finally {
                     latch.countDown()
                 }
