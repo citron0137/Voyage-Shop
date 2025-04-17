@@ -23,6 +23,10 @@ class UserPointRepositoryImpl(private val userPointJpaRepository: UserPointJpaRe
         return userPointJpaRepository.findByUserId(userId)?.toUserPoint()
     }
     
+    override fun findByUserIdWithLock(userId: String): UserPoint? {
+        return userPointJpaRepository.findByUserIdWithLock(userId)?.toUserPoint()
+    }
+    
     override fun save(userPoint: UserPoint): UserPoint {
         val userPointEntity = UserPointEntity.from(userPoint)
         return userPointJpaRepository.save(userPointEntity).toUserPoint()
