@@ -34,9 +34,17 @@ src/test/kotlin/kr/hhplus/be/server/
 - Facade 테스트: `{도메인명}FacadeTest` (예: `UserFacadeTest`)
 
 ### 메서드 네이밍
-- BDD 스타일: `` `{테스트상황}` `` 형식 권장 (예: `` `주문을 생성할 수 있다` ``)
-- 또는 `{테스트상황}_{기대결과}` 형식 (예: `주문생성_포인트차감됨`)
-- 또는 `{행위}Test` 형식 (예: `createUserTest`)
+- 테스트 메소드명은 모두 영어로 작성하고, `@DisplayName`으로 한글 제목을 지정
+  - 메소드명 예시: `createOrderTest`, `decreaseStockConcurrencyTest`
+  - DisplayName 예시: `@DisplayName("주문을 생성할 수 있다")`, `@DisplayName("동시에 재고를 감소시켜도 정확한 재고가 유지된다")`
+- 영어 메소드명 작성 스타일:
+  - camelCase로 작성
+  - 접미사 `Test` 사용 권장 (예: `createOrderTest`)
+  - 동시성 테스트의 경우 `Concurrency` 키워드 사용 (예: `decreaseStockConcurrencyTest`)
+- 기존 스타일도 지원:
+  - ~~BDD 스타일: `` `{테스트상황}` `` 형식 (예: `` `주문을 생성할 수 있다` ``)~~
+  - ~~또는 `{테스트상황}_{기대결과}` 형식 (예: `주문생성_포인트차감됨`)~~
+  - ~~또는 `{행위}Test` 형식 (예: `createUserTest`)~~
 
 ## 3. 테스트 구조
 ```kotlin
