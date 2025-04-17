@@ -108,7 +108,7 @@ docker-compose up -d
 ./gradlew test --tests "kr.hhplus.be.server.api.*"
 ```
 
-## 성능 최적화 가이드
+## ⚡️ 성능 최적화 가이드
 
 현재 문서들은 데이터 조회 성능 최적화에 중점을 두고 있습니다. 대규모 데이터셋에서 효율적인 데이터 검색 및 조회 방법을 다루고 있으며, 향후 쓰기 성능 및 트랜잭션 처리 최적화에 대한 가이드가 추가될 예정입니다.
 
@@ -119,3 +119,14 @@ docker-compose up -d
 - [락(Lock)을 사용하는 조회 기능 성능 개선 방안](docs/performance/05-lock-performance-solution.md)
 - [조회 성능 모니터링 구축 방안](docs/performance/06-performance-monitoring.md)
 - [부하 테스트 방안](docs/performance/07-load-testing.md)
+
+## ⚠️ 알려진 이슈
+
+현재 동시성 테스트 실행 시 다음과 같은 문제들이 확인되었습니다:
+
+- **`CouponEventFacadeConcurrencyTest` 실패**: 쿠폰 이벤트 동시 발급 테스트 중 `ArrayIndexOutOfBoundsException` 발생. 동시 접근 시 쿠폰 이벤트 관련 데이터 처리 로직 검토 필요.
+- **`CouponUserFacadeConcurrencyTest` 실패**: 쿠폰 동시 사용 테스트 중 `ArrayIndexOutOfBoundsException` 발생. 동시 접근 시 쿠폰 사용 처리 로직 검토 필요.
+- **`OrderFacadeConcurrencyTest` 실패**: 주문 동시 생성 테스트 중 `AssertionFailedError` 발생. 예상 최종 재고와 실제 재고 불일치. 동시 주문 시 상품 재고 차감 로직 검토 필요.
+- **`CouponUserFacadeIntegrationTest` 실패**: 기존 쿠폰 사용자 통합 테스트 실패. 최근 코드 변경 사항의 영향 검토 필요 (`ArrayIndexOutOfBoundsException` 발생).
+
+위 이슈들은 동시 요청 처리 시 데이터 정합성 문제 또는 예외 처리 로직에 잠재적인 문제가 있을 수 있음을 시사합니다. 해당 테스트 케이스 및 관련 로직에 대한 추가적인 분석과 수정이 필요합니다.
