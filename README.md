@@ -15,6 +15,7 @@
 - [프로젝트 구조](#프로젝트-구조)
 - [DB 구조](#DB-구조)
 - [테스트](#테스트)
+- [성능 최적화 가이드](#성능-최적화-가이드)
 
 
 ## 📌 소개
@@ -106,3 +107,15 @@ docker-compose up -d
 ```bash
 ./gradlew test --tests "kr.hhplus.be.server.api.*"
 ```
+
+## 성능 최적화 가이드
+
+현재 문서들은 데이터 조회 성능 최적화에 중점을 두고 있습니다. 대규모 데이터셋에서 효율적인 데이터 검색 및 조회 방법을 다루고 있으며, 향후 쓰기 성능 및 트랜잭션 처리 최적화에 대한 가이드가 추가될 예정입니다.
+
+- [성능 이슈 분석 개요](docs/performance/01-performance-issues.md)
+- [주문 아이템 순위 조회 성능 개선 방안](docs/performance/02-order-rank-performance-solution.md)
+- [주문 목록 조회 성능 개선 방안](docs/performance/03-order-list-performance-solution.md)
+- [쿠폰 사용자 및 상품 조회 성능 개선 방안](docs/performance/04-coupon-user-product-performance-solution.md)
+- [락(Lock)을 사용하는 조회 기능 성능 개선 방안](docs/performance/05-lock-performance-solution.md)
+- [조회 성능 모니터링 구축 방안](docs/performance/06-performance-monitoring.md)
+- [부하 테스트 방안](docs/performance/07-load-testing.md)
