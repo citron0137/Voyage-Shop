@@ -2,16 +2,16 @@ package kr.hhplus.be.server.infrastructure.product
 
 import kr.hhplus.be.server.domain.product.Product
 import kr.hhplus.be.server.domain.product.ProductRepository
-import org.springframework.context.annotation.Profile
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * ProductRepository 인터페이스의 JPA 구현체
  * 실제 DB와 연동하여 사용됩니다.
  */
 @Repository
-@Profile("!test", "!fake", "!local")
+@Transactional
 class ProductRepositoryImpl(private val productJpaRepository: ProductJpaRepository) : ProductRepository {
     
     override fun create(product: Product): Product {
@@ -21,6 +21,10 @@ class ProductRepositoryImpl(private val productJpaRepository: ProductJpaReposito
     
     override fun findById(productId: String): Product? {
         return productJpaRepository.findByIdOrNull(productId)?.toProduct()
+    }
+    
+    override fun findByIdWithLock(id: String): Product? {
+        return productJpaRepository.findByIdWithLock(id)?.toProduct()
     }
     
     override fun findAll(): List<Product> {
