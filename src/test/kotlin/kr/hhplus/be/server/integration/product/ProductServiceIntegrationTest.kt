@@ -4,6 +4,7 @@ import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.domain.product.Product
 import kr.hhplus.be.server.domain.product.ProductCommand
 import kr.hhplus.be.server.domain.product.ProductException
+import kr.hhplus.be.server.domain.product.ProductQuery
 import kr.hhplus.be.server.domain.product.ProductRepository
 import kr.hhplus.be.server.domain.product.ProductService
 import org.assertj.core.api.Assertions.assertThat
@@ -92,7 +93,7 @@ class ProductServiceIntegrationTest {
     @DisplayName("모든 상품을 조회할 수 있다")
     fun `모든 상품을 조회할 수 있다`() {
         // given
-        val initialProducts = productService.handle(ProductQuery.GetAll())
+        val initialProducts = productService.handle(ProductQuery.GetAll)
         val initialSize = initialProducts.size
         
         // 테스트용 상품 추가
@@ -101,7 +102,7 @@ class ProductServiceIntegrationTest {
         productService.handle(ProductCommand.Create("상품3", 3000, 30))
         
         // when
-        val products = productService.handle(ProductQuery.GetAll())
+        val products = productService.handle(ProductQuery.GetAll)
         
         // then
         assertThat(products.size).isEqualTo(initialSize + 3)
@@ -250,10 +251,4 @@ class ProductServiceIntegrationTest {
         // 모든 감소가 정확히 반영되었는지 검증
         assertThat(updatedProduct.stock).isEqualTo(expectedRemainingStock)
     }
-}
-
-// ProductQuery 클래스 - 테스트에서 사용
-sealed class ProductQuery {
-    data class GetById(val productId: String) : ProductQuery()
-    object GetAll : ProductQuery()
 } 
