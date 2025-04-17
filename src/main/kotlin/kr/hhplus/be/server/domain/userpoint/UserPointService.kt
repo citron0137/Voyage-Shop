@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.domain.userpoint
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
@@ -47,8 +49,9 @@ class UserPointService(
     }
 
     // Update
+    @Transactional
     fun charge(command: UserPointCommand.Charge): UserPoint {
-        val userPoint = userPointRepository.findByUserId(userId = command.userId)
+        val userPoint = userPointRepository.findByUserIdWithLock(userId = command.userId)
             ?: throw UserPointException.NotFound("userId(${command.userId})로 UserPoint를 찾을 수 없습니다.")
         if( userPoint.amount  > MAX_USER_POINT - command.amount )
             throw UserPointException.PointAmountOverflow("충전 가능 최대치를 초과했습니다.")
@@ -68,8 +71,9 @@ class UserPointService(
         return charge(command)
     }
 
+    @Transactional
     fun use(command: UserPointCommand.Use): UserPoint {
-        val userPoint = userPointRepository.findByUserId(userId = command.userId)
+        val userPoint = userPointRepository.findByUserIdWithLock(userId = command.userId)
             ?: throw UserPointException.NotFound("userId(${command.userId})로 UserPoint를 찾을 수 없습니다.")
         if( userPoint.amount - command.amount < 0 )
             throw UserPointException.PointAmountUnderflow("사용 가능 최대치를 초과했습니다.")
