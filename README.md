@@ -14,6 +14,7 @@
 - [시작하기](#시작하기)
 - [프로젝트 구조](#프로젝트-구조)
 - [DB 구조](#DB-구조)
+- [테스트](#테스트)
 
 
 ## 📌 소개
@@ -69,17 +70,11 @@ docker-compose up -d
 
 ## 📂 프로젝트 구조
 
-프로젝트는 레이어드 아키텍처 패턴을 따르며 다음과 같은 구조를 가집니다:
+프로젝트는 레이어드 아키텍처 패턴을 따릅니다. 자세한 내용은 아래 문서를 참조하세요:
 
-```
-kr.hhplus.be.server/
-├── controller/     # 외부 요청 처리, API 정의
-├── application/    # 유스케이스 구현, 트랜잭션 경계
-├── domain/         # 핵심 비즈니스 로직 및 엔티티
-└── infrastructure/ # 외부 인프라 구현 (DB, 외부 API 등)
-```
-
-자세한 구조는 [코드 컨벤션](./docs/system-design/04-convention.md) 문서를 참조하세요.
+- [프로젝트 컨벤션](./docs/conventions/common-conventions.md)
+- [레이어드 아키텍처](./docs/conventions/layered-architecture.md)
+- [패키지 구조](./docs/conventions/package-structure.md)
 
 ## 📊 DB 구조
 
@@ -88,3 +83,26 @@ kr.hhplus.be.server/
 프로젝트의 데이터베이스 스키마 설계에 관한 문서입니다:
 
 **[ERD 다이어그램](./docs/system-design/03-erd.md)** - 엔티티 관계 모델과 테이블 구조 설명
+
+## 🧪 테스트
+
+프로젝트의 테스트 관련 컨벤션과 구조는 아래 문서를 참조하세요:
+
+**[테스트 컨벤션](./docs/conventions/test-conventions.md)** - 통합 테스트 구조 및 작성 가이드라인
+
+### 테스트 실행 방법
+
+전체 테스트 실행:
+```bash
+./gradlew test
+```
+
+특정 테스트 클래스 실행:
+```bash
+./gradlew test --tests "kr.hhplus.be.server.api.user.UserApiTest"
+```
+
+특정 테스트 패키지 실행:
+```bash
+./gradlew test --tests "kr.hhplus.be.server.api.*"
+```

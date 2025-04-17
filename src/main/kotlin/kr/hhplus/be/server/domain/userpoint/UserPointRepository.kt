@@ -9,6 +9,9 @@ interface UserPointRepository {
 
     // Read
     fun findByUserId(userId: String): UserPoint?
+    
+    // Read with lock for concurrency control
+    fun findByUserIdWithLock(userId: String): UserPoint?
 
     // Update
     fun save(userPoint: UserPoint): UserPoint

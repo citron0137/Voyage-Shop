@@ -104,7 +104,7 @@ class UserPointServiceUnitTest {
         
         val initialUpdatedAt = existingUserPoint.updatedAt
         
-        `when`(userPointRepository.findByUserId(userId)).thenReturn(existingUserPoint)
+        `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
         `when`(userPointRepository.save(any())).thenAnswer {
             val saved = it.arguments[0] as UserPoint
             saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
@@ -120,7 +120,7 @@ class UserPointServiceUnitTest {
         assertNotNull(result.updatedAt)
         assertNotEquals(initialUpdatedAt, result.updatedAt, "updatedAt이 업데이트되어야 합니다")
         assertTrue(initialUpdatedAt.isBefore(result.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
-        verify(userPointRepository).findByUserId(userId)
+        verify(userPointRepository).findByUserIdWithLock(userId)
         verify(userPointRepository).save(any())
     }
 
@@ -136,7 +136,7 @@ class UserPointServiceUnitTest {
             amount = 1
         )
         
-        `when`(userPointRepository.findByUserId(userId)).thenReturn(existingUserPoint)
+        `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
 
         // when & then
         assertThrows<UserPointException.PointAmountOverflow> {
@@ -167,7 +167,7 @@ class UserPointServiceUnitTest {
         
         val initialUpdatedAt = existingUserPoint.updatedAt
         
-        `when`(userPointRepository.findByUserId(userId)).thenReturn(existingUserPoint)
+        `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
         `when`(userPointRepository.save(any())).thenAnswer {
             val saved = it.arguments[0] as UserPoint
             saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
@@ -183,7 +183,7 @@ class UserPointServiceUnitTest {
         assertNotNull(result.updatedAt)
         assertNotEquals(initialUpdatedAt, result.updatedAt, "updatedAt이 업데이트되어야 합니다")
         assertTrue(initialUpdatedAt.isBefore(result.updatedAt), "업데이트 후의 시간이 더 늦어야 합니다")
-        verify(userPointRepository).findByUserId(userId)
+        verify(userPointRepository).findByUserIdWithLock(userId)
         verify(userPointRepository).save(any())
     }
 
@@ -199,7 +199,7 @@ class UserPointServiceUnitTest {
             amount = 500L
         )
         
-        `when`(userPointRepository.findByUserId(userId)).thenReturn(existingUserPoint)
+        `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
 
         // when & then
         assertThrows<UserPointException.PointAmountUnderflow> {

@@ -11,7 +11,7 @@
 4. **Infrastructure**: 외부 시스템과의 통합, 레포지토리 구현
 
 
-위와 같은 레이어 구조를 채택한 이유: [링크](./04-01-layered-architecture.md)
+위와 같은 레이어 구조를 채택한 이유: [링크](./layered-architecture.md)
 
 
 ### Package(Folder) Structure
@@ -19,7 +19,7 @@
 * Layer마다 domain 패키지 정의
 * Layer마다 Domain이 조금씩 다를 수 있음 
 
-위와 같은 구조를 선택한 이유: [링크](./04-02-package-structure.md)
+위와 같은 구조를 선택한 이유: [링크](./package-structure.md)
 
 ### 최종 프로젝트 구조
 ```

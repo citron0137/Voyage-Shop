@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.product
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -105,7 +106,7 @@ class ProductService (
     fun updateStock(command: ProductCommand.UpdateStock): Product {
         if(command.amount < 0) throw ProductException.StockAmountShouldMoreThan0("")
         if(command.amount >= MAX_STOCK_AMOUNT) throw ProductException.StockAmountOverflow("")
-        val product = repository.findById(command.productId)
+        val product = repository.findByIdWithLock(command.productId)
             ?: throw ProductException.NotFound(command.productId+" is not found")
         product.stock = command.amount
         product.updatedAt = LocalDateTime.now()
@@ -113,8 +114,9 @@ class ProductService (
         return product
     }
 
+    @Transactional
     fun decreaseStock(command: ProductCommand.DecreaseStock): Product {
-        val product = repository.findById(command.productId)
+        val product = repository.findByIdWithLock(command.productId)
             ?: throw ProductException.NotFound(command.productId+" is not found")
         product.stock -= command.amount
         if(product.stock < 0)
@@ -124,9 +126,10 @@ class ProductService (
         return product
     }
 
+    @Transactional
     fun increaseStock(command: ProductCommand.IncreaseStock): Product {
-        val product = repository.findById(command.productId)
-        ?: throw ProductException.NotFound(command.productId+" is not found")
+        val product = repository.findByIdWithLock(command.productId)
+            ?: throw ProductException.NotFound(command.productId+" is not found")
         if( command.amount >= MAX_STOCK_AMOUNT - product.stock)
             throw ProductException.StockAmountOverflow(command.productId+" is more than $MAX_STOCK_AMOUNT")
         product.stock += command.amount
