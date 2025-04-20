@@ -125,6 +125,85 @@ class UserCriteria {
 }
 ```
 
+### 4.3 도메인 객체 변환 규칙
+
+1. **toCommand 패턴**: 모든 Criteria 클래스는 `toCommand()` 메소드를 통해 도메인 Command 객체로 변환되어야 함
+2. **책임 분리**: 도메인 간 변환 로직은 Criteria 내부에 캡슐화하여, Facade 클래스는 변환 세부 로직을 알 필요가 없도록 설계
+3. **파라미터 전달**: Criteria 클래스는 필요한 정보를 매개변수로 받아 내부에서 처리하는 방식으로 구현
+4. **명시적 변환**: 여러 도메인 간 변환이 필요한 경우 (예: BenefitMethod -> CouponBenefitMethod) 해당 변환 로직을 Criteria의 toCommand 메소드 내부에 구현하여 캡슐화
+
+```kotlin
+/**
+ * 쿠폰 발급 요청
+ */
+data class IssueCoupon(
+    val couponEventId: String,
+    val userId: String
+) {
+    /**
+     * CouponUserCommand로 변환
+     * 
+     * @param benefitMethod 쿠폰 이벤트의 혜택 방식
+     * @param benefitAmount 혜택 금액
+     * @return 생성된 CouponUserCommand.Create 객체
+     */
+    fun toCommand(benefitMethod: BenefitMethod, benefitAmount: String): CouponUserCommand.Create {
+        // BenefitMethod를 CouponBenefitMethod로 변환
+        val couponBenefitMethod = when (benefitMethod) {
+            BenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
+            BenefitMethod.DISCOUNT_PERCENTAGE -> CouponBenefitMethod.DISCOUNT_PERCENTAGE
+        }
+        
+        return CouponUserCommand.Create(
+            userId = userId,
+            benefitMethod = couponBenefitMethod,
+            benefitAmount = benefitAmount
+        )
+    }
+}
+```
+
+### 4.4 검증 책임 분배
+
+애플리케이션 레이어에서의 검증은 다음 원칙에 따라 구현합니다:
+
+1. **최소한의 검증**: 애플리케이션 레이어에서는 기본적인 데이터 형식 검증만 수행하고, 비즈니스 규칙 검증은 도메인 레이어에 위임
+2. **단순 DTO**: Criteria 클래스는 가능한 한 단순 DTO로 유지하고, 복잡한 검증 로직은 피함
+3. **검증 책임 분리**: 
+   - 애플리케이션 레이어: 형식 검증(빈 값, 기본 형식 등)
+   - 도메인 레이어: 비즈니스 규칙 검증, 도메인 로직 검증
+4. **Facade에서의 검증**: 유스케이스 수준의 검증(예: 두 Criteria 간의 관계 검증)은 Facade 메소드에서 수행
+
+예시:
+```kotlin
+// 도메인 레이어에서의 비즈니스 규칙 검증
+class CreateCouponEventCommand(
+    val benefitMethod: BenefitMethod,
+    val benefitAmount: String,
+    val totalIssueAmount: Long
+) {
+    init {
+        require(totalIssueAmount > 0) { "총 발급 수량은 0보다 커야 합니다." }
+        validateBenefitAmount()
+    }
+    
+    private fun validateBenefitAmount() {
+        // 도메인 규칙에 따른 검증
+    }
+}
+
+// 애플리케이션 레이어의 Facade에서의 유스케이스 검증
+@Transactional
+fun issueCouponToUser(issueCriteria: CouponEventCriteria.IssueCoupon, userCriteria: UserCriteria.GetById): CouponEventResult.IssueCoupon {
+    // 두 Criteria 간의 관계 검증 (유스케이스 수준 검증)
+    if (isUserEligibleForCoupon(issueCriteria.couponEventId, userCriteria.userId)) {
+        // 로직 수행
+    } else {
+        throw IneligibleUserException("This user is not eligible for this coupon")
+    }
+}
+```
+
 ## 5. 응답 결과 클래스 (XXXResult)
 
 ### 5.1 기본 구조
