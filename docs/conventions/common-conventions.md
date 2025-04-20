@@ -12,6 +12,7 @@
 
 ### 레이어별 상세 규약:
 - **Controller Layer**: [컨트롤러 레이어 규약](./controller-layer.md)
+- **Application Layer**: [애플리케이션 레이어 규약](./application-layer.md)
 
 위와 같은 레이어 구조를 채택한 이유: [링크](./layered-architecture.md)
 
