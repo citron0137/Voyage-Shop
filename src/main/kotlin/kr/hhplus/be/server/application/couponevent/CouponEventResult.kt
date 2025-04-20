@@ -8,11 +8,11 @@ import java.time.LocalDateTime
 /**
  * 쿠폰 이벤트 관련 결과를 담는 클래스
  */
-sealed class CouponEventResult {
+class CouponEventResult {
     /**
      * 단일 쿠폰 이벤트 조회 결과 DTO
      */
-    data class Get(
+    data class Single(
         val id: String,
         val benefitMethod: BenefitMethod,
         val benefitAmount: String,
@@ -20,13 +20,13 @@ sealed class CouponEventResult {
         val leftIssueAmount: Long,
         val createdAt: LocalDateTime,
         val updatedAt: LocalDateTime
-    ) : CouponEventResult() {
+    ) {
         companion object {
             /**
-             * CouponEvent 도메인 객체를 CouponEventResult.Get DTO로 변환합니다.
+             * CouponEvent 도메인 객체를 CouponEventResult.Single DTO로 변환합니다.
              */
-            fun from(couponEvent: CouponEvent): Get {
-                return Get(
+            fun from(couponEvent: CouponEvent): Single {
+                return Single(
                     id = couponEvent.id,
                     benefitMethod = couponEvent.benefitMethod,
                     benefitAmount = couponEvent.benefitAmount,
@@ -37,21 +37,34 @@ sealed class CouponEventResult {
                 )
             }
         }
+        
+        /**
+         * 도메인 객체를 받아 생성하는 생성자
+         */
+        constructor(couponEvent: CouponEvent) : this(
+            id = couponEvent.id,
+            benefitMethod = couponEvent.benefitMethod,
+            benefitAmount = couponEvent.benefitAmount,
+            totalIssueAmount = couponEvent.totalIssueAmount,
+            leftIssueAmount = couponEvent.leftIssueAmount,
+            createdAt = couponEvent.createdAt,
+            updatedAt = couponEvent.updatedAt
+        )
     }
 
     /**
      * 쿠폰 이벤트 목록 조회 결과 DTO
      */
     data class List(
-        val couponEvents: kotlin.collections.List<Get>
-    ) : CouponEventResult() {
+        val couponEvents: kotlin.collections.List<Single>
+    ) {
         companion object {
             /**
              * CouponEvent 도메인 객체 목록을 CouponEventResult.List DTO로 변환합니다.
              */
             fun from(couponEvents: kotlin.collections.List<CouponEvent>): List {
                 return List(
-                    couponEvents = couponEvents.map { Get.from(it) }
+                    couponEvents = couponEvents.map { Single.from(it) }
                 )
             }
         }
@@ -62,7 +75,7 @@ sealed class CouponEventResult {
      */
     data class IssueCoupon(
         val couponUserId: String
-    ) : CouponEventResult() {
+    ) {
         companion object {
             /**
              * CouponUser 도메인 객체를 CouponEventResult.IssueCoupon DTO로 변환합니다.
@@ -73,5 +86,12 @@ sealed class CouponEventResult {
                 )
             }
         }
+        
+        /**
+         * 도메인 객체를 받아 생성하는 생성자
+         */
+        constructor(couponUser: CouponUser) : this(
+            couponUserId = couponUser.couponUserId
+        )
     }
 } 

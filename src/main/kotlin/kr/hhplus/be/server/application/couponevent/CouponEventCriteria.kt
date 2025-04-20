@@ -1,20 +1,26 @@
 package kr.hhplus.be.server.application.couponevent
 
+import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
+import kr.hhplus.be.server.domain.coupon.CouponUserCommand
+import kr.hhplus.be.server.domain.couponevent.BenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
+import kr.hhplus.be.server.domain.couponevent.CreateCouponEventCommand
+
 /**
  * 쿠폰 이벤트 관련 요청 기준을 담는 클래스
  */
-sealed class CouponEventCriteria {
+class CouponEventCriteria {
     /**
      * 모든 쿠폰 이벤트 조회 요청
      */
-    class GetAll : CouponEventCriteria()
+    class GetAll
     
     /**
      * 쿠폰 이벤트 ID로 조회 요청
      */
     data class GetById(
         val couponEventId: String
-    ) : CouponEventCriteria() {
+    ) {
         init {
             require(couponEventId.isNotBlank()) { "쿠폰 이벤트 ID는 비어있을 수 없습니다." }
         }
@@ -27,7 +33,7 @@ sealed class CouponEventCriteria {
         val benefitMethod: String,
         val benefitAmount: String,
         val totalIssueAmount: Long
-    ) : CouponEventCriteria() {
+    ) {
         init {
             require(benefitMethod.isNotBlank()) { "혜택 방식은 비어있을 수 없습니다." }
             require(benefitAmount.isNotBlank()) { "혜택 금액은 비어있을 수 없습니다." }
@@ -45,6 +51,24 @@ sealed class CouponEventCriteria {
                 throw IllegalArgumentException("혜택 금액은 숫자여야 합니다.")
             }
         }
+        
+        /**
+         * 도메인 Command로 변환
+         */
+        fun toCommand(): CreateCouponEventCommand {
+            // 문자열을 BenefitMethod 열거형으로 변환
+            val benefitMethodEnum = when(benefitMethod) {
+                "DISCOUNT_FIXED_AMOUNT" -> BenefitMethod.DISCOUNT_FIXED_AMOUNT
+                "DISCOUNT_PERCENTAGE" -> BenefitMethod.DISCOUNT_PERCENTAGE
+                else -> throw CEInvalidBenefitMethodException(benefitMethod)
+            }
+            
+            return CreateCouponEventCommand(
+                benefitMethod = benefitMethodEnum,
+                benefitAmount = benefitAmount,
+                totalIssueAmount = totalIssueAmount
+            )
+        }
     }
     
     /**
@@ -53,10 +77,15 @@ sealed class CouponEventCriteria {
     data class IssueCoupon(
         val couponEventId: String,
         val userId: String
-    ) : CouponEventCriteria() {
+    ) {
         init {
             require(couponEventId.isNotBlank()) { "쿠폰 이벤트 ID는 비어있을 수 없습니다." }
             require(userId.isNotBlank()) { "사용자 ID는 비어있을 수 없습니다." }
         }
+        
+        /**
+         * 이 클래스에서는 Command를 생성하지 않고, 필요한 데이터만 제공합니다.
+         * 실제 CouponUserCommand 생성은 Facade에서 수행합니다.
+         */
     }
 } 
