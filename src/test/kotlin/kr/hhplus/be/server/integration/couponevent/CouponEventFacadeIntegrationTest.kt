@@ -5,9 +5,8 @@ import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
 import kr.hhplus.be.server.application.couponevent.CouponEventFacade
 import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
 import kr.hhplus.be.server.domain.coupon.CouponUserService
-import kr.hhplus.be.server.domain.couponevent.BenefitMethod
-import kr.hhplus.be.server.domain.couponevent.CENotFoundException
-import kr.hhplus.be.server.domain.couponevent.CEOutOfStockException
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserService
 import org.assertj.core.api.Assertions.assertThat
@@ -61,7 +60,7 @@ class CouponEventFacadeIntegrationTest {
 
         // then
         assertThat(result.id).isNotNull()
-        assertThat(result.benefitMethod).isEqualTo(BenefitMethod.DISCOUNT_FIXED_AMOUNT)
+        assertThat(result.benefitMethod).isEqualTo(CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT)
         assertThat(result.benefitAmount).isEqualTo("1000")
         assertThat(result.totalIssueAmount).isEqualTo(100)
         assertThat(result.leftIssueAmount).isEqualTo(100)
@@ -85,7 +84,7 @@ class CouponEventFacadeIntegrationTest {
         
         // then
         assertThat(result.id).isEqualTo(createdEvent.id)
-        assertThat(result.benefitMethod).isEqualTo(BenefitMethod.DISCOUNT_PERCENTAGE)
+        assertThat(result.benefitMethod).isEqualTo(CouponEventBenefitMethod.DISCOUNT_PERCENTAGE)
         assertThat(result.benefitAmount).isEqualTo("10")
     }
 
@@ -98,7 +97,7 @@ class CouponEventFacadeIntegrationTest {
         val getCriteria = CouponEventCriteria.GetById(notExistingId)
         
         // when & then
-        assertThrows<CENotFoundException> {
+        assertThrows<CouponEventException.NotFound> {
             couponEventFacade.getCouponEvent(getCriteria)
         }
     }
@@ -187,7 +186,7 @@ class CouponEventFacadeIntegrationTest {
             couponEventId = createdEvent.id,
             userId = testUsers[2].userId
         )
-        assertThrows<CEOutOfStockException> {
+        assertThrows<CouponEventException.OutOfStock> {
             couponEventFacade.issueCouponUser(issueCriteria2)
         }
     }

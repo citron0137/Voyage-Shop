@@ -6,7 +6,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import kr.hhplus.be.server.domain.couponevent.BenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -24,7 +24,7 @@ class CouponEventEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "benefit_method", nullable = false)
-    val benefitMethod: BenefitMethod,
+    val benefitMethod: CouponEventBenefitMethod,
 
     @Column(name = "benefit_amount", nullable = false)
     val benefitAmount: String,

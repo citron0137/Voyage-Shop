@@ -12,4 +12,5 @@ sealed class CouponException(message: String) : RuntimeException(message) {
     class CouponUserIdShouldNotBlank(message: String) : CouponException("coupon user id should not blank: $message")
     class DiscountAmountExceedsOriginalAmount(message: String) : CouponException("discount amount exceeds original amount: $message")
     class DiscountPercentageExceeds100(message: String) : CouponException("discount percentage exceeds 100%: $message")
+    class InvalidOriginalAmount(message: String) : CouponException("invalid original amount: $message")
 } 

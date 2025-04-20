@@ -87,6 +87,7 @@ class DomainCriteria {
 3. **기본값 제공**: 필요한 경우 파라미터에 기본값 제공
 4. **유효성 검증**: 생성자 내에서 기본적인 유효성 검증 수행
 5. **명확한 네이밍**: 작업 의도가 명확히 드러나는 클래스 이름 사용
+6. **Command 변환 메소드**: 각 Criteria 클래스는 도메인 Command 객체로 변환해주는 메소드를 제공해야 함
 
 예시:
 ```kotlin
@@ -97,7 +98,14 @@ class UserCriteria {
     /**
      * 사용자 생성 요청
      */
-    class Create
+    class Create {
+        /**
+         * 도메인 Command로 변환
+         */
+        fun toCommand(): UserCommand.Create {
+            return UserCommand.Create()
+        }
+    }
 
     /**
      * 사용자 조회 요청
@@ -117,6 +125,85 @@ class UserCriteria {
 }
 ```
 
+### 4.3 도메인 객체 변환 규칙
+
+1. **toCommand 패턴**: 모든 Criteria 클래스는 `toCommand()` 메소드를 통해 도메인 Command 객체로 변환되어야 함
+2. **책임 분리**: 도메인 간 변환 로직은 Criteria 내부에 캡슐화하여, Facade 클래스는 변환 세부 로직을 알 필요가 없도록 설계
+3. **파라미터 전달**: Criteria 클래스는 필요한 정보를 매개변수로 받아 내부에서 처리하는 방식으로 구현
+4. **명시적 변환**: 여러 도메인 간 변환이 필요한 경우 (예: BenefitMethod -> CouponBenefitMethod) 해당 변환 로직을 Criteria의 toCommand 메소드 내부에 구현하여 캡슐화
+
+```kotlin
+/**
+ * 쿠폰 발급 요청
+ */
+data class IssueCoupon(
+    val couponEventId: String,
+    val userId: String
+) {
+    /**
+     * CouponUserCommand로 변환
+     * 
+     * @param benefitMethod 쿠폰 이벤트의 혜택 방식
+     * @param benefitAmount 혜택 금액
+     * @return 생성된 CouponUserCommand.Create 객체
+     */
+    fun toCommand(benefitMethod: BenefitMethod, benefitAmount: String): CouponUserCommand.Create {
+        // BenefitMethod를 CouponBenefitMethod로 변환
+        val couponBenefitMethod = when (benefitMethod) {
+            BenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
+            BenefitMethod.DISCOUNT_PERCENTAGE -> CouponBenefitMethod.DISCOUNT_PERCENTAGE
+        }
+        
+        return CouponUserCommand.Create(
+            userId = userId,
+            benefitMethod = couponBenefitMethod,
+            benefitAmount = benefitAmount
+        )
+    }
+}
+```
+
+### 4.4 검증 책임 분배
+
+애플리케이션 레이어에서의 검증은 다음 원칙에 따라 구현합니다:
+
+1. **최소한의 검증**: 애플리케이션 레이어에서는 기본적인 데이터 형식 검증만 수행하고, 비즈니스 규칙 검증은 도메인 레이어에 위임
+2. **단순 DTO**: Criteria 클래스는 가능한 한 단순 DTO로 유지하고, 복잡한 검증 로직은 피함
+3. **검증 책임 분리**: 
+   - 애플리케이션 레이어: 형식 검증(빈 값, 기본 형식 등)
+   - 도메인 레이어: 비즈니스 규칙 검증, 도메인 로직 검증
+4. **Facade에서의 검증**: 유스케이스 수준의 검증(예: 두 Criteria 간의 관계 검증)은 Facade 메소드에서 수행
+
+예시:
+```kotlin
+// 도메인 레이어에서의 비즈니스 규칙 검증
+class CreateCouponEventCommand(
+    val benefitMethod: BenefitMethod,
+    val benefitAmount: String,
+    val totalIssueAmount: Long
+) {
+    init {
+        require(totalIssueAmount > 0) { "총 발급 수량은 0보다 커야 합니다." }
+        validateBenefitAmount()
+    }
+    
+    private fun validateBenefitAmount() {
+        // 도메인 규칙에 따른 검증
+    }
+}
+
+// 애플리케이션 레이어의 Facade에서의 유스케이스 검증
+@Transactional
+fun issueCouponToUser(issueCriteria: CouponEventCriteria.IssueCoupon, userCriteria: UserCriteria.GetById): CouponEventResult.IssueCoupon {
+    // 두 Criteria 간의 관계 검증 (유스케이스 수준 검증)
+    if (isUserEligibleForCoupon(issueCriteria.couponEventId, userCriteria.userId)) {
+        // 로직 수행
+    } else {
+        throw IneligibleUserException("This user is not eligible for this coupon")
+    }
+}
+```
+
 ## 5. 응답 결과 클래스 (XXXResult)
 
 ### 5.1 기본 구조
@@ -124,11 +211,11 @@ class UserCriteria {
 ```kotlin
 class DomainResult {
     // 단일 항목 응답
-    data class Item(
+    data class Single(
         // 필드 정의
     ) {
         companion object {
-            fun from(domainEntity: DomainEntity): Item {
+            fun from(domainEntity: DomainEntity): Single {
                 // 변환 로직
             }
         }
@@ -136,7 +223,7 @@ class DomainResult {
 
     // 목록 응답
     data class List(
-        val items: kotlin.collections.List<Item>
+        val items: kotlin.collections.List<Single>
     ) {
         companion object {
             fun from(entities: kotlin.collections.List<DomainEntity>): List {
@@ -154,6 +241,8 @@ class DomainResult {
 3. **불변 객체 사용**: 모든 응답 결과는 불변 객체로 설계
 4. **타입 안전성**: 명확한 타입 정의로 컴파일 타임에 오류 검출 가능
 5. **네임스페이스 구분**: 도메인 모델과 이름 충돌 방지를 위한 패키지 구조 활용
+6. **도메인 객체 생성자**: 각 Result 클래스는 도메인 객체를 파라미터로 받아 생성하는 생성자 또는 정적 팩토리 메소드를 제공해야 함
+7. **일관된 네이밍**: 단일 항목 응답은 `Single`로, 목록 응답은 `List`로 네이밍
 
 예시:
 ```kotlin
@@ -164,32 +253,40 @@ class UserResult {
     /**
      * 단일 사용자 정보 응답
      */
-    data class User(
+    data class Single(
         val userId: String,
         val createdAt: LocalDateTime,
         val updatedAt: LocalDateTime
     ) {
         companion object {
-            fun from(user: kr.hhplus.be.server.domain.user.User): User {
-                return User(
+            // 도메인 객체로부터 Result 객체 생성
+            fun from(user: kr.hhplus.be.server.domain.user.User): Single {
+                return Single(
                     userId = user.userId,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt
                 )
             }
         }
+
+        // 생성자를 통한 변환 방식도 가능
+        // constructor(user: kr.hhplus.be.server.domain.user.User) : this(
+        //     userId = user.userId,
+        //     createdAt = user.createdAt,
+        //     updatedAt = user.updatedAt
+        // )
     }
 
     /**
      * 사용자 목록 응답
      */
     data class List(
-        val users: kotlin.collections.List<User>
+        val users: kotlin.collections.List<Single>
     ) {
         companion object {
             fun from(users: kotlin.collections.List<kr.hhplus.be.server.domain.user.User>): List {
                 return List(
-                    users = users.map { User.from(it) }
+                    users = users.map { Single.from(it) }
                 )
             }
         }

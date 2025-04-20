@@ -228,13 +228,14 @@ class OrderFacade(
         
         if (criteria.couponUserId != null) {
             // 쿠폰 조회 및 할인 금액 계산
-            val couponUser = couponUserService.getCouponUser(criteria.couponUserId)
+            val getCouponCommand = CouponUserCommand.GetById(criteria.couponUserId)
+            val couponUser = couponUserService.getCouponUser(getCouponCommand)
             val discountAmount = couponUser.calculateDiscountAmount(totalAmount)
             
             if (discountAmount > 0) {
                 // 쿠폰 사용 처리
                 val useCommand = CouponUserCommand.Use(criteria.couponUserId)
-                couponUserService.use(useCommand)
+                couponUserService.useCoupon(useCommand)
                 
                 // 할인 정보 추가
                 totalDiscountAmount += discountAmount

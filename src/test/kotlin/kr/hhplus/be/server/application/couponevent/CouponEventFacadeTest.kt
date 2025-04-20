@@ -4,13 +4,11 @@ import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
 import kr.hhplus.be.server.domain.coupon.CouponUser
 import kr.hhplus.be.server.domain.coupon.CouponUserCommand
 import kr.hhplus.be.server.domain.coupon.CouponUserService
-import kr.hhplus.be.server.domain.couponevent.BenefitMethod
-import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
-import kr.hhplus.be.server.domain.couponevent.CENotFoundException
-import kr.hhplus.be.server.domain.couponevent.CEOutOfStockException
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
-import kr.hhplus.be.server.domain.couponevent.CreateCouponEventCommand
+import kr.hhplus.be.server.domain.couponevent.CouponEventCommand
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -48,7 +46,7 @@ class CouponEventFacadeTest {
         now = LocalDateTime.now()
         sampleCouponEvent = CouponEvent(
             id = "event-id",
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 50,
@@ -93,7 +91,7 @@ class CouponEventFacadeTest {
         )
         
         // when & then
-        assertThrows<CEInvalidBenefitMethodException> {
+        assertThrows<CouponEventException.InvalidBenefitMethod> {
             couponEventFacade.createCouponEvent(criteria)
         }
     }
@@ -107,7 +105,7 @@ class CouponEventFacadeTest {
             sampleCouponEvent,
             CouponEvent(
                 id = "event-id-2",
-                benefitMethod = BenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "10",
                 totalIssueAmount = 50,
                 leftIssueAmount = 25,
@@ -177,10 +175,10 @@ class CouponEventFacadeTest {
             userId = "user-id"
         )
         
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenThrow(CENotFoundException(couponEventId))
+        `when`(couponEventService.getCouponEvent(couponEventId)).thenThrow(CouponEventException.NotFound(couponEventId))
         
         // when & then
-        assertThrows<CENotFoundException> {
+        assertThrows<CouponEventException.NotFound> {
             couponEventFacade.issueCouponUser(criteria)
         }
     }
@@ -197,7 +195,7 @@ class CouponEventFacadeTest {
         
         val emptyStockEvent = CouponEvent(
             id = couponEventId,
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 0,
@@ -208,7 +206,7 @@ class CouponEventFacadeTest {
         `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(emptyStockEvent)
         
         // when & then
-        assertThrows<CEOutOfStockException> {
+        assertThrows<CouponEventException.OutOfStock> {
             couponEventFacade.issueCouponUser(criteria)
         }
     }

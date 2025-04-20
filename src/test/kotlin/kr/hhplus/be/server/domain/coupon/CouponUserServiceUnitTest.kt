@@ -1,19 +1,20 @@
 package kr.hhplus.be.server.domain.coupon
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
+@DisplayName("CouponUserService 단위 테스트")
 class CouponUserServiceUnitTest {
     @Mock
     private lateinit var couponUserRepository: CouponUserRepository
@@ -71,7 +72,7 @@ class CouponUserServiceUnitTest {
         `when`(couponUserRepository.update(any<CouponUser>())).thenReturn(couponUser)
 
         // when
-        val result = couponUserService.use(command)
+        val result = couponUserService.useCoupon(command)
 
         // then
         assertEquals(couponUserId, result.couponUserId)
@@ -99,7 +100,7 @@ class CouponUserServiceUnitTest {
 
         // when & then
         assertThrows<CouponException.AlreadyUsed> {
-            couponUserService.use(command)
+            couponUserService.useCoupon(command)
         }
     }
 
@@ -113,7 +114,7 @@ class CouponUserServiceUnitTest {
 
         // when & then
         assertThrows<CouponException.NotFound> {
-            couponUserService.use(command)
+            couponUserService.useCoupon(command)
         }
     }
 
@@ -122,6 +123,7 @@ class CouponUserServiceUnitTest {
     fun `사용자의 쿠폰 목록을 조회할 수 있다`() {
         // given
         val userId = "user-id"
+        val command = CouponUserCommand.GetByUserId(userId)
         val couponUsers = listOf(
             CouponUser(
                 couponUserId = UUID.randomUUID().toString(),
@@ -145,7 +147,7 @@ class CouponUserServiceUnitTest {
         `when`(couponUserRepository.findByUserId(userId)).thenReturn(couponUsers)
 
         // when
-        val result = couponUserService.getCouponUsersByUserId(userId)
+        val result = couponUserService.getAllCouponsByUserId(command)
 
         // then
         assertEquals(2, result.size)
@@ -154,8 +156,8 @@ class CouponUserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("쿠폰 ID로 쿠폰을 조회할 수 있다")
-    fun `쿠폰 ID로 쿠폰을 조회할 수 있다`() {
+    @DisplayName("쿠폰 ID로 쿠폰을 조회한다")
+    fun `쿠폰 ID로 쿠폰을 조회한다`() {
         // given
         val couponUserId = UUID.randomUUID().toString()
         val couponUser = CouponUser(
@@ -170,7 +172,8 @@ class CouponUserServiceUnitTest {
         `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
 
         // when
-        val result = couponUserService.getCouponUser(couponUserId)
+        val command = CouponUserCommand.GetById(couponUserId)
+        val result = couponUserService.getCouponUser(command)
 
         // then
         assertEquals(couponUserId, result.couponUserId)
@@ -187,8 +190,9 @@ class CouponUserServiceUnitTest {
         `when`(couponUserRepository.findById(couponUserId)).thenReturn(null)
 
         // when & then
+        val command = CouponUserCommand.GetById(couponUserId)
         assertThrows<CouponException.NotFound> {
-            couponUserService.getCouponUser(couponUserId)
+            couponUserService.getCouponUser(command)
         }
     }
 } 

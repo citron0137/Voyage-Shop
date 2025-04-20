@@ -25,14 +25,14 @@ class CouponEventServiceUnitTest {
     @DisplayName("쿠폰 이벤트를 생성할 수 있다")
     fun `쿠폰 이벤트를 생성할 수 있다`() {
         // given
-        val command = CreateCouponEventCommand(
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+        val command = CouponEventCommand.Create(
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100
         )
         val expectedCouponEvent = CouponEvent(
             id = UUID.randomUUID().toString(),
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 100,
@@ -59,7 +59,7 @@ class CouponEventServiceUnitTest {
         val id = UUID.randomUUID().toString()
         val expectedCouponEvent = CouponEvent(
             id = id,
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 100,
@@ -87,7 +87,7 @@ class CouponEventServiceUnitTest {
         `when`(couponEventRepository.findById(id)).thenReturn(null)
 
         // when & then
-        assertThrows<CENotFoundException> {
+        assertThrows<CouponEventException.NotFound> {
             couponEventService.getCouponEvent(id)
         }
     }
@@ -99,7 +99,7 @@ class CouponEventServiceUnitTest {
         val couponEvents = listOf(
             CouponEvent(
                 id = UUID.randomUUID().toString(),
-                benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "1000",
                 totalIssueAmount = 100,
                 leftIssueAmount = 100,
@@ -108,7 +108,7 @@ class CouponEventServiceUnitTest {
             ),
             CouponEvent(
                 id = UUID.randomUUID().toString(),
-                benefitMethod = BenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "10",
                 totalIssueAmount = 50,
                 leftIssueAmount = 50,
@@ -134,7 +134,7 @@ class CouponEventServiceUnitTest {
         val id = UUID.randomUUID().toString()
         val initialCouponEvent = CouponEvent(
             id = id,
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 10,
@@ -144,7 +144,7 @@ class CouponEventServiceUnitTest {
         
         val expectedUpdatedCouponEvent = CouponEvent(
             id = id,
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 9,
@@ -170,7 +170,7 @@ class CouponEventServiceUnitTest {
         val id = UUID.randomUUID().toString()
         val emptyStockCouponEvent = CouponEvent(
             id = id,
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 0,
@@ -180,7 +180,7 @@ class CouponEventServiceUnitTest {
         `when`(couponEventRepository.findById(id)).thenReturn(emptyStockCouponEvent)
 
         // when & then
-        assertThrows<CEOutOfStockException> {
+        assertThrows<CouponEventException.OutOfStock> {
             couponEventService.decreaseStock(id)
         }
     }
@@ -191,7 +191,7 @@ class CouponEventServiceUnitTest {
         // given
         val couponEvent = CouponEvent(
             id = UUID.randomUUID().toString(),
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 10,
@@ -210,7 +210,7 @@ class CouponEventServiceUnitTest {
         // given
         val couponEvent = CouponEvent(
             id = UUID.randomUUID().toString(),
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 0,
@@ -219,7 +219,7 @@ class CouponEventServiceUnitTest {
         )
 
         // when & then
-        assertThrows<CEOutOfStockException> {
+        assertThrows<CouponEventException.OutOfStock> {
             couponEvent.validateCanIssue()
         }
     }

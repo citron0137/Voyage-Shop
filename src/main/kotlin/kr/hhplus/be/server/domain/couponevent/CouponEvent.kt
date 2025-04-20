@@ -2,10 +2,11 @@ package kr.hhplus.be.server.domain.couponevent
 
 import java.time.LocalDateTime
 import java.util.UUID
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 
 data class CouponEvent(
     val id: String = UUID.randomUUID().toString(),
-    val benefitMethod: BenefitMethod,
+    val benefitMethod: CouponEventBenefitMethod,
     val benefitAmount: String,
     val totalIssueAmount: Long,
     var leftIssueAmount: Long,
@@ -16,11 +17,11 @@ data class CouponEvent(
      * 쿠폰 이벤트의 남은 발급 수량을 감소시킵니다.
      * 재고가 부족한 경우 예외가 발생합니다.
      * 
-     * @throws CEOutOfStockException 재고가 없는 경우 발생
+     * @throws CouponEventException.OutOfStock 재고가 없는 경우 발생
      */
     fun decreaseLeftIssueAmount() {
         if (leftIssueAmount <= 0) {
-            throw CEOutOfStockException("Coupon event $id is out of stock")
+            throw CouponEventException.OutOfStock("Coupon event $id is out of stock")
         }
         leftIssueAmount--
         updatedAt = LocalDateTime.now()
@@ -28,11 +29,11 @@ data class CouponEvent(
 
     /**
      * 쿠폰 발급이 가능한지 확인합니다.
-     * @throws CEOutOfStockException 재고가 없는 경우 예외 발생
+     * @throws CouponEventException.OutOfStock 재고가 없는 경우 예외 발생
      */
     fun validateCanIssue() {
         if (leftIssueAmount <= 0) {
-            throw CEOutOfStockException("Coupon event $id is out of stock")
+            throw CouponEventException.OutOfStock("Coupon event $id is out of stock")
         }
     }
 
