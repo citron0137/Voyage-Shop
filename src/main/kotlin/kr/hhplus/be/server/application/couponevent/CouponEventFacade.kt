@@ -1,9 +1,6 @@
 package kr.hhplus.be.server.application.couponevent
 
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
 import kr.hhplus.be.server.domain.coupon.CouponUserService
-import kr.hhplus.be.server.domain.couponevent.BenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
 import org.springframework.stereotype.Component
@@ -81,25 +78,10 @@ class CouponEventFacade(
         couponEventService.decreaseStock(criteria.couponEventId)
         
         // 4. 쿠폰 유저 생성 (실제 CouponUserService 호출)
-        val benefitMethod = convertBenefitMethodToCouponBenefitMethod(couponEvent.benefitMethod)
-        
-        val createCommand = CouponUserCommand.Create(
-            userId = criteria.userId,
-            benefitMethod = benefitMethod,
-            benefitAmount = couponEvent.benefitAmount
-        )
+        // Criteria에서 Command로 변환 (내부에서 BenefitMethod 변환도 수행)
+        val createCommand = criteria.toCommand(couponEvent.benefitMethod, couponEvent.benefitAmount)
         
         val couponUser = couponUserService.create(createCommand)
         return CouponEventResult.IssueCoupon.from(couponUser)
-    }
-    
-    /**
-     * CouponEvent의 BenefitMethod를 CouponUser의 CouponBenefitMethod로 변환합니다.
-     */
-    private fun convertBenefitMethodToCouponBenefitMethod(benefitMethod: BenefitMethod): CouponBenefitMethod {
-        return when (benefitMethod) {
-            BenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
-            BenefitMethod.DISCOUNT_PERCENTAGE -> CouponBenefitMethod.DISCOUNT_PERCENTAGE
-        }
     }
 } 
