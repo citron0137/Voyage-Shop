@@ -15,7 +15,7 @@ class CouponEventTest {
         // given
         val couponEvent = CouponEvent(
             id = "coupon-event-id",
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 10,
@@ -36,7 +36,7 @@ class CouponEventTest {
         // given
         val couponEvent = CouponEvent(
             id = "coupon-event-id",
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 0,
@@ -45,7 +45,7 @@ class CouponEventTest {
         )
 
         // when & then
-        assertThrows<CEOutOfStockException> {
+        assertThrows<CouponEventException.OutOfStock> {
             couponEvent.decreaseLeftIssueAmount()
         }
     }
@@ -56,7 +56,7 @@ class CouponEventTest {
         // given
         val couponEvent = CouponEvent(
             id = "coupon-event-id",
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 10,
@@ -74,7 +74,7 @@ class CouponEventTest {
         // given
         val couponEvent = CouponEvent(
             id = "coupon-event-id",
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 0,
@@ -92,7 +92,7 @@ class CouponEventTest {
         // given
         val couponEvent = CouponEvent(
             id = "coupon-event-id",
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 10,
@@ -110,7 +110,7 @@ class CouponEventTest {
         // given
         val couponEvent = CouponEvent(
             id = "coupon-event-id",
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100,
             leftIssueAmount = 0,
@@ -119,7 +119,7 @@ class CouponEventTest {
         )
 
         // when & then
-        assertThrows<CEOutOfStockException> {
+        assertThrows<CouponEventException.OutOfStock> {
             couponEvent.validateCanIssue()
         }
     }

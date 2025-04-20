@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.couponevent
 
 import kr.hhplus.be.server.domain.coupon.CouponUserService
-import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
+import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -21,7 +21,7 @@ class CouponEventFacade(
      * 
      * @param criteria 쿠폰 이벤트 생성 요청 기준
      * @return 생성된 쿠폰 이벤트 정보
-     * @throws CEInvalidBenefitMethodException 유효하지 않은 혜택 유형인 경우
+     * @throws CouponEventException.InvalidBenefitMethod 유효하지 않은 혜택 유형인 경우
      */
     @Transactional
     fun createCouponEvent(criteria: CouponEventCriteria.Create): CouponEventResult.Single {
@@ -49,7 +49,7 @@ class CouponEventFacade(
      * 
      * @param criteria 쿠폰 이벤트 조회 요청 기준
      * @return 쿠폰 이벤트 정보
-     * @throws kr.hhplus.be.server.domain.couponevent.CENotFoundException 쿠폰 이벤트를 찾을 수 없는 경우
+     * @throws CouponEventException.NotFound 쿠폰 이벤트를 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
     fun getCouponEvent(criteria: CouponEventCriteria.GetById): CouponEventResult.Single {
@@ -62,8 +62,8 @@ class CouponEventFacade(
      * 
      * @param criteria 쿠폰 발급 요청 기준
      * @return 발급된 쿠폰 정보
-     * @throws kr.hhplus.be.server.domain.couponevent.CENotFoundException 쿠폰 이벤트를 찾을 수 없는 경우
-     * @throws kr.hhplus.be.server.domain.couponevent.CEOutOfStockException 쿠폰 재고가 없는 경우
+     * @throws CouponEventException.NotFound 쿠폰 이벤트를 찾을 수 없는 경우
+     * @throws CouponEventException.OutOfStock 쿠폰 재고가 없는 경우
      * @throws kr.hhplus.be.server.domain.coupon.CouponUserException.AlreadyIssuedException 이미 발급된 쿠폰인 경우
      */
     @Transactional

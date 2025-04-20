@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.couponevent
 
 import kr.hhplus.be.server.domain.coupon.CouponUser
-import kr.hhplus.be.server.domain.couponevent.BenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import java.time.LocalDateTime
 
@@ -14,7 +14,7 @@ class CouponEventResult {
      */
     data class Single(
         val id: String,
-        val benefitMethod: BenefitMethod,
+        val benefitMethod: CouponEventBenefitMethod,
         val benefitAmount: String,
         val totalIssueAmount: Long,
         val leftIssueAmount: Long,

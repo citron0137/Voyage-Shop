@@ -2,9 +2,9 @@ package kr.hhplus.be.server.application.couponevent
 
 import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
 import kr.hhplus.be.server.domain.coupon.CouponUserCommand
-import kr.hhplus.be.server.domain.couponevent.BenefitMethod
-import kr.hhplus.be.server.domain.couponevent.CEInvalidBenefitMethodException
-import kr.hhplus.be.server.domain.couponevent.CreateCouponEventCommand
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CouponEventCommand
+import kr.hhplus.be.server.domain.couponevent.CouponEventException
 
 /**
  * 쿠폰 이벤트 관련 요청 기준을 담는 클래스
@@ -33,15 +33,15 @@ class CouponEventCriteria {
         /**
          * 도메인 Command로 변환
          */
-        fun toCommand(): CreateCouponEventCommand {
+        fun toCommand(): CouponEventCommand.Create {
             // 문자열을 BenefitMethod 열거형으로 변환
             val benefitMethodEnum = when(benefitMethod) {
-                "DISCOUNT_FIXED_AMOUNT" -> BenefitMethod.DISCOUNT_FIXED_AMOUNT
-                "DISCOUNT_PERCENTAGE" -> BenefitMethod.DISCOUNT_PERCENTAGE
-                else -> throw CEInvalidBenefitMethodException(benefitMethod)
+                "DISCOUNT_FIXED_AMOUNT" -> CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT
+                "DISCOUNT_PERCENTAGE" -> CouponEventBenefitMethod.DISCOUNT_PERCENTAGE
+                else -> throw CouponEventException.InvalidBenefitMethod(benefitMethod)
             }
             
-            return CreateCouponEventCommand(
+            return CouponEventCommand.Create(
                 benefitMethod = benefitMethodEnum,
                 benefitAmount = benefitAmount,
                 totalIssueAmount = totalIssueAmount
@@ -63,11 +63,11 @@ class CouponEventCriteria {
          * @param benefitAmount 혜택 금액
          * @return 생성된 CouponUserCommand.Create 객체
          */
-        fun toCommand(benefitMethod: BenefitMethod, benefitAmount: String): CouponUserCommand.Create {
+        fun toCommand(benefitMethod: CouponEventBenefitMethod, benefitAmount: String): CouponUserCommand.Create {
             // BenefitMethod를 CouponBenefitMethod로 변환
             val couponBenefitMethod = when (benefitMethod) {
-                BenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
-                BenefitMethod.DISCOUNT_PERCENTAGE -> CouponBenefitMethod.DISCOUNT_PERCENTAGE
+                CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
+                CouponEventBenefitMethod.DISCOUNT_PERCENTAGE -> CouponBenefitMethod.DISCOUNT_PERCENTAGE
             }
             
             return CouponUserCommand.Create(

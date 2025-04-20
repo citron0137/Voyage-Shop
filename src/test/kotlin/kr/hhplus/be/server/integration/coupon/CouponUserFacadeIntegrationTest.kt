@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.integration.coupon
 
 import kr.hhplus.be.server.TestcontainersConfiguration
+import kr.hhplus.be.server.application.couponuser.CouponUserCriteria
 import kr.hhplus.be.server.application.couponuser.CouponUserFacade
 import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
 import kr.hhplus.be.server.domain.coupon.CouponException
@@ -47,9 +48,10 @@ class CouponUserFacadeIntegrationTest {
         val userId = testUsers[0].userId
         val benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
         val benefitAmount = "1000"
+        val criteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
 
         // when
-        val couponUser = couponUserFacade.issueCoupon(userId, benefitMethod, benefitAmount)
+        val couponUser = couponUserFacade.issueCoupon(criteria)
 
         // then
         assertThat(couponUser.couponUserId).isNotNull()
@@ -68,10 +70,13 @@ class CouponUserFacadeIntegrationTest {
         val benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
         val benefitAmount = "2000"
         
-        val issuedCoupon = couponUserFacade.issueCoupon(userId, benefitMethod, benefitAmount)
+        val issueCriteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
+        val issuedCoupon = couponUserFacade.issueCoupon(issueCriteria)
+        
+        val useCriteria = CouponUserCriteria.Use(issuedCoupon.couponUserId)
         
         // when
-        val usedCoupon = couponUserFacade.useCoupon(issuedCoupon.couponUserId)
+        val usedCoupon = couponUserFacade.useCoupon(useCriteria)
         
         // then
         assertThat(usedCoupon.couponUserId).isEqualTo(issuedCoupon.couponUserId)
@@ -84,18 +89,20 @@ class CouponUserFacadeIntegrationTest {
     fun useAlreadyUsedCouponTest() {
         // given
         val userId = testUsers[2].userId
-        val issuedCoupon = couponUserFacade.issueCoupon(
+        val issueCriteria = CouponUserCriteria.Create(
             userId, 
-            CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, 
+            CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT.name, 
             "3000"
         )
+        val issuedCoupon = couponUserFacade.issueCoupon(issueCriteria)
         
         // 쿠폰 사용
-        couponUserFacade.useCoupon(issuedCoupon.couponUserId)
+        val useCriteria = CouponUserCriteria.Use(issuedCoupon.couponUserId)
+        couponUserFacade.useCoupon(useCriteria)
         
         // when & then
         assertThrows<CouponException.AlreadyUsed> {
-            couponUserFacade.useCoupon(issuedCoupon.couponUserId)
+            couponUserFacade.useCoupon(useCriteria)
         }
     }
 
@@ -109,10 +116,13 @@ class CouponUserFacadeIntegrationTest {
         val benefitAmount = "2000"
         val originalAmount = 10000L
         
-        val coupon = couponUserFacade.issueCoupon(userId, benefitMethod, benefitAmount)
+        val issueCriteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
+        val coupon = couponUserFacade.issueCoupon(issueCriteria)
+        
+        val calculateCriteria = CouponUserCriteria.CalculateDiscount(coupon.couponUserId, originalAmount)
         
         // when
-        val discountAmount = couponUserFacade.calculateDiscountAmount(coupon.couponUserId, originalAmount)
+        val discountAmount = couponUserFacade.calculateDiscountAmount(calculateCriteria)
         
         // then
         assertThat(discountAmount).isEqualTo(2000L)
@@ -128,10 +138,13 @@ class CouponUserFacadeIntegrationTest {
         val benefitAmount = "10" // 10% 할인
         val originalAmount = 10000L
         
-        val coupon = couponUserFacade.issueCoupon(userId, benefitMethod, benefitAmount)
+        val issueCriteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
+        val coupon = couponUserFacade.issueCoupon(issueCriteria)
+        
+        val calculateCriteria = CouponUserCriteria.CalculateDiscount(coupon.couponUserId, originalAmount)
         
         // when
-        val discountAmount = couponUserFacade.calculateDiscountAmount(coupon.couponUserId, originalAmount)
+        val discountAmount = couponUserFacade.calculateDiscountAmount(calculateCriteria)
         
         // then
         assertThat(discountAmount).isEqualTo(1000L) // 10000의 10%는 1000
@@ -146,10 +159,13 @@ class CouponUserFacadeIntegrationTest {
         val benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
         val benefitAmount = "5000"
         
-        val issuedCoupon = couponUserFacade.issueCoupon(userId, benefitMethod, benefitAmount)
+        val issueCriteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
+        val issuedCoupon = couponUserFacade.issueCoupon(issueCriteria)
+        
+        val getCriteria = CouponUserCriteria.GetById(issuedCoupon.couponUserId)
         
         // when
-        val coupon = couponUserFacade.getCouponUser(issuedCoupon.couponUserId)
+        val coupon = couponUserFacade.getCouponUser(getCriteria)
         
         // then
         assertThat(coupon.couponUserId).isEqualTo(issuedCoupon.couponUserId)
@@ -164,10 +180,11 @@ class CouponUserFacadeIntegrationTest {
     fun getCouponUserNotFoundTest() {
         // given
         val nonExistentCouponId = "non-existent-coupon-id-${UUID.randomUUID()}"
+        val getCriteria = CouponUserCriteria.GetById(nonExistentCouponId)
         
         // when & then
         assertThrows<CouponException.NotFound> {
-            couponUserFacade.getCouponUser(nonExistentCouponId)
+            couponUserFacade.getCouponUser(getCriteria)
         }
     }
 
@@ -179,12 +196,18 @@ class CouponUserFacadeIntegrationTest {
         val userId = testUsers[6].userId
         
         // 쿠폰 3개 발급
-        couponUserFacade.issueCoupon(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1000")
-        couponUserFacade.issueCoupon(userId, CouponBenefitMethod.DISCOUNT_PERCENTAGE, "5")
-        couponUserFacade.issueCoupon(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, "3000")
+        val criteria1 = CouponUserCriteria.Create(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT.name, "1000")
+        val criteria2 = CouponUserCriteria.Create(userId, CouponBenefitMethod.DISCOUNT_PERCENTAGE.name, "5")
+        val criteria3 = CouponUserCriteria.Create(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT.name, "3000")
+        
+        couponUserFacade.issueCoupon(criteria1)
+        couponUserFacade.issueCoupon(criteria2)
+        couponUserFacade.issueCoupon(criteria3)
+        
+        val getUserCriteria = CouponUserCriteria.GetByUserId(userId)
         
         // when
-        val coupons = couponUserFacade.getAllCouponsByUserId(userId)
+        val coupons = couponUserFacade.getAllCouponsByUserId(getUserCriteria)
         
         // then
         assertThat(coupons.couponUsers).hasSize(3)
@@ -196,14 +219,18 @@ class CouponUserFacadeIntegrationTest {
     @Transactional
     fun getAllCouponsTest() {
         // given
-        val beforeCount = couponUserFacade.getAllCoupons().couponUsers.size
+        val getAllCriteria = CouponUserCriteria.GetAll()
+        val beforeCount = couponUserFacade.getAllCoupons(getAllCriteria).couponUsers.size
         
         // 쿠폰 2개 발급
-        couponUserFacade.issueCoupon(testUsers[7].userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1500")
-        couponUserFacade.issueCoupon(testUsers[8].userId, CouponBenefitMethod.DISCOUNT_PERCENTAGE, "15")
+        val criteria1 = CouponUserCriteria.Create(testUsers[7].userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT.name, "1500")
+        val criteria2 = CouponUserCriteria.Create(testUsers[8].userId, CouponBenefitMethod.DISCOUNT_PERCENTAGE.name, "15")
+        
+        couponUserFacade.issueCoupon(criteria1)
+        couponUserFacade.issueCoupon(criteria2)
         
         // when
-        val coupons = couponUserFacade.getAllCoupons()
+        val coupons = couponUserFacade.getAllCoupons(getAllCriteria)
         
         // then
         assertThat(coupons.couponUsers.size).isEqualTo(beforeCount + 2)

@@ -13,6 +13,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import java.time.LocalDateTime
 
@@ -34,6 +35,8 @@ class CouponUserFacadeTest {
     fun getAllCouponsByUserId() {
         // given
         val userId = "user1"
+        val criteria = CouponUserCriteria.GetByUserId(userId)
+        val serviceCommand = CouponUserCommand.GetByUserId(userId)
         val couponUsers = listOf(
             CouponUser(
                 couponUserId = "coupon1",
@@ -55,10 +58,10 @@ class CouponUserFacadeTest {
             )
         )
         
-        `when`(couponUserService.getAllCouponsByUserId(userId, userService)).thenReturn(couponUsers)
+        `when`(couponUserService.getAllCouponsByUserId(serviceCommand)).thenReturn(couponUsers)
         
         // when
-        val result = couponUserFacade.getAllCouponsByUserId(userId)
+        val result = couponUserFacade.getAllCouponsByUserId(criteria)
         
         // then
         assertThat(result.couponUsers).hasSize(2)
@@ -69,7 +72,7 @@ class CouponUserFacadeTest {
         assertThat(result.couponUsers[1].benefitMethod).isEqualTo(CouponBenefitMethod.DISCOUNT_PERCENTAGE)
         assertThat(result.couponUsers[1].benefitAmount).isEqualTo("10")
         
-        verify(couponUserService, times(1)).getAllCouponsByUserId(userId, userService)
+        verify(couponUserService, times(1)).getAllCouponsByUserId(serviceCommand)
     }
     
     @Test
@@ -77,6 +80,8 @@ class CouponUserFacadeTest {
     fun getCouponUser() {
         // given
         val couponUserId = "coupon1"
+        val criteria = CouponUserCriteria.GetById(couponUserId)
+        val serviceCommand = CouponUserCommand.GetById(couponUserId)
         val couponUser = CouponUser(
             couponUserId = couponUserId,
             userId = "user1",
@@ -87,17 +92,17 @@ class CouponUserFacadeTest {
             updatedAt = LocalDateTime.now()
         )
         
-        `when`(couponUserService.getCouponUserWithValidation(couponUserId)).thenReturn(couponUser)
+        `when`(couponUserService.getCouponUser(serviceCommand)).thenReturn(couponUser)
         
         // when
-        val result = couponUserFacade.getCouponUser(couponUserId)
+        val result = couponUserFacade.getCouponUser(criteria)
         
         // then
         assertThat(result.couponUserId).isEqualTo(couponUserId)
         assertThat(result.benefitMethod).isEqualTo(CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT)
         assertThat(result.benefitAmount).isEqualTo("1000")
         
-        verify(couponUserService, times(1)).getCouponUserWithValidation(couponUserId)
+        verify(couponUserService, times(1)).getCouponUser(serviceCommand)
     }
     
     @Test
@@ -107,6 +112,9 @@ class CouponUserFacadeTest {
         val userId = "user1"
         val benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
         val benefitAmount = "1000"
+        val criteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
+        val serviceCommand = CouponUserCommand.Create(userId, benefitMethod, benefitAmount)
+        
         val createdCouponUser = CouponUser(
             couponUserId = "new-coupon-id",
             userId = userId,
@@ -117,10 +125,10 @@ class CouponUserFacadeTest {
             updatedAt = LocalDateTime.now()
         )
         
-        `when`(couponUserService.issueCoupon(userId, benefitMethod, benefitAmount, userService)).thenReturn(createdCouponUser)
+        `when`(couponUserService.create(serviceCommand)).thenReturn(createdCouponUser)
         
         // when
-        val result = couponUserFacade.issueCoupon(userId, benefitMethod, benefitAmount)
+        val result = couponUserFacade.issueCoupon(criteria)
         
         // then
         assertThat(result.couponUserId).isEqualTo("new-coupon-id")
@@ -128,7 +136,7 @@ class CouponUserFacadeTest {
         assertThat(result.benefitMethod).isEqualTo(benefitMethod)
         assertThat(result.benefitAmount).isEqualTo(benefitAmount)
         
-        verify(couponUserService, times(1)).issueCoupon(userId, benefitMethod, benefitAmount, userService)
+        verify(couponUserService, times(1)).create(serviceCommand)
     }
     
     @Test
@@ -136,6 +144,8 @@ class CouponUserFacadeTest {
     fun useCoupon() {
         // given
         val couponUserId = "coupon1"
+        val criteria = CouponUserCriteria.Use(couponUserId)
+        val serviceCommand = CouponUserCommand.Use(couponUserId)
         val couponUser = CouponUser(
             couponUserId = couponUserId,
             userId = "user1",
@@ -146,16 +156,16 @@ class CouponUserFacadeTest {
             updatedAt = LocalDateTime.now()
         )
         
-        `when`(couponUserService.useCoupon(couponUserId)).thenReturn(couponUser)
+        `when`(couponUserService.useCoupon(serviceCommand)).thenReturn(couponUser)
         
         // when
-        val result = couponUserFacade.useCoupon(couponUserId)
+        val result = couponUserFacade.useCoupon(criteria)
         
         // then
         assertThat(result.couponUserId).isEqualTo(couponUserId)
         assertThat(result.usedAt).isNotNull()
         
-        verify(couponUserService, times(1)).useCoupon(couponUserId)
+        verify(couponUserService, times(1)).useCoupon(serviceCommand)
     }
     
     @Test
@@ -164,23 +174,26 @@ class CouponUserFacadeTest {
         // given
         val couponUserId = "coupon1"
         val originalAmount = 10000L
+        val criteria = CouponUserCriteria.CalculateDiscount(couponUserId, originalAmount)
+        val serviceCommand = CouponUserCommand.CalculateDiscount(couponUserId, originalAmount)
         val discountAmount = 1000L
         
-        `when`(couponUserService.calculateDiscountAmount(couponUserId, originalAmount)).thenReturn(discountAmount)
+        `when`(couponUserService.calculateDiscountAmount(serviceCommand)).thenReturn(discountAmount)
         
         // when
-        val result = couponUserFacade.calculateDiscountAmount(couponUserId, originalAmount)
+        val result = couponUserFacade.calculateDiscountAmount(criteria)
         
         // then
         assertThat(result).isEqualTo(discountAmount)
         
-        verify(couponUserService, times(1)).calculateDiscountAmount(couponUserId, originalAmount)
+        verify(couponUserService, times(1)).calculateDiscountAmount(serviceCommand)
     }
     
     @Test
     @DisplayName("모든 쿠폰을 조회한다")
     fun getAllCoupons() {
         // given
+        val criteria = CouponUserCriteria.GetAll()
         val couponUsers = listOf(
             CouponUser(
                 couponUserId = "coupon1",
@@ -202,16 +215,16 @@ class CouponUserFacadeTest {
             )
         )
         
-        `when`(couponUserService.getAllCouponUsers()).thenReturn(couponUsers)
+        `when`(couponUserService.getAllCouponUsers(any())).thenReturn(couponUsers)
         
         // when
-        val result = couponUserFacade.getAllCoupons()
+        val result = couponUserFacade.getAllCoupons(criteria)
         
         // then
         assertThat(result.couponUsers).hasSize(2)
         assertThat(result.couponUsers[0].couponUserId).isEqualTo("coupon1")
         assertThat(result.couponUsers[1].couponUserId).isEqualTo("coupon2")
         
-        verify(couponUserService, times(1)).getAllCouponUsers()
+        verify(couponUserService, times(1)).getAllCouponUsers(any())
     }
 } 
