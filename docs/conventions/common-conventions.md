@@ -10,6 +10,8 @@
 3. **Domain**: 핵심 비즈니스 규칙과 로직 정의, 레포지토리 인터페이스 정의
 4. **Infrastructure**: 외부 시스템과의 통합, 레포지토리 구현
 
+### 레이어별 상세 규약:
+- **Controller Layer**: [컨트롤러 레이어 규약](./controller-layer.md)
 
 위와 같은 레이어 구조를 채택한 이유: [링크](./layered-architecture.md)
 
