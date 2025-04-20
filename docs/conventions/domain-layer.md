@@ -80,7 +80,9 @@ class ProductService(
     }
     
     fun decreaseStock(command: ProductCommand.DecreaseStock): Product {
-        val product = getProduct(ProductCommand.GetById(command.productId))
+        // 각 메서드는 직접 리포지토리에 접근
+        val product = productRepository.findById(command.productId)
+            ?: throw ProductException.NotFound("Product with id: ${command.productId}")
         
         if (product.stock < command.amount) {
             throw ProductException.StockAmountUnderflow(
@@ -107,6 +109,7 @@ class ProductService(
 - **중복 메서드를 절대 만들지 않습니다.** 동일한 기능을 수행하는 메서드는 하나만 존재해야 합니다.
 - 메서드 이름은 그 역할을 명확히 표현해야 합니다. 단순히 내부 구현을 드러내는 이름(예: `process`, `handle`)보다는 비즈니스 의도를 드러내는 이름(예: `issueCoupon`, `calculateDiscount`)을 사용합니다.
 - 메서드의 문서화(JavaDoc)를 통해 목적, 매개변수, 반환 값, 예외 등을 명확하게 설명합니다.
+- **메서드 간 직접 호출을 지양합니다.** 각 메서드는 자신의 작업을 수행하기 위해 필요한 리포지토리에 직접 접근해야 합니다. 다른 서비스 메서드를 호출하면 코드의 복잡성이 증가하고 의존성이 깊어져 테스트와 유지보수가 어려워집니다.
 
 ### 2.5 메서드 설계 가이드라인
 
@@ -122,6 +125,8 @@ class ProductService(
 - **단일 책임 원칙 준수**: 각 메서드는 하나의 명확한 책임만 가져야 합니다.
 
 - **애매한 네이밍 금지**: `process`, `handle`, `execute`와 같은 구체적이지 않은 이름은 지양합니다. 대신 `issueCoupon`, `calculateDiscount`, `validateOrder`와 같이 기능을 명확히 설명하는 이름을 사용합니다.
+
+- **독립적인 메서드 설계**: 각 메서드는 다른 서비스 메서드에 의존하지 않고 독립적으로 동작해야 합니다. 공통 로직이 필요한 경우, 헬퍼 메서드를 사용하여 중복을 줄이되 메서드 간 직접 호출은 피합니다.
 
 #### 좋은 예시:
 
@@ -142,6 +147,16 @@ private fun validateProductId(productId: String) {
     if (productId.isBlank()) {
         throw ProductException.InvalidId("Product ID cannot be blank")
     }
+}
+
+// 좋은 예시: 각 메서드가 독립적으로 리포지토리에 접근
+fun useCoupon(command: CouponUserCommand.Use): CouponUser {
+    // 다른 서비스 메서드 호출 대신 직접 리포지토리 접근
+    val couponUser = repository.findById(command.couponUserId)
+        ?: throw CouponException.NotFound("Coupon with id: ${command.couponUserId}")
+        
+    val usedCouponUser = couponUser.use()
+    return repository.update(usedCouponUser)
 }
 ```
 
@@ -172,9 +187,17 @@ fun getCouponUserWithValidation(command: CouponUserCommand.GetById): CouponUser 
 fun process(command: OrderCommand.Process): Order {
     // 어떤 처리를 하는지 이름만으로는 명확하지 않음
 }
+
+// 나쁜 예시 4: 메서드 간 직접 호출
+fun calculateDiscountAmount(command: CouponUserCommand.CalculateDiscount): Long {
+    // 다른 서비스 메서드를 호출하여 의존성 발생
+    val couponUser = getCouponUser(CouponUserCommand.GetById(command.couponUserId))
+    
+    return couponUser.calculateDiscountAmount(command.originalAmount)
+}
 ```
 
-위 나쁜 예시들은 코드의 복잡성을 증가시키고 유지보수를 어렵게 만듭니다. 항상 메서드 하나가 명확한 하나의 책임을 가지도록 설계하고, 불필요한 중복을 제거하는 것이 중요합니다.
+위 나쁜 예시들은 코드의 복잡성을 증가시키고 유지보수를 어렵게 만듭니다. 항상 메서드 하나가 명확한 하나의 책임을 가지도록 설계하고, 불필요한 중복을 제거하며, 메서드 간 직접 호출을 지양하는 것이 중요합니다.
 
 ## 3. 리포지토리 인터페이스
 
