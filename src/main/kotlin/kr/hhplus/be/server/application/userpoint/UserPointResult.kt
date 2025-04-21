@@ -10,7 +10,7 @@ class UserPointResult {
     /**
      * 단일 사용자 포인트 정보 응답
      */
-    data class Point(
+    data class Single(
         val userPointId: String,
         val userId: String,
         val amount: Long,
@@ -19,10 +19,10 @@ class UserPointResult {
     ) {
         companion object {
             /**
-             * UserPoint 도메인 객체를 Point DTO로 변환합니다.
+             * UserPoint 도메인 객체를 Single DTO로 변환합니다.
              */
-            fun from(userPoint: UserPoint): Point {
-                return Point(
+            fun from(userPoint: UserPoint): Single {
+                return Single(
                     userPointId = userPoint.userPointId,
                     userId = userPoint.userId,
                     amount = userPoint.amount,
@@ -37,7 +37,7 @@ class UserPointResult {
      * 사용자 포인트 목록 응답
      */
     data class List(
-        val userPoints: kotlin.collections.List<Point>
+        val userPoints: kotlin.collections.List<Single>
     ) {
         companion object {
             /**
@@ -45,7 +45,7 @@ class UserPointResult {
              */
             fun from(userPoints: kotlin.collections.List<UserPoint>): List {
                 return List(
-                    userPoints = userPoints.map { Point.from(it) }
+                    userPoints = userPoints.map { Single.from(it) }
                 )
             }
         }

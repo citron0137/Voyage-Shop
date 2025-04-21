@@ -30,12 +30,10 @@ class UserPointFacade(
      * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    fun getUserPoint(criteria: UserPointCriteria.GetByUserId): UserPointResult.Point {
-        // 사용자 포인트 조회 쿼리 생성
-        val query = UserPointQuery.GetByUserId(criteria.userId)
+    fun getUserPoint(criteria: UserPointCriteria.GetByUserId): UserPointResult.Single {
         // 사용자 포인트 조회
-        val userPoint = userPointService.getByUserId(query)
-        return UserPointResult.Point.from(userPoint)
+        val userPoint = userPointService.getByUserId(criteria.toQuery())
+        return UserPointResult.Single.from(userPoint)
     }
     
     /**
@@ -51,14 +49,11 @@ class UserPointFacade(
      * @throws UserPointException.PointAmountOverflow 충전 후 포인트가 최대치를 초과하는 경우
      */
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Point {
-        // 포인트 충전 명령 생성
-        val command = UserPointCommand.Charge(userId = criteria.userId, amount = criteria.amount)
-        
+    fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Single {
         // 포인트 충전
-        val userPoint = userPointService.charge(command)
+        val userPoint = userPointService.charge(criteria.toCommand())
         
-        return UserPointResult.Point.from(userPoint)
+        return UserPointResult.Single.from(userPoint)
     }
     
     /**
@@ -74,13 +69,10 @@ class UserPointFacade(
      * @throws UserPointException.PointAmountUnderflow 사용 가능한 포인트가 부족한 경우
      */
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    fun usePoint(criteria: UserPointCriteria.Use): UserPointResult.Point {
-        // 포인트 사용 명령 생성
-        val command = UserPointCommand.Use(userId = criteria.userId, amount = criteria.amount)
-        
+    fun usePoint(criteria: UserPointCriteria.Use): UserPointResult.Single {
         // 포인트 사용
-        val userPoint = userPointService.use(command)
+        val userPoint = userPointService.use(criteria.toCommand())
         
-        return UserPointResult.Point.from(userPoint)
+        return UserPointResult.Single.from(userPoint)
     }
 } 
