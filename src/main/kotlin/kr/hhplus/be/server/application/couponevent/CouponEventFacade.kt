@@ -23,7 +23,6 @@ class CouponEventFacade(
      * 
      * @param criteria 쿠폰 이벤트 생성 요청 기준
      * @return 생성된 쿠폰 이벤트 정보
-     * @throws CouponEventException.InvalidBenefitMethod 유효하지 않은 혜택 유형인 경우
      */
     @Transactional
     fun createCouponEvent(criteria: CouponEventCriteria.Create): CouponEventResult.Single {

@@ -61,7 +61,7 @@ class CouponEventFacadeTest {
     fun `쿠폰 이벤트를 생성할 수 있다`() {
         // given
         val criteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100
         )
@@ -79,22 +79,6 @@ class CouponEventFacadeTest {
         assertThat(result.leftIssueAmount).isEqualTo(sampleCouponEvent.leftIssueAmount)
         
         verify(couponEventService, times(1)).createCouponEvent(criteria.toCommand())
-    }
-    
-    @Test
-    @DisplayName("잘못된 혜택 방식으로 쿠폰 이벤트를 생성하면 예외가 발생한다")
-    fun `잘못된 혜택 방식으로 쿠폰 이벤트를 생성하면 예외가 발생한다`() {
-        // given
-        val criteria = CouponEventCriteria.Create(
-            benefitMethod = "INVALID_METHOD",
-            benefitAmount = "1000",
-            totalIssueAmount = 100
-        )
-        
-        // when & then
-        assertThrows<CouponEventException.InvalidBenefitMethod> {
-            couponEventFacade.createCouponEvent(criteria)
-        }
     }
     
     @Test

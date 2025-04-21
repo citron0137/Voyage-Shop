@@ -50,7 +50,7 @@ class CouponEventFacadeIntegrationTest {
     fun createCouponEventTest() {
         // given
         val criteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100
         )
@@ -72,7 +72,7 @@ class CouponEventFacadeIntegrationTest {
     fun getCouponEventTest() {
         // given
         val createCriteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_PERCENTAGE",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
             benefitAmount = "10",
             totalIssueAmount = 50
         )
@@ -112,7 +112,7 @@ class CouponEventFacadeIntegrationTest {
         // 쿠폰 이벤트 2개 생성
         couponEventFacade.createCouponEvent(
             CouponEventCriteria.Create(
-                benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "2000",
                 totalIssueAmount = 30
             )
@@ -120,7 +120,7 @@ class CouponEventFacadeIntegrationTest {
         
         couponEventFacade.createCouponEvent(
             CouponEventCriteria.Create(
-                benefitMethod = "DISCOUNT_PERCENTAGE",
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "20",
                 totalIssueAmount = 40
             )
@@ -139,7 +139,7 @@ class CouponEventFacadeIntegrationTest {
     fun issueCouponUserTest() {
         // given
         val createCriteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "3000",
             totalIssueAmount = 5
         )
@@ -168,7 +168,7 @@ class CouponEventFacadeIntegrationTest {
     fun issueCouponUserOutOfStockTest() {
         // given
         val createCriteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_PERCENTAGE",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
             benefitAmount = "15",
             totalIssueAmount = 1 // 재고를 1개만 설정
         )

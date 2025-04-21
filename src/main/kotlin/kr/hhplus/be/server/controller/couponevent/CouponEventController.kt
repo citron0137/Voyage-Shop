@@ -22,23 +22,9 @@ class CouponEventController(
     override fun createCouponEvent(
         req: CouponEventRequest.Create
     ): BaseResponse<CouponEventResponse.Event> {
-        val criteria = CouponEventCriteria.Create(
-            benefitMethod = req.benefitMethod,
-            benefitAmount = req.benefitAmount,
-            totalIssueAmount = req.totalIssueAmount.toLong()
-        )
-        
+        val criteria = req.toCriteria()
         val result = couponEventFacade.createCouponEvent(criteria)
-        
-        return BaseResponse.success(
-            CouponEventResponse.Event(
-                id = result.id,
-                benefitMethod = result.benefitMethod.name,
-                benefitAmount = result.benefitAmount,
-                totalIssueAmount = result.totalIssueAmount,
-                leftIssueAmount = result.leftIssueAmount
-            )
-        )
+        return BaseResponse.success(CouponEventResponse.Event.from(result))
     }
 
     /**
@@ -48,18 +34,7 @@ class CouponEventController(
      */
     override fun getAllCouponEvents(): BaseResponse<List<CouponEventResponse.Event>> {
         val result = couponEventFacade.getAllCouponEvents()
-        
-        val responseList = result.couponEvents.map { event ->
-            CouponEventResponse.Event(
-                id = event.id,
-                benefitMethod = event.benefitMethod.name,
-                benefitAmount = event.benefitAmount,
-                totalIssueAmount = event.totalIssueAmount,
-                leftIssueAmount = event.leftIssueAmount
-            )
-        }
-        
-        return BaseResponse.success(responseList)
+        return BaseResponse.success(CouponEventResponse.List.from(result).items)
     }
 
     /**
@@ -73,17 +48,8 @@ class CouponEventController(
         couponEventId: String,
         req: CouponEventRequest.IssueCoupon
     ): BaseResponse<CouponEventResponse.IssueCoupon> {
-        val criteria = CouponEventCriteria.IssueCoupon(
-            couponEventId = couponEventId,
-            userId = req.userId
-        )
-        
+        val criteria = req.toCriteria(couponEventId)
         val result = couponEventFacade.issueCouponUser(criteria)
-        
-        return BaseResponse.success(
-            CouponEventResponse.IssueCoupon(
-                couponUserId = result.couponUserId
-            )
-        )
+        return BaseResponse.success(CouponEventResponse.IssueCoupon.from(result))
     }
 }

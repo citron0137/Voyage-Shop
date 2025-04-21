@@ -26,7 +26,7 @@ class CouponEventCriteria {
      * 쿠폰 이벤트 생성 요청
      */
     data class Create(
-        val benefitMethod: String,
+        val benefitMethod: CouponEventBenefitMethod,
         val benefitAmount: String,
         val totalIssueAmount: Long
     ) {
@@ -34,15 +34,8 @@ class CouponEventCriteria {
          * 도메인 Command로 변환
          */
         fun toCommand(): CouponEventCommand.Create {
-            // 문자열을 BenefitMethod 열거형으로 변환
-            val benefitMethodEnum = when(benefitMethod) {
-                "DISCOUNT_FIXED_AMOUNT" -> CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT
-                "DISCOUNT_PERCENTAGE" -> CouponEventBenefitMethod.DISCOUNT_PERCENTAGE
-                else -> throw CouponEventException.InvalidBenefitMethod(benefitMethod)
-            }
-            
             return CouponEventCommand.Create(
-                benefitMethod = benefitMethodEnum,
+                benefitMethod = benefitMethod,
                 benefitAmount = benefitAmount,
                 totalIssueAmount = totalIssueAmount
             )
