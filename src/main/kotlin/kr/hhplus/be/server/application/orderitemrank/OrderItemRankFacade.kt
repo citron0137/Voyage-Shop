@@ -27,7 +27,7 @@ class OrderItemRankFacade(
         val daysAgo = LocalDateTime.now().minusDays(criteria.days.toLong())
         
         // 모든 주문 조회 후 지정된 일수 이내 주문만 필터링
-        val query = OrderQuery.GetAll
+        val query = criteria.toQuery()
         val recentOrders = orderService.getAllOrders(query)
             .filter { it.createdAt.isAfter(daysAgo) }
             
@@ -43,7 +43,7 @@ class OrderItemRankFacade(
             .toList()
             .sortedByDescending { it.second }
             .take(criteria.limit)
-            .map { OrderItemRankResult.Rank(productId = it.first, orderCount = it.second) }
+            .map { OrderItemRankResult.Single.from(productId = it.first, orderCount = it.second) }
             
         return OrderItemRankResult.List(topRanks)
     }
@@ -52,7 +52,7 @@ class OrderItemRankFacade(
      * 최근 3일간의 주문 아이템 중 상위 5개 순위를 조회합니다. (호환성 메서드)
      */
     @Transactional(readOnly = true)
-    fun getRecentTopOrderItemRanks(): List<OrderItemRankResult.Rank> {
+    fun getRecentTopOrderItemRanks(): List<OrderItemRankResult.Single> {
         return getRecentTopOrderItemRanks(OrderItemRankCriteria.RecentTopRanks()).ranks
     }
 } 
