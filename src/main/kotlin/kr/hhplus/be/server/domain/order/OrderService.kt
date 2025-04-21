@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.order
 
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
@@ -14,7 +13,7 @@ class OrderService(
         val orderId = UUID.randomUUID().toString()
         
         // 주문 생성
-        val order = Order(
+        val order = Order.create(
             orderId = orderId,
             userId = command.userId,
             paymentId = command.paymentId,
@@ -26,13 +25,12 @@ class OrderService(
         
         // 주문 상품 생성
         val orderItems = command.orderItems.map { itemCommand ->
-            OrderItem(
+            OrderItem.create(
                 orderItemId = UUID.randomUUID().toString(),
                 orderId = orderId,
                 productId = itemCommand.productId,
                 amount = itemCommand.amount,
-                unitPrice = itemCommand.unitPrice,
-                totalPrice = itemCommand.totalPrice
+                unitPrice = itemCommand.unitPrice
             )
         }
         orderItemRepository.createAll(orderItems)
@@ -40,10 +38,10 @@ class OrderService(
         // 주문 할인 생성
         if (command.orderDiscounts.isNotEmpty()) {
             val orderDiscounts = command.orderDiscounts.map { discountCommand ->
-                OrderDiscount(
+                OrderDiscount.create(
                     orderDiscountId = UUID.randomUUID().toString(),
                     orderId = orderId,
-                    discountType = discountCommand.discountType,
+                    orderDiscountType = discountCommand.orderDiscountType,
                     discountId = discountCommand.discountId,
                     discountAmount = discountCommand.discountAmount
                 )
@@ -54,24 +52,24 @@ class OrderService(
         return savedOrder
     }
     
-    fun getOrderById(command: OrderCommand.GetById): Order {
-        return orderRepository.findById(command.orderId)
-            ?: throw OrderException.NotFound("Order with id: ${command.orderId}")
+    fun getOrderById(query: OrderQuery.GetById): Order {
+        return orderRepository.findById(query.orderId)
+            ?: throw OrderException.NotFound("Order with id: ${query.orderId}")
     }
     
-    fun getOrdersByUserId(command: OrderCommand.GetByUserId): List<Order> {
-        return orderRepository.findByUserId(command.userId)
+    fun getOrdersByUserId(query: OrderQuery.GetByUserId): List<Order> {
+        return orderRepository.findByUserId(query.userId)
     }
     
-    fun getAllOrders(): List<Order> {
+    fun getAllOrders(query: OrderQuery.GetAll): List<Order> {
         return orderRepository.findAll()
     }
     
-    fun getOrderItemsByOrderId(command: OrderItemCommand.GetByOrderId): List<OrderItem> {
-        return orderItemRepository.findByOrderId(command.orderId)
+    fun getOrderItemsByOrderId(query: OrderQuery.GetOrderItemsByOrderId): List<OrderItem> {
+        return orderItemRepository.findByOrderId(query.orderId)
     }
     
-    fun getOrderDiscountsByOrderId(command: OrderDiscountCommand.GetByOrderId): List<OrderDiscount> {
-        return orderDiscountRepository.findByOrderId(command.orderId)
+    fun getOrderDiscountsByOrderId(query: OrderQuery.GetOrderDiscountsByOrderId): List<OrderDiscount> {
+        return orderDiscountRepository.findByOrderId(query.orderId)
     }
 } 

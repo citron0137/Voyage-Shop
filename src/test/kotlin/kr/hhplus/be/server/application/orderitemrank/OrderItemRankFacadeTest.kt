@@ -1,9 +1,6 @@
 package kr.hhplus.be.server.application.orderitemrank
 
-import kr.hhplus.be.server.domain.order.Order
-import kr.hhplus.be.server.domain.order.OrderItem
-import kr.hhplus.be.server.domain.order.OrderItemCommand
-import kr.hhplus.be.server.domain.order.OrderService
+import kr.hhplus.be.server.domain.order.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -122,10 +119,10 @@ class OrderItemRankFacadeTest {
             )
         )
         
-        whenever(orderService.getAllOrders()).thenReturn(listOf(recentOrder1, recentOrder2, oldOrder))
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order1"))).thenReturn(order1Items)
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order2"))).thenReturn(order2Items)
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order3"))).thenReturn(order3Items)
+        whenever(orderService.getAllOrders(OrderQuery.GetAll)).thenReturn(listOf(recentOrder1, recentOrder2, oldOrder))
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order1"))).thenReturn(order1Items)
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order2"))).thenReturn(order2Items)
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order3"))).thenReturn(order3Items)
         
         // when
         val result = orderItemRankFacade.getRecentTopOrderItemRanks()
@@ -202,9 +199,9 @@ class OrderItemRankFacadeTest {
             )
         )
         
-        whenever(orderService.getAllOrders()).thenReturn(listOf(oldOrder1, oldOrder2))
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order1"))).thenReturn(order1Items)
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order2"))).thenReturn(order2Items)
+        whenever(orderService.getAllOrders(OrderQuery.GetAll)).thenReturn(listOf(oldOrder1, oldOrder2))
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order1"))).thenReturn(order1Items)
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order2"))).thenReturn(order2Items)
         
         // when
         val result = orderItemRankFacade.getRecentTopOrderItemRanks()
@@ -239,8 +236,8 @@ class OrderItemRankFacadeTest {
             OrderItem(orderItemId = "item6", orderId = "order1", productId = "product6", amount = 5, unitPrice = 1000, totalPrice = 5000)
         )
         
-        whenever(orderService.getAllOrders()).thenReturn(listOf(recentOrder))
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order1"))).thenReturn(orderItems)
+        whenever(orderService.getAllOrders(OrderQuery.GetAll)).thenReturn(listOf(recentOrder))
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order1"))).thenReturn(orderItems)
         
         // when
         val result = orderItemRankFacade.getRecentTopOrderItemRanks()

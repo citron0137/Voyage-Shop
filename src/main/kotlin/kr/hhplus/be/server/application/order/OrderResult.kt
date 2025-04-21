@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.application.order
 
-import kr.hhplus.be.server.domain.order.DiscountType
+import kr.hhplus.be.server.domain.order.OrderDiscountType
 import kr.hhplus.be.server.domain.order.Order
-import kr.hhplus.be.server.domain.order.OrderDiscount
-import kr.hhplus.be.server.domain.order.OrderItem
 import java.time.LocalDateTime
 
 /**
@@ -104,7 +102,7 @@ sealed class OrderResult {
     data class OrderDiscount(
         val orderDiscountId: String,
         val orderId: String,
-        val discountType: DiscountType,
+        val orderDiscountType: OrderDiscountType,
         val discountId: String,
         val discountAmount: Long,
         val createdAt: LocalDateTime,
@@ -118,7 +116,7 @@ sealed class OrderResult {
                 return OrderDiscount(
                     orderDiscountId = orderDiscount.orderDiscountId,
                     orderId = orderDiscount.orderId,
-                    discountType = orderDiscount.discountType,
+                    orderDiscountType = orderDiscount.type,
                     discountId = orderDiscount.discountId,
                     discountAmount = orderDiscount.discountAmount,
                     createdAt = orderDiscount.createdAt,

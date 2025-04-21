@@ -6,7 +6,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import kr.hhplus.be.server.domain.order.DiscountType
+import kr.hhplus.be.server.domain.order.OrderDiscountType
 import kr.hhplus.be.server.domain.order.OrderDiscount
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
@@ -21,24 +21,24 @@ data class OrderDiscountJpaEntity(
     @Id
     @Column(name = "order_discount_id", length = 36, nullable = false)
     val orderDiscountId: String,
-    
+
     @Column(name = "order_id", length = 36, nullable = false)
     val orderId: String,
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "discount_type", nullable = false)
-    val discountType: DiscountType,
-    
+    val orderDiscountType: OrderDiscountType,
+
     @Column(name = "discount_id", length = 36, nullable = false)
     val discountId: String,
-    
+
     @Column(name = "discount_amount", nullable = false)
     val discountAmount: Long,
-    
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    
+
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now()
@@ -50,7 +50,7 @@ data class OrderDiscountJpaEntity(
         return OrderDiscount(
             orderDiscountId = orderDiscountId,
             orderId = orderId,
-            discountType = discountType,
+            type = orderDiscountType,
             discountId = discountId,
             discountAmount = discountAmount,
             createdAt = createdAt,
@@ -66,7 +66,7 @@ data class OrderDiscountJpaEntity(
             return OrderDiscountJpaEntity(
                 orderDiscountId = domain.orderDiscountId,
                 orderId = domain.orderId,
-                discountType = domain.discountType,
+                orderDiscountType = domain.type,
                 discountId = domain.discountId,
                 discountAmount = domain.discountAmount,
                 createdAt = domain.createdAt,

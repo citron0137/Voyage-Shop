@@ -81,7 +81,7 @@ class OrderFacadeTest {
             OrderDiscount(
                 orderDiscountId = "orderDiscount1",
                 orderId = orderId,
-                discountType = DiscountType.COUPON,
+                type = OrderDiscountType.COUPON,
                 discountId = "coupon1",
                 discountAmount = 1000
             )
@@ -103,7 +103,7 @@ class OrderFacadeTest {
         assertThat(result.items).hasSize(1)
         assertThat(result.items[0].productId).isEqualTo("product1")
         assertThat(result.discounts).hasSize(1)
-        assertThat(result.discounts[0].discountType).isEqualTo(DiscountType.COUPON)
+        assertThat(result.discounts[0].orderDiscountType).isEqualTo(OrderDiscountType.COUPON)
     }
     
     @Test
@@ -184,7 +184,7 @@ class OrderFacadeTest {
             OrderDiscount(
                 orderDiscountId = "orderDiscount1",
                 orderId = "order1",
-                discountType = DiscountType.COUPON,
+                type = OrderDiscountType.COUPON,
                 discountId = "coupon1",
                 discountAmount = 1000
             )
@@ -194,7 +194,7 @@ class OrderFacadeTest {
             OrderDiscount(
                 orderDiscountId = "orderDiscount2",
                 orderId = "order2",
-                discountType = DiscountType.COUPON,
+                type = OrderDiscountType.COUPON,
                 discountId = "coupon2",
                 discountAmount = 2000
             )
@@ -202,10 +202,10 @@ class OrderFacadeTest {
         
         whenever(userService.getUserById(any())).thenReturn(user)
         whenever(orderService.getOrdersByUserId(any())).thenReturn(orders)
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order1"))).thenReturn(orderItems1)
-        whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order2"))).thenReturn(orderItems2)
-        whenever(orderService.getOrderDiscountsByOrderId(OrderDiscountCommand.GetByOrderId("order1"))).thenReturn(orderDiscounts1)
-        whenever(orderService.getOrderDiscountsByOrderId(OrderDiscountCommand.GetByOrderId("order2"))).thenReturn(orderDiscounts2)
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order1"))).thenReturn(orderItems1)
+        whenever(orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId("order2"))).thenReturn(orderItems2)
+        whenever(orderService.getOrderDiscountsByOrderId(OrderQuery.GetOrderDiscountsByOrderId("order1"))).thenReturn(orderDiscounts1)
+        whenever(orderService.getOrderDiscountsByOrderId(OrderQuery.GetOrderDiscountsByOrderId("order2"))).thenReturn(orderDiscounts2)
         
         // when
         val result = orderFacade.getOrdersByUserId(userId)
@@ -363,7 +363,7 @@ class OrderFacadeTest {
             OrderDiscount(
                 orderDiscountId = "orderDiscount1",
                 orderId = "order1",
-                discountType = DiscountType.COUPON,
+                type = OrderDiscountType.COUPON,
                 discountId = couponUserId,
                 discountAmount = 1000
             )
@@ -393,7 +393,7 @@ class OrderFacadeTest {
         assertThat(result.finalAmount).isEqualTo(9000)
         assertThat(result.items).hasSize(1)
         assertThat(result.discounts).hasSize(1)
-        assertThat(result.discounts[0].discountType).isEqualTo(DiscountType.COUPON)
+        assertThat(result.discounts[0].orderDiscountType).isEqualTo(OrderDiscountType.COUPON)
         assertThat(result.discounts[0].discountAmount).isEqualTo(1000)
     }
     

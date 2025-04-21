@@ -90,7 +90,7 @@ class OrderResponse {
             fun from(orderDiscountResult: OrderResult.OrderDiscount): OrderDiscount {
                 return OrderDiscount(
                     id = orderDiscountResult.orderDiscountId,
-                    type = orderDiscountResult.discountType.name,
+                    type = orderDiscountResult.orderDiscountType.name,
                     discountId = orderDiscountResult.discountId,
                     amount = orderDiscountResult.discountAmount
                 )

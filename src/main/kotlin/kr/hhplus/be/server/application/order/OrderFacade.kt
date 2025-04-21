@@ -47,16 +47,16 @@ class OrderFacade(
      */
     @Transactional(readOnly = true)
     fun getOrder(criteria: OrderCriteria.GetById): OrderResult.Get {
-        val command = OrderCommand.GetById(criteria.orderId)
-        val order = orderService.getOrderById(command)
+        val query = OrderQuery.GetById(criteria.orderId)
+        val order = orderService.getOrderById(query)
         
         // 주문 항목 조회
-        val itemsCommand = OrderItemCommand.GetByOrderId(criteria.orderId)
-        val items = orderService.getOrderItemsByOrderId(itemsCommand)
+        val itemsQuery = OrderQuery.GetOrderItemsByOrderId(criteria.orderId)
+        val items = orderService.getOrderItemsByOrderId(itemsQuery)
         
         // 주문 할인 조회
-        val discountsCommand = OrderDiscountCommand.GetByOrderId(criteria.orderId)
-        val discounts = orderService.getOrderDiscountsByOrderId(discountsCommand)
+        val discountsQuery = OrderQuery.GetOrderDiscountsByOrderId(criteria.orderId)
+        val discounts = orderService.getOrderDiscountsByOrderId(discountsQuery)
         
         return OrderResult.Get.from(order, items, discounts)
     }
@@ -82,8 +82,8 @@ class OrderFacade(
      */
     @Transactional(readOnly = true)
     fun getOrdersByUserId(criteria: OrderCriteria.GetByUserId): OrderResult.Orders {
-        val command = OrderCommand.GetByUserId(criteria.userId)
-        val orders = orderService.getOrdersByUserId(command)
+        val query = OrderQuery.GetByUserId(criteria.userId)
+        val orders = orderService.getOrdersByUserId(query)
         
         // 주문이 없으면 빈 목록 반환
         if (orders.isEmpty()) {
@@ -93,10 +93,10 @@ class OrderFacade(
         // 각 주문의 항목과 할인 정보 조회
         val orderIds = orders.map { it.orderId }
         val allItems = orderIds.flatMap { 
-            orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(it)) 
+            orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId(it)) 
         }
         val allDiscounts = orderIds.flatMap { 
-            orderService.getOrderDiscountsByOrderId(OrderDiscountCommand.GetByOrderId(it)) 
+            orderService.getOrderDiscountsByOrderId(OrderQuery.GetOrderDiscountsByOrderId(it)) 
         }
         
         // 주문 ID별로 그룹화
@@ -122,7 +122,8 @@ class OrderFacade(
      */
     @Transactional(readOnly = true)
     fun getAllOrders(criteria: OrderCriteria.GetAll): OrderResult.Orders {
-        val orders = orderService.getAllOrders()
+        val query = OrderQuery.GetAll
+        val orders = orderService.getAllOrders(query)
         
         // 주문이 없으면 빈 목록 반환
         if (orders.isEmpty()) {
@@ -132,10 +133,10 @@ class OrderFacade(
         // 각 주문의 항목과 할인 정보 조회
         val orderIds = orders.map { it.orderId }
         val allItems = orderIds.flatMap { 
-            orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(it)) 
+            orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId(it))
         }
         val allDiscounts = orderIds.flatMap { 
-            orderService.getOrderDiscountsByOrderId(OrderDiscountCommand.GetByOrderId(it)) 
+            orderService.getOrderDiscountsByOrderId(OrderQuery.GetOrderDiscountsByOrderId(it))
         }
         
         // 주문 ID별로 그룹화
@@ -236,7 +237,7 @@ class OrderFacade(
                 totalDiscountAmount += discountAmount
                 orderDiscountCommands.add(
                     OrderDiscountCommand.Create(
-                        discountType = DiscountType.COUPON,
+                        orderDiscountType = OrderDiscountType.COUPON,
                         discountId = criteria.couponUserId,
                         discountAmount = discountAmount
                     )
@@ -263,11 +264,11 @@ class OrderFacade(
         val order = orderService.createOrder(orderCommand)
         
         // 주문 항목 및 할인 조회
-        val itemsCommand = OrderItemCommand.GetByOrderId(order.orderId)
-        val items = orderService.getOrderItemsByOrderId(itemsCommand)
+        val itemsQuery = OrderQuery.GetOrderItemsByOrderId(order.orderId)
+        val items = orderService.getOrderItemsByOrderId(itemsQuery)
         
-        val discountsCommand = OrderDiscountCommand.GetByOrderId(order.orderId)
-        val discounts = orderService.getOrderDiscountsByOrderId(discountsCommand)
+        val discountsQuery = OrderQuery.GetOrderDiscountsByOrderId(order.orderId)
+        val discounts = orderService.getOrderDiscountsByOrderId(discountsQuery)
         
         return OrderResult.Get.from(order, items, discounts)
     }
