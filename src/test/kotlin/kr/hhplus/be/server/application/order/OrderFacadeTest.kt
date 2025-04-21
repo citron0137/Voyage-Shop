@@ -8,6 +8,7 @@ import kr.hhplus.be.server.domain.payment.Payment
 import kr.hhplus.be.server.domain.payment.PaymentService
 import kr.hhplus.be.server.domain.product.Product
 import kr.hhplus.be.server.domain.product.ProductException
+import kr.hhplus.be.server.domain.product.ProductQuery
 import kr.hhplus.be.server.domain.product.ProductService
 import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserException
@@ -293,9 +294,9 @@ class OrderFacadeTest {
         )
         
         whenever(userService.getUserById(any())).thenReturn(user)
-        whenever(productService.getProduct("product1")).thenReturn(product1)
-        whenever(productService.getProduct("product2")).thenReturn(product2)
-        whenever(productService.decreaseStock(any())).thenReturn(product1)
+        whenever(productService.getProductById(ProductQuery.GetById("product1"))).thenReturn(product1)
+        whenever(productService.getProductById(ProductQuery.GetById("product2"))).thenReturn(product2)
+        whenever(productService.decreaseProductStock(any())).thenReturn(product1)
         whenever(paymentService.createPayment(any())).thenReturn(payment)
         whenever(orderService.createOrder(any())).thenReturn(order)
         whenever(orderService.getOrderItemsByOrderId(any())).thenReturn(orderItemsResult)
@@ -371,8 +372,8 @@ class OrderFacadeTest {
         val couponUser = mock<CouponUser>()
         
         whenever(userService.getUserById(any())).thenReturn(user)
-        whenever(productService.getProduct("product1")).thenReturn(product)
-        whenever(productService.decreaseStock(any())).thenReturn(product)
+        whenever(productService.getProductById(ProductQuery.GetById("product1"))).thenReturn(product)
+        whenever(productService.decreaseProductStock(any())).thenReturn(product)
         whenever(couponUserService.getCouponUser(CouponUserCommand.GetById(couponUserId))).thenReturn(couponUser)
         whenever(couponUser.calculateDiscountAmount(10000)).thenReturn(1000)
         whenever(couponUserService.useCoupon(CouponUserCommand.Use(couponUserId))).thenReturn(couponUser)
@@ -415,8 +416,8 @@ class OrderFacadeTest {
         )
         
         whenever(userService.getUserById(any())).thenReturn(user)
-        whenever(productService.getProduct("product1")).thenReturn(product)
-        whenever(productService.decreaseStock(any())).thenThrow(ProductException.StockAmountUnderflow("재고 부족"))
+        whenever(productService.getProductById(ProductQuery.GetById("product1"))).thenReturn(product)
+        whenever(productService.decreaseProductStock(any())).thenThrow(ProductException.StockAmountUnderflow("재고 부족"))
         
         // when, then
         assertThrows<ProductException.StockAmountUnderflow> {

@@ -7,6 +7,7 @@ import kr.hhplus.be.server.domain.payment.PaymentCommand
 import kr.hhplus.be.server.domain.payment.PaymentService
 import kr.hhplus.be.server.domain.product.ProductCommand
 import kr.hhplus.be.server.domain.product.ProductException
+import kr.hhplus.be.server.domain.product.ProductQuery
 import kr.hhplus.be.server.domain.product.ProductService
 import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.domain.user.UserService
@@ -192,7 +193,7 @@ class OrderFacade(
         // 주문 항목 생성 및 상품 재고 확인/감소
         val orderItemCommands = criteria.items.map { item ->
             // 상품 존재 여부와 가격 확인
-            val product = productService.getProduct(item.productId)
+            val product = productService.getProductById(ProductQuery.GetById(item.productId))
             
             // 재고 감소
             val decreaseCommand = ProductCommand.DecreaseStock(
@@ -200,7 +201,7 @@ class OrderFacade(
                 amount = item.amount
             )
             try {
-                productService.decreaseStock(decreaseCommand)
+                productService.decreaseProductStock(decreaseCommand)
             } catch (e: ProductException.StockAmountUnderflow) {
                 throw ProductException.StockAmountUnderflow("상품 ${item.productId}의 재고가 부족합니다.")
             }

@@ -1,9 +1,6 @@
 package kr.hhplus.be.server.application.product
 
-import kr.hhplus.be.server.domain.product.Product
-import kr.hhplus.be.server.domain.product.ProductCommand
-import kr.hhplus.be.server.domain.product.ProductException
-import kr.hhplus.be.server.domain.product.ProductService
+import kr.hhplus.be.server.domain.product.*
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -25,7 +22,7 @@ class ProductFacade(
      */
     @Transactional(readOnly = true)
     fun getProduct(criteria: ProductCriteria.GetById): ProductResult.Product {
-        val product = productService.getProduct(criteria.productId)
+        val product = productService.getProductById(ProductQuery.GetById(criteria.productId))
         return ProductResult.Product.from(product)
     }
     
@@ -37,7 +34,7 @@ class ProductFacade(
      */
     @Transactional(readOnly = true)
     fun getAllProducts(criteria: ProductCriteria.GetAll = ProductCriteria.GetAll()): ProductResult.List {
-        val products = productService.getAllProducts()
+        val products = productService.getAllProducts(ProductQuery.GetAll)
         return ProductResult.List.from(products)
     }
     
@@ -58,10 +55,7 @@ class ProductFacade(
             price = criteria.price,
             stock = criteria.stock
         )
-        
         val product = productService.createProduct(command)
-            ?: throw ProductException.NotFound("상품 생성 후 상품을 찾을 수 없습니다.")
-        
         return ProductResult.Product.from(product)
     }
     
@@ -81,10 +75,7 @@ class ProductFacade(
             productId = criteria.productId,
             amount = criteria.stock
         )
-        
-        val product = productService.updateStock(command)
-            ?: throw ProductException.NotFound("재고 업데이트 후 상품을 찾을 수 없습니다.")
-        
+        val product = productService.updateProductStock(command)
         return ProductResult.Product.from(product)
     }
     
@@ -104,10 +95,7 @@ class ProductFacade(
             productId = criteria.productId,
             amount = criteria.amount
         )
-        
-        val product = productService.increaseStock(command)
-            ?: throw ProductException.NotFound("재고 증가 후 상품을 찾을 수 없습니다.")
-        
+        val product = productService.increaseProductStock(command)
         return ProductResult.Product.from(product)
     }
     
@@ -127,10 +115,7 @@ class ProductFacade(
             productId = criteria.productId,
             amount = criteria.amount
         )
-        
-        val product = productService.decreaseStock(command)
-            ?: throw ProductException.NotFound("재고 감소 후 상품을 찾을 수 없습니다.")
-        
+        val product = productService.decreaseProductStock(command)
         return ProductResult.Product.from(product)
     }
 } 
