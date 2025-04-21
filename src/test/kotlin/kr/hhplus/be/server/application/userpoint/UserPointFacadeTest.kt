@@ -2,10 +2,7 @@ package kr.hhplus.be.server.application.userpoint
 
 import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserService
-import kr.hhplus.be.server.domain.userpoint.UserPoint
-import kr.hhplus.be.server.domain.userpoint.UserPointCommand
-import kr.hhplus.be.server.domain.userpoint.UserPointException
-import kr.hhplus.be.server.domain.userpoint.UserPointService
+import kr.hhplus.be.server.domain.userpoint.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -43,7 +40,7 @@ class UserPointFacadeTest {
         )
         
         whenever(userService.getUserById(any())).thenReturn(user)
-        whenever(userPointService.findByUserId(userId)).thenReturn(userPoint)
+        whenever(userPointService.getByUserId(UserPointQuery.GetByUserId(userId))).thenReturn(userPoint)
         
         // when
         val result = userPointFacade.getUserPoint(criteria)
@@ -62,7 +59,8 @@ class UserPointFacadeTest {
         val user = User(userId = userId)
         
         whenever(userService.getUserById(any())).thenReturn(user)
-        whenever(userPointService.findByUserId(userId)).thenReturn(null)
+        whenever(userPointService.getByUserId(UserPointQuery.GetByUserId(userId)))
+            .thenThrow(UserPointException.NotFound("userId(${userId})로 UserPoint를 찾을 수 없습니다."))
         
         // when, then
         assertThrows<UserPointException.NotFound> {

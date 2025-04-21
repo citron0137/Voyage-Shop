@@ -5,6 +5,7 @@ import kr.hhplus.be.server.domain.user.UserQuery
 import kr.hhplus.be.server.domain.user.UserService
 import kr.hhplus.be.server.domain.userpoint.UserPointCommand
 import kr.hhplus.be.server.domain.userpoint.UserPointException
+import kr.hhplus.be.server.domain.userpoint.UserPointQuery
 import kr.hhplus.be.server.domain.userpoint.UserPointService
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Isolation
@@ -30,9 +31,10 @@ class UserPointFacade(
      */
     @Transactional(readOnly = true)
     fun getUserPoint(criteria: UserPointCriteria.GetByUserId): UserPointResult.Point {
+        // 사용자 포인트 조회 쿼리 생성
+        val query = UserPointQuery.GetByUserId(criteria.userId)
         // 사용자 포인트 조회
-        val userPoint = userPointService.findByUserId(criteria.userId) 
-            ?: throw UserPointException.NotFound("userId(${criteria.userId})로 UserPoint를 찾을 수 없습니다.")
+        val userPoint = userPointService.getByUserId(query)
         return UserPointResult.Point.from(userPoint)
     }
     

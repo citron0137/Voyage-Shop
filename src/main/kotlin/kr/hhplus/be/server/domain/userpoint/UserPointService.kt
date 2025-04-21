@@ -30,11 +30,12 @@ class UserPointService(
     /**
      * 사용자 ID로 포인트를 조회합니다.
      * 
-     * @param userId 사용자 ID
+     * @param query 사용자 ID로 포인트 조회 쿼리
      * @return 조회된 사용자 포인트(없으면 null)
      */
-    fun findByUserId(userId: String): UserPoint? {
-        return this.userPointRepository.findByUserId(userId)
+    fun getByUserId(query: UserPointQuery.GetByUserId): UserPoint {
+        return this.userPointRepository.findByUserId(query.userId)
+            ?: throw UserPointException.NotFound("userId(${query.userId})로 UserPoint를 찾을 수 없습니다.")
     }
 
     /**

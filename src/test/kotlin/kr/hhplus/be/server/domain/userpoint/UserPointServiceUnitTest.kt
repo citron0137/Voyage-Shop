@@ -48,6 +48,7 @@ class UserPointServiceUnitTest {
     fun `포인트 조회 테스트 - 존재하는 경우`() {
         // given
         val userId = "test-user-id"
+        val query = UserPointQuery.GetByUserId(userId)
         val expectedUserPoint = UserPoint(
             userPointId = "test-point-id",
             userId = userId,
@@ -57,7 +58,7 @@ class UserPointServiceUnitTest {
         `when`(userPointRepository.findByUserId(userId)).thenReturn(expectedUserPoint)
 
         // when
-        val result = userPointService.findByUserId(userId)
+        val result = userPointService.getByUserId(query)
 
         // then
         assertNotNull(result)
@@ -71,13 +72,14 @@ class UserPointServiceUnitTest {
     fun `포인트 조회 테스트 - 존재하지 않는 경우`() {
         // given
         val userId = "non-existent-user-id"
+        val query = UserPointQuery.GetByUserId(userId)
         `when`(userPointRepository.findByUserId(userId)).thenReturn(null)
 
         // when
-        val result = userPointService.findByUserId(userId)
-
         // then
-        assertNull(result)
+        assertThrows<UserPointException.NotFound> {
+            userPointService.getByUserId(query)
+        }
         verify(userPointRepository).findByUserId(userId)
     }
 
