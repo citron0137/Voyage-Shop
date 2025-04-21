@@ -9,6 +9,7 @@ import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
 import kr.hhplus.be.server.domain.couponevent.CouponEventCommand
+import kr.hhplus.be.server.domain.couponevent.CouponEventQuery
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -65,7 +66,7 @@ class CouponEventFacadeTest {
             totalIssueAmount = 100
         )
         
-        `when`(couponEventService.createCouponEvent(any())).thenReturn(sampleCouponEvent)
+        `when`(couponEventService.createCouponEvent(criteria.toCommand())).thenReturn(sampleCouponEvent)
         
         // when
         val result = couponEventFacade.createCouponEvent(criteria)
@@ -77,7 +78,7 @@ class CouponEventFacadeTest {
         assertThat(result.totalIssueAmount).isEqualTo(sampleCouponEvent.totalIssueAmount)
         assertThat(result.leftIssueAmount).isEqualTo(sampleCouponEvent.leftIssueAmount)
         
-        verify(couponEventService, times(1)).createCouponEvent(any())
+        verify(couponEventService, times(1)).createCouponEvent(criteria.toCommand())
     }
     
     @Test
@@ -114,7 +115,7 @@ class CouponEventFacadeTest {
             )
         )
         
-        `when`(couponEventService.getAllCouponEvents()).thenReturn(couponEvents)
+        `when`(couponEventService.getAllCouponEvents(any())).thenReturn(couponEvents)
         
         // when
         val result = couponEventFacade.getAllCouponEvents(criteria)
@@ -126,7 +127,7 @@ class CouponEventFacadeTest {
         assertThat(result.couponEvents[1].id).isEqualTo(couponEvents[1].id)
         assertThat(result.couponEvents[1].benefitMethod).isEqualTo(couponEvents[1].benefitMethod)
         
-        verify(couponEventService, times(1)).getAllCouponEvents()
+        verify(couponEventService, times(1)).getAllCouponEvents(any())
     }
     
     @Test
@@ -150,9 +151,9 @@ class CouponEventFacadeTest {
             updatedAt = now
         )
         
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(sampleCouponEvent)
-        `when`(couponEventService.decreaseStock(couponEventId)).thenReturn(sampleCouponEvent)
-        `when`(couponUserService.create(any<CouponUserCommand.Create>())).thenReturn(couponUser)
+        `when`(couponEventService.getCouponEvent(CouponEventQuery.GetById(couponEventId))).thenReturn(sampleCouponEvent)
+        `when`(couponEventService.decreaseStock(CouponEventCommand.Issue(couponEventId))).thenReturn(sampleCouponEvent)
+        `when`(couponUserService.create(CouponUserCommand.Create(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1000"))).thenReturn(couponUser)
         
         // when
         val result = couponEventFacade.issueCouponUser(criteria)
@@ -160,9 +161,9 @@ class CouponEventFacadeTest {
         // then
         assertThat(result.couponUserId).isEqualTo(couponUser.couponUserId)
         
-        verify(couponEventService, times(1)).getCouponEvent(couponEventId)
-        verify(couponEventService, times(1)).decreaseStock(couponEventId)
-        verify(couponUserService, times(1)).create(any<CouponUserCommand.Create>())
+        verify(couponEventService, times(1)).getCouponEvent(CouponEventQuery.GetById(couponEventId))
+        verify(couponEventService, times(1)).decreaseStock(CouponEventCommand.Issue(couponEventId))
+        verify(couponUserService, times(1)).create(CouponUserCommand.Create(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1000"))
     }
     
     @Test
@@ -175,7 +176,7 @@ class CouponEventFacadeTest {
             userId = "user-id"
         )
         
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenThrow(CouponEventException.NotFound(couponEventId))
+        `when`(couponEventService.getCouponEvent(CouponEventQuery.GetById(couponEventId))).thenThrow(CouponEventException.NotFound(couponEventId))
         
         // when & then
         assertThrows<CouponEventException.NotFound> {
@@ -203,7 +204,7 @@ class CouponEventFacadeTest {
             updatedAt = now
         )
         
-        `when`(couponEventService.getCouponEvent(couponEventId)).thenReturn(emptyStockEvent)
+        `when`(couponEventService.getCouponEvent(CouponEventQuery.GetById(couponEventId))).thenReturn(emptyStockEvent)
         
         // when & then
         assertThrows<CouponEventException.OutOfStock> {

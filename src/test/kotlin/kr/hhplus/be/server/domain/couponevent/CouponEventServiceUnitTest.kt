@@ -69,7 +69,7 @@ class CouponEventServiceUnitTest {
         `when`(couponEventRepository.findById(id)).thenReturn(expectedCouponEvent)
 
         // when
-        val result = couponEventService.getCouponEvent(id)
+        val result = couponEventService.getCouponEvent(CouponEventQuery.GetById(id))
 
         // then
         assertEquals(expectedCouponEvent.id, result.id)
@@ -88,7 +88,7 @@ class CouponEventServiceUnitTest {
 
         // when & then
         assertThrows<CouponEventException.NotFound> {
-            couponEventService.getCouponEvent(id)
+            couponEventService.getCouponEvent(CouponEventQuery.GetById(id))
         }
     }
 
@@ -119,7 +119,7 @@ class CouponEventServiceUnitTest {
         `when`(couponEventRepository.findAll()).thenReturn(couponEvents)
 
         // when
-        val result = couponEventService.getAllCouponEvents()
+        val result = couponEventService.getAllCouponEvents(CouponEventQuery.GetAll())
 
         // then
         assertEquals(2, result.size)
@@ -153,10 +153,10 @@ class CouponEventServiceUnitTest {
         )
         
         `when`(couponEventRepository.findById(id)).thenReturn(initialCouponEvent)
-        `when`(couponEventRepository.decreaseStock(id)).thenReturn(expectedUpdatedCouponEvent)
+        `when`(couponEventRepository.save(any())).thenReturn(expectedUpdatedCouponEvent)
 
         // when
-        val result = couponEventService.decreaseStock(id)
+        val result = couponEventService.decreaseStock(CouponEventCommand.Issue(id))
 
         // then
         assertEquals(expectedUpdatedCouponEvent.id, result.id)
@@ -181,7 +181,7 @@ class CouponEventServiceUnitTest {
 
         // when & then
         assertThrows<CouponEventException.OutOfStock> {
-            couponEventService.decreaseStock(id)
+            couponEventService.decreaseStock(CouponEventCommand.Issue(id))
         }
     }
 

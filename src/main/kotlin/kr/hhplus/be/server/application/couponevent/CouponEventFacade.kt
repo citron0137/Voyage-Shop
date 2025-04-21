@@ -77,7 +77,7 @@ class CouponEventFacade(
         couponEvent.validateCanIssue()
         
         // 3. 재고 감소 시도 (실패 시 예외 발생)
-        couponEventService.decreaseStock(CouponEventCommand.Issue(couponEvent.id))
+        couponEventService.decreaseStock(CouponEventCommand.Issue(criteria.couponEventId))
         
         // 4. 쿠폰 유저 생성 (실제 CouponUserService 호출)
         // Criteria에서 Command로 변환 (내부에서 BenefitMethod 변환도 수행)
