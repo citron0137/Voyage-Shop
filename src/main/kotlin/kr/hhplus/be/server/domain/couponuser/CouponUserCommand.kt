@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.domain.coupon
+package kr.hhplus.be.server.domain.couponuser
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -15,7 +15,7 @@ sealed class CouponUserCommand {
     ) : CouponUserCommand() {
         init {
             if (userId.isBlank()) {
-                throw CouponException.UserIdShouldNotBlank("유저 ID는 비어있을 수 없습니다.")
+                throw CouponUserException.UserIdShouldNotBlank("유저 ID는 비어있을 수 없습니다.")
             }
         }
     }
@@ -33,7 +33,7 @@ sealed class CouponUserCommand {
     ) : CouponUserCommand() {
         init {
             if (couponUserId.isBlank()) {
-                throw CouponException.CouponUserIdShouldNotBlank("쿠폰 ID는 비어있을 수 없습니다.")
+                throw CouponUserException.CouponUserIdShouldNotBlank("쿠폰 ID는 비어있을 수 없습니다.")
             }
         }
     }
@@ -43,27 +43,27 @@ sealed class CouponUserCommand {
      */
     data class Create(
         val userId: String,
-        val benefitMethod: CouponBenefitMethod,
+        val benefitMethod: CouponUserBenefitMethod,
         val benefitAmount: String
     ) : CouponUserCommand() {
         init {
             if (userId.isBlank()) {
-                throw CouponException.UserIdShouldNotBlank(userId)
+                throw CouponUserException.UserIdShouldNotBlank(userId)
             }
             
             if (benefitAmount.isBlank()) {
-                throw CouponException.BenefitAmountShouldNotBlank(benefitAmount)
+                throw CouponUserException.BenefitAmountShouldNotBlank(benefitAmount)
             }
             if (benefitAmount.toLongOrNull() == null) {
-                throw CouponException.BenefitAmountShouldBeNumeric(benefitAmount)
+                throw CouponUserException.BenefitAmountShouldBeNumeric(benefitAmount)
             }
             if (benefitAmount.toLong() <= 0) {
-                throw CouponException.BenefitAmountShouldMoreThan0(benefitAmount)
+                throw CouponUserException.BenefitAmountShouldMoreThan0(benefitAmount)
             }
             
             // 퍼센트 할인율이 100%를 초과하는지 확인
-            if (benefitMethod == CouponBenefitMethod.DISCOUNT_PERCENTAGE && benefitAmount.toLong() > 100) {
-                throw CouponException.DiscountPercentageExceeds100("Discount percentage ${benefitAmount} exceeds 100%")
+            if (benefitMethod == CouponUserBenefitMethod.DISCOUNT_PERCENTAGE && benefitAmount.toLong() > 100) {
+                throw CouponUserException.DiscountPercentageExceeds100("Discount percentage ${benefitAmount} exceeds 100%")
             }
         }
 
@@ -88,7 +88,7 @@ sealed class CouponUserCommand {
     ) : CouponUserCommand() {
         init {
             if (couponUserId.isBlank()) {
-                throw CouponException.CouponUserIdShouldNotBlank(couponUserId)
+                throw CouponUserException.CouponUserIdShouldNotBlank(couponUserId)
             }
         }
     }
@@ -102,10 +102,10 @@ sealed class CouponUserCommand {
     ) : CouponUserCommand() {
         init {
             if (couponUserId.isBlank()) {
-                throw CouponException.CouponUserIdShouldNotBlank("쿠폰 ID는 비어있을 수 없습니다.")
+                throw CouponUserException.CouponUserIdShouldNotBlank("쿠폰 ID는 비어있을 수 없습니다.")
             }
             if (originalAmount <= 0) {
-                throw CouponException.InvalidOriginalAmount("원래 금액은 0보다 커야 합니다: $originalAmount")
+                throw CouponUserException.InvalidOriginalAmount("원래 금액은 0보다 커야 합니다: $originalAmount")
             }
         }
     }

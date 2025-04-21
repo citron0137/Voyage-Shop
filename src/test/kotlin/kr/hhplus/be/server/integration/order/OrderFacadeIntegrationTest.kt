@@ -3,9 +3,9 @@ package kr.hhplus.be.server.integration.order
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.order.OrderFacade
 import kr.hhplus.be.server.application.order.OrderItemRequest
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
-import kr.hhplus.be.server.domain.coupon.CouponUserService
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.product.ProductCommand
 import kr.hhplus.be.server.domain.product.ProductService
 import kr.hhplus.be.server.domain.user.UserService
@@ -177,7 +177,7 @@ class OrderFacadeIntegrationTest {
         // 테스트용 쿠폰 생성 (고정 금액 1000원 할인)
         val couponCommand = CouponUserCommand.Create(
             userId = testUserId,
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000"
         )
         val couponUser = couponUserService.create(couponCommand)

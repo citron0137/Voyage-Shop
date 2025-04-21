@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.couponevent
 
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
 import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEventCommand
 import kr.hhplus.be.server.domain.couponevent.CouponEventException
@@ -66,8 +66,8 @@ class CouponEventCriteria {
         fun toCommand(benefitMethod: CouponEventBenefitMethod, benefitAmount: String): CouponUserCommand.Create {
             // BenefitMethod를 CouponBenefitMethod로 변환
             val couponBenefitMethod = when (benefitMethod) {
-                CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
-                CouponEventBenefitMethod.DISCOUNT_PERCENTAGE -> CouponBenefitMethod.DISCOUNT_PERCENTAGE
+                CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT
+                CouponEventBenefitMethod.DISCOUNT_PERCENTAGE -> CouponUserBenefitMethod.DISCOUNT_PERCENTAGE
             }
             
             return CouponUserCommand.Create(

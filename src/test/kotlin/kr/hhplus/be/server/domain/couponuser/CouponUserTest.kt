@@ -1,5 +1,8 @@
 package kr.hhplus.be.server.domain.coupon
 
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -16,7 +19,7 @@ class CouponUserTest {
         val couponUser = CouponUser(
             couponUserId = "coupon-user-id",
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = null,
             createdAt = now,
@@ -42,7 +45,7 @@ class CouponUserTest {
         val couponUser = CouponUser(
             couponUserId = "coupon-user-id",
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = now,
             createdAt = now,
@@ -50,7 +53,7 @@ class CouponUserTest {
         )
 
         // when & then
-        assertThrows<CouponException.AlreadyUsed> {
+        assertThrows<CouponUserException.AlreadyUsed> {
             couponUser.use()
         }
     }
@@ -62,7 +65,7 @@ class CouponUserTest {
         val couponUser = CouponUser(
             couponUserId = "coupon-user-id",
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = null,
             createdAt = now,
@@ -83,7 +86,7 @@ class CouponUserTest {
         val couponUser = CouponUser(
             couponUserId = "coupon-user-id",
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_PERCENTAGE,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
             benefitAmount = "10",
             usedAt = null,
             createdAt = now,
@@ -104,7 +107,7 @@ class CouponUserTest {
         val couponUser = CouponUser(
             couponUserId = "coupon-user-id",
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "2000",
             usedAt = null,
             createdAt = now,
@@ -112,7 +115,7 @@ class CouponUserTest {
         )
 
         // when & then
-        assertThrows<CouponException.DiscountAmountExceedsOriginalAmount> {
+        assertThrows<CouponUserException.DiscountAmountExceedsOriginalAmount> {
             couponUser.calculateDiscountAmount(1000)
         }
     }
@@ -124,7 +127,7 @@ class CouponUserTest {
         val couponUser = CouponUser(
             couponUserId = "coupon-user-id",
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_PERCENTAGE,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
             benefitAmount = "120",
             usedAt = null,
             createdAt = now,
@@ -132,7 +135,7 @@ class CouponUserTest {
         )
 
         // when & then
-        assertThrows<CouponException.DiscountPercentageExceeds100> {
+        assertThrows<CouponUserException.DiscountPercentageExceeds100> {
             couponUser.calculateDiscountAmount(5000)
         }
     }
@@ -141,8 +144,8 @@ class CouponUserTest {
     @DisplayName("잘못된 할인 방법으로 쿠폰을 생성하면 예외가 발생한다")
     fun `잘못된 할인 방법으로 쿠폰을 생성하면 예외가 발생한다`() {
         // when & then
-        assertThrows<CouponException.InvalidBenefitMethod> {
-            CouponBenefitMethod.from("INVALID_METHOD")
+        assertThrows<CouponUserException.InvalidBenefitMethod> {
+            CouponUserBenefitMethod.from("INVALID_METHOD")
         }
     }
 } 

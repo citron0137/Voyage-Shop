@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.application.couponuser
 
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
-import kr.hhplus.be.server.domain.coupon.CouponUserService
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 

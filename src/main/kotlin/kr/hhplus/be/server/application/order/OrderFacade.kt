@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.order
 
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
-import kr.hhplus.be.server.domain.coupon.CouponUserService
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.order.*
 import kr.hhplus.be.server.domain.payment.PaymentCommand
 import kr.hhplus.be.server.domain.payment.PaymentService

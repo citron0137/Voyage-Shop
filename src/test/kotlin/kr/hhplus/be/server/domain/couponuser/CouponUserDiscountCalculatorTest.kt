@@ -1,14 +1,14 @@
 package kr.hhplus.be.server.domain.coupon.discount
 
-import kr.hhplus.be.server.domain.coupon.CouponException
+import kr.hhplus.be.server.domain.couponuser.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class DiscountCalculatorTest {
-    private val fixedAmountCalculator = FixedAmountDiscountCalculator()
-    private val percentageCalculator = PercentageDiscountCalculator()
+class CouponUserDiscountCalculatorTest {
+    private val fixedAmountCalculator = CouponUserFixedAmountDiscountCalculator()
+    private val percentageCalculator = CouponUserPercentageDiscountCalculator()
     
     @Test
     @DisplayName("고정 금액 할인 계산기는 할인 금액을 그대로 반환한다")
@@ -32,7 +32,7 @@ class DiscountCalculatorTest {
         val discountAmount = "2000"
         
         // when & then
-        assertThrows<CouponException.DiscountAmountExceedsOriginalAmount> {
+        assertThrows<CouponUserException.DiscountAmountExceedsOriginalAmount> {
             fixedAmountCalculator.calculate(originalAmount, discountAmount)
         }
     }
@@ -59,7 +59,7 @@ class DiscountCalculatorTest {
         val discountAmount = "120"
         
         // when & then
-        assertThrows<CouponException.DiscountPercentageExceeds100> {
+        assertThrows<CouponUserException.DiscountPercentageExceeds100> {
             percentageCalculator.calculate(originalAmount, discountAmount)
         }
     }
@@ -68,14 +68,14 @@ class DiscountCalculatorTest {
     @DisplayName("할인 계산기 팩토리는 할인 방식에 맞는 계산기를 반환한다")
     fun `할인 계산기 팩토리는 할인 방식에 맞는 계산기를 반환한다`() {
         // given
-        val factory = DiscountCalculatorFactory
+        val factory = CouponUserDiscountCalculatorFactory
         
         // when & then
-        val fixedCalculator = factory.getCalculator(kr.hhplus.be.server.domain.coupon.CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT)
-        val percentageCalculator = factory.getCalculator(kr.hhplus.be.server.domain.coupon.CouponBenefitMethod.DISCOUNT_PERCENTAGE)
+        val fixedCalculator = factory.getCalculator(CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT)
+        val percentageCalculator = factory.getCalculator(CouponUserBenefitMethod.DISCOUNT_PERCENTAGE)
         
         // then
-        assertEquals(FixedAmountDiscountCalculator::class.java, fixedCalculator.javaClass)
-        assertEquals(PercentageDiscountCalculator::class.java, percentageCalculator.javaClass)
+        assertEquals(CouponUserFixedAmountDiscountCalculator::class.java, fixedCalculator.javaClass)
+        assertEquals(CouponUserPercentageDiscountCalculator::class.java, percentageCalculator.javaClass)
     }
 } 

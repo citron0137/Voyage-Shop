@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.couponevent
 
-import kr.hhplus.be.server.domain.coupon.CouponUserService
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
 import kr.hhplus.be.server.domain.couponevent.CouponEventQuery

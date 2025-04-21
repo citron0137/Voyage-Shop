@@ -3,10 +3,9 @@ package kr.hhplus.be.server.integration.couponevent
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
 import kr.hhplus.be.server.application.couponevent.CouponEventFacade
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserService
 import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEventException
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserService
 import org.assertj.core.api.Assertions.assertThat

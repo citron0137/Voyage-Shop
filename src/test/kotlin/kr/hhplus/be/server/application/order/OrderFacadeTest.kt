@@ -1,9 +1,8 @@
 package kr.hhplus.be.server.application.order
 
-import io.mockk.mockk
-import kr.hhplus.be.server.domain.coupon.CouponUser
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
-import kr.hhplus.be.server.domain.coupon.CouponUserService
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.order.*
 import kr.hhplus.be.server.domain.payment.Payment
 import kr.hhplus.be.server.domain.payment.PaymentService

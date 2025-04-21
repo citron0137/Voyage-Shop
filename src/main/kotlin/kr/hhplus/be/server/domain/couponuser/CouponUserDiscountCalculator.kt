@@ -1,16 +1,14 @@
-package kr.hhplus.be.server.domain.coupon.discount
+package kr.hhplus.be.server.domain.couponuser
 
-import kr.hhplus.be.server.domain.coupon.CouponException
-
-interface DiscountCalculator {
+interface CouponUserDiscountCalculator {
     fun calculate(originalAmount: Long, discountAmount: String): Long
 }
 
-class FixedAmountDiscountCalculator : DiscountCalculator {
+class CouponUserFixedAmountDiscountCalculator : CouponUserDiscountCalculator {
     override fun calculate(originalAmount: Long, discountAmount: String): Long {
         val discount = discountAmount.toLong()
         if (discount > originalAmount) {
-            throw CouponException.DiscountAmountExceedsOriginalAmount(
+            throw CouponUserException.DiscountAmountExceedsOriginalAmount(
                 "Discount amount $discount exceeds original amount $originalAmount"
             )
         }
@@ -18,11 +16,11 @@ class FixedAmountDiscountCalculator : DiscountCalculator {
     }
 }
 
-class PercentageDiscountCalculator : DiscountCalculator {
+class CouponUserPercentageDiscountCalculator : CouponUserDiscountCalculator {
     override fun calculate(originalAmount: Long, discountAmount: String): Long {
         val percentage = discountAmount.toLong()
         if (percentage > 100) {
-            throw CouponException.DiscountPercentageExceeds100(
+            throw CouponUserException.DiscountPercentageExceeds100(
                 "Discount percentage $percentage exceeds 100%"
             )
         }

@@ -1,15 +1,15 @@
 package kr.hhplus.be.server.application.couponevent
 
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUser
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
-import kr.hhplus.be.server.domain.coupon.CouponUserService
 import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
 import kr.hhplus.be.server.domain.couponevent.CouponEventCommand
 import kr.hhplus.be.server.domain.couponevent.CouponEventQuery
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -144,7 +144,7 @@ class CouponEventFacadeTest {
         val couponUser = CouponUser(
             couponUserId = UUID.randomUUID().toString(),
             userId = userId,
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = null,
             createdAt = now,
@@ -153,7 +153,7 @@ class CouponEventFacadeTest {
         
         `when`(couponEventService.getCouponEvent(CouponEventQuery.GetById(couponEventId))).thenReturn(sampleCouponEvent)
         `when`(couponEventService.decreaseStock(CouponEventCommand.Issue(couponEventId))).thenReturn(sampleCouponEvent)
-        `when`(couponUserService.create(CouponUserCommand.Create(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1000"))).thenReturn(couponUser)
+        `when`(couponUserService.create(CouponUserCommand.Create(userId, CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1000"))).thenReturn(couponUser)
         
         // when
         val result = couponEventFacade.issueCouponUser(criteria)
@@ -163,7 +163,7 @@ class CouponEventFacadeTest {
         
         verify(couponEventService, times(1)).getCouponEvent(CouponEventQuery.GetById(couponEventId))
         verify(couponEventService, times(1)).decreaseStock(CouponEventCommand.Issue(couponEventId))
-        verify(couponUserService, times(1)).create(CouponUserCommand.Create(userId, CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1000"))
+        verify(couponUserService, times(1)).create(CouponUserCommand.Create(userId, CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT, "1000"))
     }
     
     @Test

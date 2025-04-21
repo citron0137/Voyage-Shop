@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.coupon
 
+import kr.hhplus.be.server.domain.couponuser.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -28,13 +29,13 @@ class CouponUserServiceUnitTest {
         // given
         val command = CouponUserCommand.Create(
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000"
         )
         val expectedCouponUser = CouponUser(
             couponUserId = UUID.randomUUID().toString(),
             userId = command.userId,
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = command.benefitAmount,
             usedAt = null,
             createdAt = LocalDateTime.now(),
@@ -48,7 +49,7 @@ class CouponUserServiceUnitTest {
         // then
         assertEquals(expectedCouponUser.couponUserId, result.couponUserId)
         assertEquals(command.userId, result.userId)
-        assertEquals(CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, result.benefitMethod)
+        assertEquals(CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT, result.benefitMethod)
         assertEquals(command.benefitAmount, result.benefitAmount)
         assertEquals(null, result.usedAt)
     }
@@ -62,7 +63,7 @@ class CouponUserServiceUnitTest {
         val couponUser = CouponUser(
             couponUserId = couponUserId,
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = null,
             createdAt = LocalDateTime.now(),
@@ -77,7 +78,7 @@ class CouponUserServiceUnitTest {
         // then
         assertEquals(couponUserId, result.couponUserId)
         assertEquals("user-id", result.userId)
-        assertEquals(CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, result.benefitMethod)
+        assertEquals(CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT, result.benefitMethod)
         assertEquals("1000", result.benefitAmount)
     }
 
@@ -90,7 +91,7 @@ class CouponUserServiceUnitTest {
         val couponUser = CouponUser(
             couponUserId = couponUserId,
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = LocalDateTime.now(),
             createdAt = LocalDateTime.now(),
@@ -99,7 +100,7 @@ class CouponUserServiceUnitTest {
         `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
 
         // when & then
-        assertThrows<CouponException.AlreadyUsed> {
+        assertThrows<CouponUserException.AlreadyUsed> {
             couponUserService.useCoupon(command)
         }
     }
@@ -113,7 +114,7 @@ class CouponUserServiceUnitTest {
         `when`(couponUserRepository.findById(couponUserId)).thenReturn(null)
 
         // when & then
-        assertThrows<CouponException.NotFound> {
+        assertThrows<CouponUserException.NotFound> {
             couponUserService.useCoupon(command)
         }
     }
@@ -128,7 +129,7 @@ class CouponUserServiceUnitTest {
             CouponUser(
                 couponUserId = UUID.randomUUID().toString(),
                 userId = userId,
-                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "1000",
                 usedAt = null,
                 createdAt = LocalDateTime.now(),
@@ -137,7 +138,7 @@ class CouponUserServiceUnitTest {
             CouponUser(
                 couponUserId = UUID.randomUUID().toString(),
                 userId = userId,
-                benefitMethod = CouponBenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "10",
                 usedAt = null,
                 createdAt = LocalDateTime.now(),
@@ -163,7 +164,7 @@ class CouponUserServiceUnitTest {
         val couponUser = CouponUser(
             couponUserId = couponUserId,
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = null,
             createdAt = LocalDateTime.now(),
@@ -178,7 +179,7 @@ class CouponUserServiceUnitTest {
         // then
         assertEquals(couponUserId, result.couponUserId)
         assertEquals("user-id", result.userId)
-        assertEquals(CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, result.benefitMethod)
+        assertEquals(CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT, result.benefitMethod)
         assertEquals("1000", result.benefitAmount)
     }
 
@@ -191,7 +192,7 @@ class CouponUserServiceUnitTest {
 
         // when & then
         val command = CouponUserCommand.GetById(couponUserId)
-        assertThrows<CouponException.NotFound> {
+        assertThrows<CouponUserException.NotFound> {
             couponUserService.getCouponUser(command)
         }
     }

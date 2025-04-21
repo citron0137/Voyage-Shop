@@ -3,8 +3,8 @@ package kr.hhplus.be.server.infrastructure.coupon
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import java.time.LocalDateTime
@@ -17,18 +17,18 @@ import java.time.LocalDateTime
 data class CouponUserJpaEntity(
     @Id
     val couponUserId: String,
-    
+
     val userId: String,
-    
-    val benefitMethod: CouponBenefitMethod,
-    
+
+    val benefitMethod: CouponUserBenefitMethod,
+
     val benefitAmount: String,
-    
+
     val usedAt: LocalDateTime?,
-    
+
     @CreationTimestamp
     val createdAt: LocalDateTime,
-    
+
     @UpdateTimestamp
     val updatedAt: LocalDateTime
 ) {

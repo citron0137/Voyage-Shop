@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.couponuser
 
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import java.time.LocalDateTime
 
 /**
@@ -14,7 +14,7 @@ sealed class CouponUserResult {
     data class User(
         val couponUserId: String,
         val userId: String,
-        val benefitMethod: CouponBenefitMethod,
+        val benefitMethod: CouponUserBenefitMethod,
         val benefitAmount: String,
         val usedAt: LocalDateTime?,
         val createdAt: LocalDateTime,

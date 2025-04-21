@@ -1,5 +1,8 @@
 package kr.hhplus.be.server.domain.coupon
 
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -12,7 +15,7 @@ class CouponUserCommandTest {
         // given
         val command = CouponUserCommand.Create(
             userId = "user-id",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000"
         )
 
@@ -21,7 +24,7 @@ class CouponUserCommandTest {
 
         // then
         assertEquals(command.userId, entity.userId)
-        assertEquals(CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT, entity.benefitMethod)
+        assertEquals(CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT, entity.benefitMethod)
         assertEquals(command.benefitAmount, entity.benefitAmount)
         assertEquals(null, entity.usedAt)
     }
@@ -30,10 +33,10 @@ class CouponUserCommandTest {
     @DisplayName("빈 userId로 Create 커맨드를 생성하면 예외가 발생한다")
     fun `빈 userId로 Create 커맨드를 생성하면 예외가 발생한다`() {
         // when & then
-        assertThrows<CouponException.UserIdShouldNotBlank> {
+        assertThrows<CouponUserException.UserIdShouldNotBlank> {
             CouponUserCommand.Create(
                 userId = "",
-                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "1000"
             )
         }
@@ -43,10 +46,10 @@ class CouponUserCommandTest {
     @DisplayName("빈 benefitAmount로 Create 커맨드를 생성하면 예외가 발생한다")
     fun `빈 benefitAmount로 Create 커맨드를 생성하면 예외가 발생한다`() {
         // when & then
-        assertThrows<CouponException.BenefitAmountShouldNotBlank> {
+        assertThrows<CouponUserException.BenefitAmountShouldNotBlank> {
             CouponUserCommand.Create(
                 userId = "user-id",
-                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = ""
             )
         }
@@ -56,10 +59,10 @@ class CouponUserCommandTest {
     @DisplayName("0 이하의 할인 금액으로 Create 커맨드를 생성하면 예외가 발생한다")
     fun `0 이하의 할인 금액으로 Create 커맨드를 생성하면 예외가 발생한다`() {
         // when & then
-        assertThrows<CouponException.BenefitAmountShouldMoreThan0> {
+        assertThrows<CouponUserException.BenefitAmountShouldMoreThan0> {
             CouponUserCommand.Create(
                 userId = "user-id",
-                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "0"
             )
         }
@@ -69,10 +72,10 @@ class CouponUserCommandTest {
     @DisplayName("숫자가 아닌 할인 금액으로 Create 커맨드를 생성하면 예외가 발생한다")
     fun `숫자가 아닌 할인 금액으로 Create 커맨드를 생성하면 예외가 발생한다`() {
         // when & then
-        assertThrows<CouponException.BenefitAmountShouldBeNumeric> {
+        assertThrows<CouponUserException.BenefitAmountShouldBeNumeric> {
             CouponUserCommand.Create(
                 userId = "user-id",
-                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "invalid"
             )
         }
@@ -82,10 +85,10 @@ class CouponUserCommandTest {
     @DisplayName("퍼센트 할인율이 100%를 초과하는 Create 커맨드를 생성하면 예외가 발생한다")
     fun `퍼센트 할인율이 100%를 초과하는 Create 커맨드를 생성하면 예외가 발생한다`() {
         // when & then
-        assertThrows<CouponException.DiscountPercentageExceeds100> {
+        assertThrows<CouponUserException.DiscountPercentageExceeds100> {
             CouponUserCommand.Create(
                 userId = "user-id",
-                benefitMethod = CouponBenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "120"
             )
         }
@@ -95,7 +98,7 @@ class CouponUserCommandTest {
     @DisplayName("빈 couponUserId로 Use 커맨드를 생성하면 예외가 발생한다")
     fun `빈 couponUserId로 Use 커맨드를 생성하면 예외가 발생한다`() {
         // when & then
-        assertThrows<CouponException.CouponUserIdShouldNotBlank> {
+        assertThrows<CouponUserException.CouponUserIdShouldNotBlank> {
             CouponUserCommand.Use(
                 couponUserId = ""
             )

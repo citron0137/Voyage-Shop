@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.domain.coupon
+package kr.hhplus.be.server.domain.couponuser
 
 interface CouponUserRepository {
     fun create(couponUser: CouponUser): CouponUser

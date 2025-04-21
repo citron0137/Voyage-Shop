@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.infrastructure.coupon
 
-import kr.hhplus.be.server.domain.coupon.CouponUser
-import kr.hhplus.be.server.domain.coupon.CouponUserRepository
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserRepository
 import org.springframework.context.annotation.Profile
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
