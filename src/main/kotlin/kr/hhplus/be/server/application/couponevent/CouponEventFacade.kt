@@ -3,6 +3,8 @@ package kr.hhplus.be.server.application.couponevent
 import kr.hhplus.be.server.domain.coupon.CouponUserService
 import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponevent.CouponEventService
+import kr.hhplus.be.server.domain.couponevent.CouponEventQuery
+import kr.hhplus.be.server.domain.couponevent.CouponEventCommand
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -40,7 +42,7 @@ class CouponEventFacade(
      */
     @Transactional(readOnly = true)
     fun getAllCouponEvents(criteria: CouponEventCriteria.GetAll = CouponEventCriteria.GetAll()): CouponEventResult.List {
-        val couponEvents = couponEventService.getAllCouponEvents()
+        val couponEvents = couponEventService.getAllCouponEvents(CouponEventQuery.GetAll())
         return CouponEventResult.List.from(couponEvents)
     }
 
@@ -53,7 +55,7 @@ class CouponEventFacade(
      */
     @Transactional(readOnly = true)
     fun getCouponEvent(criteria: CouponEventCriteria.GetById): CouponEventResult.Single {
-        val couponEvent = couponEventService.getCouponEvent(criteria.couponEventId)
+        val couponEvent = couponEventService.getCouponEvent(CouponEventQuery.GetById(criteria.couponEventId))
         return CouponEventResult.Single.from(couponEvent)
     }
 
@@ -69,13 +71,13 @@ class CouponEventFacade(
     @Transactional
     fun issueCouponUser(criteria: CouponEventCriteria.IssueCoupon): CouponEventResult.IssueCoupon {
         // 1. 쿠폰 이벤트 조회 및 존재 여부 확인
-        val couponEvent = couponEventService.getCouponEvent(criteria.couponEventId)
+        val couponEvent = couponEventService.getCouponEvent(CouponEventQuery.GetById(criteria.couponEventId))
         
         // 2. 재고 확인 (이 시점에 재고 없으면 예외 발생)
         couponEvent.validateCanIssue()
         
         // 3. 재고 감소 시도 (실패 시 예외 발생)
-        couponEventService.decreaseStock(criteria.couponEventId)
+        couponEventService.decreaseStock(CouponEventCommand.Issue(couponEvent.id))
         
         // 4. 쿠폰 유저 생성 (실제 CouponUserService 호출)
         // Criteria에서 Command로 변환 (내부에서 BenefitMethod 변환도 수행)
