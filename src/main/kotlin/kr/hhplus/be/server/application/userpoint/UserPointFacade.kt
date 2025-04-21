@@ -7,6 +7,7 @@ import kr.hhplus.be.server.domain.userpoint.UserPointCommand
 import kr.hhplus.be.server.domain.userpoint.UserPointException
 import kr.hhplus.be.server.domain.userpoint.UserPointService
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 
 /**
@@ -37,6 +38,7 @@ class UserPointFacade(
     
     /**
      * 사용자 포인트를 충전합니다.
+     * 동시성 문제를 방지하기 위해 적절한 격리 수준을 설정합니다.
      *
      * @param criteria 사용자 포인트 충전 요청 기준
      * @return 충전 후 사용자 포인트 정보
@@ -46,14 +48,36 @@ class UserPointFacade(
      * @throws UserPointException.ChargeAmountShouldMoreThan0 충전 금액이 0 이하인 경우
      * @throws UserPointException.PointAmountOverflow 충전 후 포인트가 최대치를 초과하는 경우
      */
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Point {
         // 포인트 충전 명령 생성
         val command = UserPointCommand.Charge(userId = criteria.userId, amount = criteria.amount)
         
         // 포인트 충전
         val userPoint = userPointService.charge(command)
-            ?: throw UserPointException.NotFound("userId(${criteria.userId})로 UserPoint를 찾을 수 없습니다.")
+        
+        return UserPointResult.Point.from(userPoint)
+    }
+    
+    /**
+     * 사용자 포인트를 사용합니다.
+     * 동시성 문제를 방지하기 위해 적절한 격리 수준을 설정합니다.
+     *
+     * @param criteria 사용자 포인트 사용 요청 기준
+     * @return 사용 후 사용자 포인트 정보
+     * @throws UserException.UserIdShouldNotBlank 사용자 ID가 빈 값인 경우
+     * @throws UserException.NotFound 사용자를 찾을 수 없는 경우
+     * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
+     * @throws UserPointException.UseAmountShouldMoreThan0 사용 금액이 0 이하인 경우
+     * @throws UserPointException.PointAmountUnderflow 사용 가능한 포인트가 부족한 경우
+     */
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    fun usePoint(criteria: UserPointCriteria.Use): UserPointResult.Point {
+        // 포인트 사용 명령 생성
+        val command = UserPointCommand.Use(userId = criteria.userId, amount = criteria.amount)
+        
+        // 포인트 사용
+        val userPoint = userPointService.use(command)
         
         return UserPointResult.Point.from(userPoint)
     }

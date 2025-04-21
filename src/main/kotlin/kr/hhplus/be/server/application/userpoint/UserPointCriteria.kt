@@ -27,4 +27,17 @@ class UserPointCriteria {
             require(amount > 0) { "충전 금액은 0보다 커야 합니다." }
         }
     }
+    
+    /**
+     * 사용자 포인트 사용 요청
+     */
+    data class Use(
+        val userId: String,
+        val amount: Long
+    ) {
+        init {
+            require(userId.isNotBlank()) { "사용자 ID는 비어있을 수 없습니다." }
+            require(amount > 0) { "사용 금액은 0보다 커야 합니다." }
+        }
+    }
 } 

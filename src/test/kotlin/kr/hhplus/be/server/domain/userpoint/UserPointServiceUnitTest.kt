@@ -107,8 +107,8 @@ class UserPointServiceUnitTest {
         `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
         `when`(userPointRepository.save(any())).thenAnswer {
             val saved = it.arguments[0] as UserPoint
-            saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
-            saved
+            // 불변 객체이므로 직접 필드를 수정하는 대신 새 객체 생성
+            saved.copy(updatedAt = LocalDateTime.now())
         }
 
         // when
@@ -170,8 +170,8 @@ class UserPointServiceUnitTest {
         `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
         `when`(userPointRepository.save(any())).thenAnswer {
             val saved = it.arguments[0] as UserPoint
-            saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
-            saved
+            // 불변 객체이므로 직접 필드를 수정하는 대신 새 객체 생성
+            saved.copy(updatedAt = LocalDateTime.now())
         }
 
         // when
