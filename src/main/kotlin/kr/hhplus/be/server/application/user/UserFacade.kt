@@ -29,7 +29,7 @@ class UserFacade(
     @Transactional
     fun createUser(criteria: UserCriteria.Create = UserCriteria.Create()): UserResult.User {
         // 사용자 생성
-        val createdUser = userService.createUser()
+        val createdUser = userService.createUser(criteria.toCommand())
         
         // 사용자 포인트 생성
         val createPointCommand = UserPointCommand.Create(userId = createdUser.userId)
@@ -47,7 +47,7 @@ class UserFacade(
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우 (U_NOT_FOUND)
      */
     fun findUserById(criteria: UserCriteria.GetById): UserResult.User {
-        val user = userService.findUserByIdOrThrow(criteria.userId)
+        val user = userService.getUserById(criteria.toQuery())
         return UserResult.User.from(user)
     }
 

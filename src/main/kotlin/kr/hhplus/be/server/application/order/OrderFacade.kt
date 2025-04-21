@@ -81,9 +81,6 @@ class OrderFacade(
      */
     @Transactional(readOnly = true)
     fun getOrdersByUserId(criteria: OrderCriteria.GetByUserId): OrderResult.Orders {
-        // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(criteria.userId)
-        
         val command = OrderCommand.GetByUserId(criteria.userId)
         val orders = orderService.getOrdersByUserId(command)
         
@@ -192,9 +189,6 @@ class OrderFacade(
      */
     @Transactional
     fun createOrder(criteria: OrderCriteria.Create): OrderResult.Get {
-        // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(criteria.userId)
-        
         // 주문 항목 생성 및 상품 재고 확인/감소
         val orderItemCommands = criteria.items.map { item ->
             // 상품 존재 여부와 가격 확인

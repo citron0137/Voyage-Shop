@@ -199,7 +199,7 @@ class OrderFacadeTest {
             )
         )
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
+        whenever(userService.getUserById(any())).thenReturn(user)
         whenever(orderService.getOrdersByUserId(any())).thenReturn(orders)
         whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order1"))).thenReturn(orderItems1)
         whenever(orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId("order2"))).thenReturn(orderItems2)
@@ -231,20 +231,7 @@ class OrderFacadeTest {
         }
     }
     
-    @Test
-    @DisplayName("존재하지 않는 사용자의 주문 목록을 조회하면 예외가 발생한다")
-    fun getOrdersByUserIdWithNonExistingUser() {
-        // given
-        val userId = "non-existing-user"
-        
-        whenever(userService.findUserByIdOrThrow(userId)).thenThrow(UserException.NotFound("사용자를 찾을 수 없습니다"))
-        
-        // when, then
-        assertThrows<UserException.NotFound> {
-            orderFacade.getOrdersByUserId(userId)
-        }
-    }
-    
+
     @Test
     @DisplayName("주문을 생성한다")
     fun createOrder() {
@@ -305,7 +292,7 @@ class OrderFacadeTest {
             )
         )
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
+        whenever(userService.getUserById(any())).thenReturn(user)
         whenever(productService.getProduct("product1")).thenReturn(product1)
         whenever(productService.getProduct("product2")).thenReturn(product2)
         whenever(productService.decreaseStock(any())).thenReturn(product1)
@@ -383,7 +370,7 @@ class OrderFacadeTest {
         
         val couponUser = mock<CouponUser>()
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
+        whenever(userService.getUserById(any())).thenReturn(user)
         whenever(productService.getProduct("product1")).thenReturn(product)
         whenever(productService.decreaseStock(any())).thenReturn(product)
         whenever(couponUserService.getCouponUser(CouponUserCommand.GetById(couponUserId))).thenReturn(couponUser)
@@ -427,7 +414,7 @@ class OrderFacadeTest {
             OrderItemRequest(productId = "product1", amount = 2)
         )
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
+        whenever(userService.getUserById(any())).thenReturn(user)
         whenever(productService.getProduct("product1")).thenReturn(product)
         whenever(productService.decreaseStock(any())).thenThrow(ProductException.StockAmountUnderflow("재고 부족"))
         
@@ -446,7 +433,7 @@ class OrderFacadeTest {
         
         val orderItems = emptyList<OrderItemRequest>()
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
+        whenever(userService.getUserById(any())).thenReturn(user)
         
         // when, then
         assertThrows<OrderException.OrderItemRequired> {

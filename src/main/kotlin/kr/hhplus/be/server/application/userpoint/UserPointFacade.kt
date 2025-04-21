@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.application.userpoint
 
 import kr.hhplus.be.server.domain.user.UserException
+import kr.hhplus.be.server.domain.user.UserQuery
 import kr.hhplus.be.server.domain.user.UserService
 import kr.hhplus.be.server.domain.userpoint.UserPointCommand
 import kr.hhplus.be.server.domain.userpoint.UserPointException
@@ -28,13 +29,9 @@ class UserPointFacade(
      */
     @Transactional(readOnly = true)
     fun getUserPoint(criteria: UserPointCriteria.GetByUserId): UserPointResult.Point {
-        // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(criteria.userId)
-        
         // 사용자 포인트 조회
         val userPoint = userPointService.findByUserId(criteria.userId) 
             ?: throw UserPointException.NotFound("userId(${criteria.userId})로 UserPoint를 찾을 수 없습니다.")
-        
         return UserPointResult.Point.from(userPoint)
     }
     
@@ -51,9 +48,6 @@ class UserPointFacade(
      */
     @Transactional
     fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Point {
-        // 사용자 존재 여부 확인
-        userService.findUserByIdOrThrow(criteria.userId)
-        
         // 포인트 충전 명령 생성
         val command = UserPointCommand.Charge(userId = criteria.userId, amount = criteria.amount)
         

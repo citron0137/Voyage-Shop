@@ -8,6 +8,7 @@ import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.product.ProductCommand
 import kr.hhplus.be.server.domain.product.ProductService
+import kr.hhplus.be.server.domain.user.UserCommand
 import kr.hhplus.be.server.domain.user.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +42,7 @@ class OrderFacadeIntegrationTest {
     @BeforeEach
     fun setUp() {
         // 테스트용 사용자 생성
-        val user = userService.createUser()
+        val user = userService.createUser(UserCommand.Create)
         testUserId = user.userId
 
         // 테스트용 상품 생성

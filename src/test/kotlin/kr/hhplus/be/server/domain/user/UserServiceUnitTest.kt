@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.regex.Pattern
@@ -28,7 +29,7 @@ class UserServiceUnitTest {
         every { userRepository.create(any()) } answers { firstArg() }
 
         // when
-        val actualUser = userService.createUser()
+        val actualUser = userService.createUser(UserCommand.Create)
 
         // then
         verify { userRepository.create(any()) }
@@ -46,7 +47,7 @@ class UserServiceUnitTest {
         every { userRepository.findById(userId) } returns expectedUser
 
         // when
-        val actualUser = userService.findUserById(userId)
+        val actualUser = userService.findUserById(UserQuery.GetById(userId))
 
         // then
         verify { userRepository.findById(userId) }
@@ -60,7 +61,7 @@ class UserServiceUnitTest {
         every { userRepository.findById(userId) } returns null
 
         // when
-        val actualUser = userService.findUserById(userId)
+        val actualUser = userService.findUserById(UserQuery.GetById(userId))
 
         // then
         verify { userRepository.findById(userId) }
@@ -76,7 +77,7 @@ class UserServiceUnitTest {
         every { userRepository.findById(userId) } returns expectedUser
 
         // when
-        val actualUser = userService.findUserByIdOrThrow(userId)
+        val actualUser = userService.getUserById(UserQuery.GetById(userId))
 
         // then
         verify { userRepository.findById(userId) }
@@ -91,7 +92,7 @@ class UserServiceUnitTest {
 
         // when & then
         assertThrows(UserException.NotFound::class.java) {
-            userService.findUserByIdOrThrow(userId)
+            userService.getUserById(UserQuery.GetById(userId))
         }
         
         verify { userRepository.findById(userId) }

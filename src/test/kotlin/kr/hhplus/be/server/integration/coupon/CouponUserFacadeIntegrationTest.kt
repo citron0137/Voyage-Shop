@@ -6,6 +6,7 @@ import kr.hhplus.be.server.application.couponuser.CouponUserFacade
 import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import kr.hhplus.be.server.domain.couponuser.CouponUserException
 import kr.hhplus.be.server.domain.user.User
+import kr.hhplus.be.server.domain.user.UserCommand
 import kr.hhplus.be.server.domain.user.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -35,7 +36,7 @@ class CouponUserFacadeIntegrationTest {
     fun setUp() {
         // 테스트용 사용자 생성
         for (i in 1..10) {
-            val user = userService.createUser()
+            val user = userService.createUser(UserCommand.Create)
             testUsers.add(user)
         }
     }
