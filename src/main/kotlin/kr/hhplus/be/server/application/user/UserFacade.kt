@@ -27,7 +27,7 @@ class UserFacade(
      * @throws RuntimeException 사용자 생성 또는 포인트 생성 과정에서 예기치 않은 오류가 발생한 경우
      */
     @Transactional
-    fun createUser(criteria: UserCriteria.Create = UserCriteria.Create()): UserResult.User {
+    fun createUser(criteria: UserCriteria.Create = UserCriteria.Create()): UserResult.Single {
         // 사용자 생성
         val createdUser = userService.createUser(criteria.toCommand())
         
@@ -35,7 +35,7 @@ class UserFacade(
         val createPointCommand = UserPointCommand.Create(userId = createdUser.userId)
         userPointService.create(createPointCommand)
         
-        return UserResult.User.from(createdUser)
+        return UserResult.Single.from(createdUser)
     }
 
     /**
@@ -46,9 +46,9 @@ class UserFacade(
      * @throws UserException.UserIdShouldNotBlank 사용자 ID가 빈 값인 경우
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우 (U_NOT_FOUND)
      */
-    fun findUserById(criteria: UserCriteria.GetById): UserResult.User {
+    fun findUserById(criteria: UserCriteria.GetById): UserResult.Single {
         val user = userService.getUserById(criteria.toQuery())
-        return UserResult.User.from(user)
+        return UserResult.Single.from(user)
     }
 
     /**
