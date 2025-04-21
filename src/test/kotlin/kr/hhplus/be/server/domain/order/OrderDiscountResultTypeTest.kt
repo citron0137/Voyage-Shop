@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-class OrderDiscountTypeTest {
+class OrderDiscountResultTypeTest {
 
     @Test
     @DisplayName("문자열을 DiscountType으로 변환할 수 있다")

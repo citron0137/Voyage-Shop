@@ -11,7 +11,7 @@ import org.mockito.kotlin.whenever
 import java.time.LocalDateTime
 
 @DisplayName("OrderItemRankFacade 테스트")
-class OrderItemRankFacadeTest {
+class OrderItemResultRankFacadeTest {
     
     private lateinit var orderService: OrderService
     private lateinit var orderItemRankFacade: OrderItemRankFacade
