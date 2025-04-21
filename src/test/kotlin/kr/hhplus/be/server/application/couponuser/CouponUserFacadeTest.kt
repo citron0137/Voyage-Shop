@@ -116,7 +116,7 @@ class CouponUserFacadeTest {
         val userId = "user1"
         val benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT
         val benefitAmount = "1000"
-        val criteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
+        val criteria = CouponUserCriteria.Create(userId, benefitMethod, benefitAmount)
         val serviceCommand = CouponUserCommand.Create(userId, benefitMethod, benefitAmount)
         
         val createdCouponUser = CouponUser(

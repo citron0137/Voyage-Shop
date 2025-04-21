@@ -58,7 +58,7 @@ sealed class CouponUserCriteria {
      */
     data class Create(
         val userId: String,
-        val benefitMethod: String,  // String으로 받아 도메인 객체로 변환
+        val benefitMethod: CouponUserBenefitMethod,
         val benefitAmount: String
     ) : CouponUserCriteria() {
         /**
@@ -69,7 +69,7 @@ sealed class CouponUserCriteria {
         fun toCommand(): CouponUserCommand.Create {
             return CouponUserCommand.Create(
                 userId = userId,
-                benefitMethod = CouponUserBenefitMethod.valueOf(benefitMethod),
+                benefitMethod = benefitMethod,
                 benefitAmount = benefitAmount
             )
         }

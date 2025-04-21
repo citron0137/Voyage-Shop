@@ -31,8 +31,8 @@ class CouponUserFacade(
      * @throws kr.hhplus.be.server.domain.coupon.CouponException.CouponNotFound 쿠폰을 찾을 수 없는 경우
      */
     @Transactional(readOnly = true)
-    fun getCouponUser(criteria: CouponUserCriteria.GetById): CouponUserResult.User {
-        return CouponUserResult.User.from(couponUserService.getCouponUser(criteria.toCommand()))
+    fun getCouponUser(criteria: CouponUserCriteria.GetById): CouponUserResult.Single {
+        return CouponUserResult.Single.from(couponUserService.getCouponUser(criteria.toCommand()))
     }
     
     /**
@@ -43,8 +43,8 @@ class CouponUserFacade(
      * @throws kr.hhplus.be.server.domain.coupon.CouponException.InvalidBenefitAmount 유효하지 않은 혜택 금액인 경우
      */
     @Transactional
-    fun issueCoupon(criteria: CouponUserCriteria.Create): CouponUserResult.User {
-        return CouponUserResult.User.from(couponUserService.create(criteria.toCommand()))
+    fun issueCoupon(criteria: CouponUserCriteria.Create): CouponUserResult.Single {
+        return CouponUserResult.Single.from(couponUserService.create(criteria.toCommand()))
     }
     
     /**
@@ -56,8 +56,8 @@ class CouponUserFacade(
      * @throws kr.hhplus.be.server.domain.coupon.CouponException.CouponAlreadyUsed 쿠폰이 이미 사용된 경우
      */
     @Transactional
-    fun useCoupon(criteria: CouponUserCriteria.Use): CouponUserResult.User {
-        return CouponUserResult.User.from(couponUserService.useCoupon(criteria.toCommand()))
+    fun useCoupon(criteria: CouponUserCriteria.Use): CouponUserResult.Single {
+        return CouponUserResult.Single.from(couponUserService.useCoupon(criteria.toCommand()))
     }
     
     /**
