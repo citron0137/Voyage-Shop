@@ -15,24 +15,24 @@ import org.springframework.stereotype.Repository
 class CouponUserRepositoryImpl(private val couponUserJpaRepository: CouponUserJpaRepository) : CouponUserRepository {
     
     override fun create(couponUser: CouponUser): CouponUser {
-        val couponUserEntity = CouponUserEntity.from(couponUser)
-        return couponUserJpaRepository.save(couponUserEntity).toCouponUser()
+        val couponUserEntity = CouponUserJpaEntity.fromDomain(couponUser)
+        return couponUserJpaRepository.save(couponUserEntity).toDomain()
     }
     
     override fun findById(couponUserId: String): CouponUser? {
-        return couponUserJpaRepository.findByIdOrNull(couponUserId)?.toCouponUser()
+        return couponUserJpaRepository.findByIdOrNull(couponUserId)?.toDomain()
     }
     
     override fun findByUserId(userId: String): List<CouponUser> {
-        return couponUserJpaRepository.findByUserId(userId).map { it.toCouponUser() }
+        return couponUserJpaRepository.findByUserId(userId).map { it.toDomain() }
     }
     
     override fun update(couponUser: CouponUser): CouponUser {
-        val couponUserEntity = CouponUserEntity.from(couponUser)
-        return couponUserJpaRepository.save(couponUserEntity).toCouponUser()
+        val couponUserEntity = CouponUserJpaEntity.fromDomain(couponUser)
+        return couponUserJpaRepository.save(couponUserEntity).toDomain()
     }
     
     override fun findAll(): List<CouponUser> {
-        return couponUserJpaRepository.findAll().map { it.toCouponUser() }
+        return couponUserJpaRepository.findAll().map { it.toDomain() }
     }
 } 

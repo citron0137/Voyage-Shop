@@ -14,7 +14,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "coupon_users")
-data class CouponUserEntity(
+data class CouponUserJpaEntity(
     @Id
     val couponUserId: String,
     
@@ -32,27 +32,10 @@ data class CouponUserEntity(
     @UpdateTimestamp
     val updatedAt: LocalDateTime
 ) {
-    companion object {
-        /**
-         * 도메인 객체로부터 엔티티 객체를 생성
-         */
-        fun from(couponUser: CouponUser): CouponUserEntity {
-            return CouponUserEntity(
-                couponUserId = couponUser.couponUserId,
-                userId = couponUser.userId,
-                benefitMethod = couponUser.benefitMethod,
-                benefitAmount = couponUser.benefitAmount,
-                usedAt = couponUser.usedAt,
-                createdAt = couponUser.createdAt,
-                updatedAt = couponUser.updatedAt
-            )
-        }
-    }
-    
     /**
      * 엔티티 객체로부터 도메인 객체를 생성
      */
-    fun toCouponUser(): CouponUser {
+    fun toDomain(): CouponUser {
         return CouponUser(
             couponUserId = couponUserId,
             userId = userId,
@@ -62,5 +45,22 @@ data class CouponUserEntity(
             createdAt = createdAt,
             updatedAt = updatedAt
         )
+    }
+    
+    companion object {
+        /**
+         * 도메인 객체로부터 엔티티 객체를 생성
+         */
+        fun fromDomain(domain: CouponUser): CouponUserJpaEntity {
+            return CouponUserJpaEntity(
+                couponUserId = domain.couponUserId,
+                userId = domain.userId,
+                benefitMethod = domain.benefitMethod,
+                benefitAmount = domain.benefitAmount,
+                usedAt = domain.usedAt,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
+            )
+        }
     }
 } 
