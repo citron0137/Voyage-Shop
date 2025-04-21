@@ -17,7 +17,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "order_discounts")
-class OrderDiscountEntity(
+data class OrderDiscountJpaEntity(
     @Id
     @Column(name = "order_discount_id", length = 36, nullable = false)
     val orderDiscountId: String,
@@ -43,34 +43,34 @@ class OrderDiscountEntity(
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
+    /**
+     * 엔티티 객체로부터 도메인 객체를 생성
+     */
+    fun toDomain(): OrderDiscount {
+        return OrderDiscount(
+            orderDiscountId = orderDiscountId,
+            orderId = orderId,
+            discountType = discountType,
+            discountId = discountId,
+            discountAmount = discountAmount,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
+    }
+    
     companion object {
         /**
-         * 도메인 객체를 엔티티로 변환
+         * 도메인 객체로부터 엔티티 객체를 생성
          */
-        fun of(orderDiscount: OrderDiscount): OrderDiscountEntity {
-            return OrderDiscountEntity(
-                orderDiscountId = orderDiscount.orderDiscountId,
-                orderId = orderDiscount.orderId,
-                discountType = orderDiscount.discountType,
-                discountId = orderDiscount.discountId,
-                discountAmount = orderDiscount.discountAmount,
-                createdAt = orderDiscount.createdAt,
-                updatedAt = orderDiscount.updatedAt
-            )
-        }
-
-        /**
-         * 엔티티를 도메인 객체로 변환
-         */
-        fun toDomain(entity: OrderDiscountEntity): OrderDiscount {
-            return OrderDiscount(
-                orderDiscountId = entity.orderDiscountId,
-                orderId = entity.orderId,
-                discountType = entity.discountType,
-                discountId = entity.discountId,
-                discountAmount = entity.discountAmount,
-                createdAt = entity.createdAt,
-                updatedAt = entity.updatedAt
+        fun fromDomain(domain: OrderDiscount): OrderDiscountJpaEntity {
+            return OrderDiscountJpaEntity(
+                orderDiscountId = domain.orderDiscountId,
+                orderId = domain.orderId,
+                discountType = domain.discountType,
+                discountId = domain.discountId,
+                discountAmount = domain.discountAmount,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
             )
         }
     }

@@ -25,9 +25,9 @@ class OrderItemRepositoryImpl(
      */
     @Transactional
     override fun create(orderItem: OrderItem): OrderItem {
-        val entity = OrderItemEntity.of(orderItem)
+        val entity = OrderItemJpaEntity.fromDomain(orderItem)
         val savedEntity = orderItemJpaRepository.save(entity)
-        return OrderItemEntity.toDomain(savedEntity)
+        return savedEntity.toDomain()
     }
 
     /**
@@ -38,9 +38,9 @@ class OrderItemRepositoryImpl(
      */
     @Transactional
     override fun createAll(orderItems: List<OrderItem>): List<OrderItem> {
-        val entities = orderItems.map { OrderItemEntity.of(it) }
+        val entities = orderItems.map { OrderItemJpaEntity.fromDomain(it) }
         val savedEntities = orderItemJpaRepository.saveAll(entities)
-        return savedEntities.map { OrderItemEntity.toDomain(it) }
+        return savedEntities.map { it.toDomain() }
     }
 
     /**
@@ -51,7 +51,7 @@ class OrderItemRepositoryImpl(
      */
     @Transactional(readOnly = true)
     override fun findById(orderItemId: String): OrderItem? {
-        return orderItemJpaRepository.findByIdOrNull(orderItemId)?.let { OrderItemEntity.toDomain(it) }
+        return orderItemJpaRepository.findByIdOrNull(orderItemId)?.toDomain()
     }
 
     /**
@@ -62,6 +62,6 @@ class OrderItemRepositoryImpl(
      */
     @Transactional(readOnly = true)
     override fun findByOrderId(orderId: String): List<OrderItem> {
-        return orderItemJpaRepository.findByOrderId(orderId).map { OrderItemEntity.toDomain(it) }
+        return orderItemJpaRepository.findByOrderId(orderId).map { it.toDomain() }
     }
 } 

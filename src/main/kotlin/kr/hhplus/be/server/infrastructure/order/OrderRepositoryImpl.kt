@@ -15,19 +15,19 @@ import org.springframework.stereotype.Repository
 class OrderRepositoryImpl(private val orderJpaRepository: OrderJpaRepository) : OrderRepository {
     
     override fun create(order: Order): Order {
-        val orderEntity = OrderEntity.from(order)
-        return orderJpaRepository.save(orderEntity).toOrder()
+        val orderEntity = OrderJpaEntity.fromDomain(order)
+        return orderJpaRepository.save(orderEntity).toDomain()
     }
     
     override fun findById(orderId: String): Order? {
-        return orderJpaRepository.findByIdOrNull(orderId)?.toOrder()
+        return orderJpaRepository.findByIdOrNull(orderId)?.toDomain()
     }
     
     override fun findByUserId(userId: String): List<Order> {
-        return orderJpaRepository.findByUserId(userId).map { it.toOrder() }
+        return orderJpaRepository.findByUserId(userId).map { it.toDomain() }
     }
     
     override fun findAll(): List<Order> {
-        return orderJpaRepository.findAll().map { it.toOrder() }
+        return orderJpaRepository.findAll().map { it.toDomain() }
     }
 } 

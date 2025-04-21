@@ -14,7 +14,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "order_items")
-class OrderItemEntity(
+data class OrderItemJpaEntity(
     @Id
     @Column(name = "order_item_id", length = 36, nullable = false)
     val orderItemId: String,
@@ -42,36 +42,36 @@ class OrderItemEntity(
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
+    /**
+     * 엔티티 객체로부터 도메인 객체를 생성
+     */
+    fun toDomain(): OrderItem {
+        return OrderItem(
+            orderItemId = orderItemId,
+            orderId = orderId,
+            productId = productId,
+            amount = amount,
+            unitPrice = unitPrice,
+            totalPrice = totalPrice,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
+    }
+    
     companion object {
         /**
-         * 도메인 객체를 엔티티로 변환
+         * 도메인 객체로부터 엔티티 객체를 생성
          */
-        fun of(orderItem: OrderItem): OrderItemEntity {
-            return OrderItemEntity(
-                orderItemId = orderItem.orderItemId,
-                orderId = orderItem.orderId,
-                productId = orderItem.productId,
-                amount = orderItem.amount,
-                unitPrice = orderItem.unitPrice,
-                totalPrice = orderItem.totalPrice,
-                createdAt = orderItem.createdAt,
-                updatedAt = orderItem.updatedAt
-            )
-        }
-
-        /**
-         * 엔티티를 도메인 객체로 변환
-         */
-        fun toDomain(entity: OrderItemEntity): OrderItem {
-            return OrderItem(
-                orderItemId = entity.orderItemId,
-                orderId = entity.orderId,
-                productId = entity.productId,
-                amount = entity.amount,
-                unitPrice = entity.unitPrice,
-                totalPrice = entity.totalPrice,
-                createdAt = entity.createdAt,
-                updatedAt = entity.updatedAt
+        fun fromDomain(domain: OrderItem): OrderItemJpaEntity {
+            return OrderItemJpaEntity(
+                orderItemId = domain.orderItemId,
+                orderId = domain.orderId,
+                productId = domain.productId,
+                amount = domain.amount,
+                unitPrice = domain.unitPrice,
+                totalPrice = domain.totalPrice,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
             )
         }
     }
