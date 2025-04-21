@@ -17,7 +17,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "coupon_event")
-class CouponEventEntity(
+data class CouponEventJpaEntity(
     @Id
     @Column(name = "id", length = 36, nullable = false)
     val id: String,
@@ -43,35 +43,34 @@ class CouponEventEntity(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
+    /**
+     * 엔티티를 도메인 객체로 변환
+     */
+    fun toDomain(): CouponEvent {
+        return CouponEvent(
+            id = id,
+            benefitMethod = benefitMethod,
+            benefitAmount = benefitAmount,
+            totalIssueAmount = totalIssueAmount,
+            leftIssueAmount = leftIssueAmount,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
+    }
 
     companion object {
         /**
          * 도메인 객체를 엔티티로 변환
          */
-        fun of(couponEvent: CouponEvent): CouponEventEntity {
-            return CouponEventEntity(
-                id = couponEvent.id,
-                benefitMethod = couponEvent.benefitMethod,
-                benefitAmount = couponEvent.benefitAmount,
-                totalIssueAmount = couponEvent.totalIssueAmount,
-                leftIssueAmount = couponEvent.leftIssueAmount,
-                createdAt = couponEvent.createdAt,
-                updatedAt = couponEvent.updatedAt
-            )
-        }
-
-        /**
-         * 엔티티를 도메인 객체로 변환
-         */
-        fun toDomain(entity: CouponEventEntity): CouponEvent {
-            return CouponEvent(
-                id = entity.id,
-                benefitMethod = entity.benefitMethod,
-                benefitAmount = entity.benefitAmount,
-                totalIssueAmount = entity.totalIssueAmount,
-                leftIssueAmount = entity.leftIssueAmount,
-                createdAt = entity.createdAt,
-                updatedAt = entity.updatedAt
+        fun fromDomain(domain: CouponEvent): CouponEventJpaEntity {
+            return CouponEventJpaEntity(
+                id = domain.id,
+                benefitMethod = domain.benefitMethod,
+                benefitAmount = domain.benefitAmount,
+                totalIssueAmount = domain.totalIssueAmount,
+                leftIssueAmount = domain.leftIssueAmount,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
             )
         }
     }

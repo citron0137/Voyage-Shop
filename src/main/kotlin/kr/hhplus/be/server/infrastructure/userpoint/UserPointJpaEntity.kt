@@ -13,7 +13,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "user_points")
-data class UserPointEntity(
+data class UserPointJpaEntity(
     @Id
     val userPointId: String,
     
@@ -27,25 +27,10 @@ data class UserPointEntity(
     @UpdateTimestamp
     var updatedAt: LocalDateTime
 ) {
-    companion object {
-        /**
-         * 도메인 객체로부터 엔티티 객체를 생성
-         */
-        fun from(userPoint: UserPoint): UserPointEntity {
-            return UserPointEntity(
-                userPointId = userPoint.userPointId,
-                userId = userPoint.userId,
-                amount = userPoint.amount,
-                createdAt = userPoint.createdAt,
-                updatedAt = userPoint.updatedAt
-            )
-        }
-    }
-    
     /**
      * 엔티티 객체로부터 도메인 객체를 생성
      */
-    fun toUserPoint(): UserPoint {
+    fun toDomain(): UserPoint {
         return UserPoint(
             userPointId = userPointId,
             userId = userId,
@@ -53,5 +38,20 @@ data class UserPointEntity(
             createdAt = createdAt,
             updatedAt = updatedAt
         )
+    }
+    
+    companion object {
+        /**
+         * 도메인 객체로부터 엔티티 객체를 생성
+         */
+        fun fromDomain(domain: UserPoint): UserPointJpaEntity {
+            return UserPointJpaEntity(
+                userPointId = domain.userPointId,
+                userId = domain.userId,
+                amount = domain.amount,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
+            )
+        }
     }
 } 

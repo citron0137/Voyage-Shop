@@ -14,7 +14,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "users")
-class UserEntity(
+data class UserJpaEntity(
     @Id
     @Column(name = "user_id", length = 36, nullable = false)
     val userId: String,
@@ -27,26 +27,26 @@ class UserEntity(
     @Column(name = "updated_at", nullable = false)
     val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
+    /**
+     * 엔티티 객체로부터 도메인 객체를 생성
+     */
+    fun toDomain(): User {
+        return User(
+            userId = userId,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
+    }
+    
     companion object {
         /**
-         * 도메인 객체를 엔티티로 변환
+         * 도메인 객체로부터 엔티티 객체를 생성
          */
-        fun of(user: User): UserEntity {
-            return UserEntity(
-                userId = user.userId,
-                createdAt = user.createdAt,
-                updatedAt = user.updatedAt
-            )
-        }
-
-        /**
-         * 엔티티를 도메인 객체로 변환
-         */
-        fun toDomain(entity: UserEntity): User {
-            return User(
-                userId = entity.userId,
-                createdAt = entity.createdAt,
-                updatedAt = entity.updatedAt
+        fun fromDomain(domain: User): UserJpaEntity {
+            return UserJpaEntity(
+                userId = domain.userId,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
             )
         }
     }

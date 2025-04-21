@@ -13,7 +13,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "payments")
-data class PaymentEntity(
+data class PaymentJpaEntity(
     @Id
     val paymentId: String,
     
@@ -27,25 +27,10 @@ data class PaymentEntity(
     @UpdateTimestamp
     val updatedAt: LocalDateTime
 ) {
-    companion object {
-        /**
-         * 도메인 객체로부터 엔티티 객체를 생성
-         */
-        fun from(payment: Payment): PaymentEntity {
-            return PaymentEntity(
-                paymentId = payment.paymentId,
-                userId = payment.userId,
-                totalPaymentAmount = payment.totalPaymentAmount,
-                createdAt = payment.createdAt,
-                updatedAt = payment.updatedAt
-            )
-        }
-    }
-    
     /**
      * 엔티티 객체로부터 도메인 객체를 생성
      */
-    fun toPayment(): Payment {
+    fun toDomain(): Payment {
         return Payment(
             paymentId = paymentId,
             userId = userId,
@@ -53,5 +38,20 @@ data class PaymentEntity(
             createdAt = createdAt,
             updatedAt = updatedAt
         )
+    }
+    
+    companion object {
+        /**
+         * 도메인 객체로부터 엔티티 객체를 생성
+         */
+        fun fromDomain(domain: Payment): PaymentJpaEntity {
+            return PaymentJpaEntity(
+                paymentId = domain.paymentId,
+                userId = domain.userId,
+                totalPaymentAmount = domain.totalPaymentAmount,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
+            )
+        }
     }
 } 

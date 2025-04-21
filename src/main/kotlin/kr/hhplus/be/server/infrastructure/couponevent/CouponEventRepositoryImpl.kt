@@ -19,9 +19,9 @@ class CouponEventRepositoryImpl(
      */
     @Transactional
     override fun create(couponEvent: CouponEvent): CouponEvent {
-        val entity = CouponEventEntity.of(couponEvent)
+        val entity = CouponEventJpaEntity.fromDomain(couponEvent)
         val savedEntity = couponEventJpaRepository.save(entity)
-        return CouponEventEntity.toDomain(savedEntity)
+        return savedEntity.toDomain()
     }
 
     /**
@@ -30,7 +30,7 @@ class CouponEventRepositoryImpl(
     @Transactional(readOnly = true)
     override fun findById(id: String): CouponEvent? {
         val entity = couponEventJpaRepository.findById(id).orElse(null)
-        return entity?.let { CouponEventEntity.toDomain(it) }
+        return entity?.toDomain()
     }
 
     /**
@@ -39,7 +39,7 @@ class CouponEventRepositoryImpl(
     @Transactional(readOnly = true)
     override fun findAll(): List<CouponEvent> {
         return couponEventJpaRepository.findAll()
-            .map { CouponEventEntity.toDomain(it) }
+            .map { it.toDomain() }
     }
 
     /**
@@ -51,6 +51,6 @@ class CouponEventRepositoryImpl(
         val entity = couponEventJpaRepository.findByIdWithLock(id) ?: return null
         entity.leftIssueAmount = entity.leftIssueAmount - 1
         val savedEntity = couponEventJpaRepository.save(entity)
-        return CouponEventEntity.toDomain(savedEntity)
+        return savedEntity.toDomain()
     }
 } 

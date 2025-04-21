@@ -13,7 +13,7 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(name = "products")
-data class ProductEntity(
+data class ProductJpaEntity(
     @Id
     val productId: String,
     
@@ -29,26 +29,10 @@ data class ProductEntity(
     @UpdateTimestamp
     val updatedAt: LocalDateTime
 ) {
-    companion object {
-        /**
-         * 도메인 객체로부터 엔티티 객체를 생성
-         */
-        fun from(product: Product): ProductEntity {
-            return ProductEntity(
-                productId = product.productId,
-                name = product.name,
-                price = product.price,
-                stock = product.stock,
-                createdAt = product.createdAt,
-                updatedAt = product.updatedAt
-            )
-        }
-    }
-    
     /**
      * 엔티티 객체로부터 도메인 객체를 생성
      */
-    fun toProduct(): Product {
+    fun toDomain(): Product {
         return Product(
             productId = productId,
             name = name,
@@ -57,5 +41,21 @@ data class ProductEntity(
             createdAt = createdAt,
             updatedAt = updatedAt
         )
+    }
+    
+    companion object {
+        /**
+         * 도메인 객체로부터 엔티티 객체를 생성
+         */
+        fun fromDomain(domain: Product): ProductJpaEntity {
+            return ProductJpaEntity(
+                productId = domain.productId,
+                name = domain.name,
+                price = domain.price,
+                stock = domain.stock,
+                createdAt = domain.createdAt,
+                updatedAt = domain.updatedAt
+            )
+        }
     }
 } 
