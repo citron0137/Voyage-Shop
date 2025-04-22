@@ -5,38 +5,30 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
-
 ## 📑 목차
 
 - [소개](#소개)
-- [비즈니스 요구사항 정리](#비즈니스-요구사항-정리)
 - [기술 스택](#기술-스택)
 - [시작하기](#시작하기)
 - [프로젝트 구조](#프로젝트-구조)
-- [DB 구조](#DB-구조)
 - [테스트](#테스트)
-
+- [프로젝트 문서](#프로젝트-문서)
 
 ## 📌 소개
 
 **Voyage Shop**은 온라인 쇼핑몰 백엔드 서비스입니다. 제품 관리, 주문 처리, 사용자 관리, 쿠폰 및 포인트 시스템을 포함하고 있습니다.
 
-## 📚 비즈니스 요구사항 정리
-
-프로젝트의 요구사항과 설계에 관련된 문서입니다:
-
-**📄 요구사항 및 설계**
-- [요구사항 분석](./docs/system-design/01-requirement.md)
-- [시퀀스 다이어그램](./docs/system-design/02-sequance-diagram.md)
-  
-
 ## 🛠 기술 스택
 
-**언어:** Kotlin  
-**프레임워크:** Spring Boot  
-**빌드 도구:** Gradle  
-**컨테이너화:** Docker  
-**데이터베이스:** MySQL
+Voyage Shop은 다음 기술 스택을 사용하여 개발되었습니다.
+
+| 분류 | 기술 |
+|------|------|
+| **언어** | Kotlin |
+| **프레임워크** | Spring Boot |
+| **빌드 도구** | Gradle |
+| **컨테이너화** | Docker |
+| **데이터베이스** | MySQL |
 
 ## 🚀 시작하기
 
@@ -49,58 +41,90 @@
 
 ### 환경 설정
 
-**1. 저장소 클론**
+1. **저장소 클론**
 
-```bash
-git clone https://github.com/your-username/voyage-shop.git
-cd voyage-shop
-```
+   ```bash
+   git clone https://github.com/your-username/voyage-shop.git
+   cd voyage-shop
+   ```
 
-**2. 도커 컨테이너 실행**
+2. **도커 컨테이너 실행**
 
-```bash
-docker-compose up -d
-```
+   ```bash
+   docker-compose up -d
+   ```
 
-**3. 애플리케이션 실행**
+3. **애플리케이션 실행**
 
-```bash
-./gradlew bootRun
-```
+   ```bash
+   ./gradlew bootRun
+   ```
 
 ## 📂 프로젝트 구조
 
-프로젝트는 레이어드 아키텍처 패턴을 따릅니다. 자세한 내용은 아래 문서를 참조하세요:
+프로젝트는 레이어드 아키텍처 패턴을 따릅니다. 주요 패키지 구조는 다음과 같습니다:
 
-- [프로젝트 컨벤션](./docs/conventions/01.common-conventions.md)
+```
+src/
+  ├── controller/     # API 엔드포인트 및 요청 처리
+  ├── application/    # 비즈니스 유스케이스 구현
+  ├── domain/         # 핵심 비즈니스 로직 및 규칙
+  └── infrastructure/ # 외부 시스템 연동 및 DB 접근
+```
 
-## 📊 DB 구조
-
-<img src="https://cdn-icons-png.flaticon.com/512/2906/2906274.png" width="80" alt="Database">
-
-프로젝트의 데이터베이스 스키마 설계에 관한 문서입니다:
-
-**[ERD 다이어그램](./docs/system-design/03-erd.md)** - 엔티티 관계 모델과 테이블 구조 설명
+자세한 설계 원칙과 규약은 [프로젝트 컨벤션](./docs/conventions/01.common-conventions.md) 문서를 참조하세요.
 
 ## 🧪 테스트
 
-프로젝트의 테스트 관련 컨벤션과 구조는 아래 문서를 참조하세요:
+프로젝트는 다양한 레벨의 테스트를 포함하고 있습니다:
 
-**[테스트 컨벤션](./docs/conventions/01.common-conventions.md)** - 테스트 관련 컨벤션 및 구조 설명
+- 도메인 레이어 유닛 테스트
+- 애플리케이션 레이어 유닛/통합 테스트
+- 컨트롤러 레이어 API 테스트
+- 동시성 테스트
+
+자세한 테스트 방법 및 구조는 [테스트 컨벤션](./docs/conventions/09.test-conventions.md) 문서를 참조하세요.
 
 ### 테스트 실행 방법
 
-전체 테스트 실행:
+**전체 테스트 실행:**
 ```bash
 ./gradlew test
 ```
 
-특정 테스트 클래스 실행:
+**특정 테스트 클래스 실행:**
 ```bash
 ./gradlew test --tests "kr.hhplus.be.server.api.user.UserApiTest"
 ```
 
-특정 테스트 패키지 실행:
+**특정 테스트 패키지 실행:**
 ```bash
 ./gradlew test --tests "kr.hhplus.be.server.api.*"
 ```
+
+## 📋 프로젝트 문서
+
+프로젝트에 대한 상세 문서는 다음 카테고리로 구분됩니다.
+
+### ✅ 요구사항 문서 (Requirements)
+
+비즈니스 요구사항과 기능 명세를 담고 있습니다:
+
+- [기능 요구사항](./docs/requirements/01-functional-requirements.md) - 주요 기능 목록
+- [도메인 요구사항](./docs/requirements/02-domain-requirements.md) - 도메인 규칙 및 제약조건
+- [비기능 요구사항](./docs/requirements/03-non-functional-requirements.md) - 성능, 보안 등 품질 요구사항
+
+### 📐 설계 문서 (Design)
+
+시스템 설계와 아키텍처에 관한 문서입니다:
+
+- [시퀀스 다이어그램](./docs/design/sequence-diagram.md) - 주요 기능 흐름도
+- [데이터베이스 설계](./docs/design/database-design.md) - DB 스키마 및 테이블 구조
+
+### 📏 개발 규약 (Conventions)
+
+개발 과정에서 준수해야 할 규칙과 패턴을 정의합니다:
+
+- [프로젝트 컨벤션 개요](./docs/conventions/01.common-conventions.md) - 전체 컨벤션 요약 및 링크
+- [레이어드 아키텍처](./docs/conventions/03.layered-architecture.md) - 아키텍처 선택 이유 및 구조
+- [도메인 레이어 규약](./docs/conventions/07.domain-layer.md) - 핵심 비즈니스 로직 작성 규칙
