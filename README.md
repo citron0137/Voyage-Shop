@@ -72,9 +72,7 @@ docker-compose up -d
 
 프로젝트는 레이어드 아키텍처 패턴을 따릅니다. 자세한 내용은 아래 문서를 참조하세요:
 
-- [프로젝트 컨벤션](./docs/conventions/common-conventions.md)
-- [레이어드 아키텍처](./docs/conventions/layered-architecture.md)
-- [패키지 구조](./docs/conventions/package-structure.md)
+- [프로젝트 컨벤션](./docs/conventions/01.common-conventions.md)
 
 ## 📊 DB 구조
 
@@ -88,7 +86,7 @@ docker-compose up -d
 
 프로젝트의 테스트 관련 컨벤션과 구조는 아래 문서를 참조하세요:
 
-**[테스트 컨벤션](./docs/conventions/test-conventions.md)** - 통합 테스트 구조 및 작성 가이드라인
+**[테스트 컨벤션](./docs/conventions/01.common-conventions.md)** - 테스트 관련 컨벤션 및 구조 설명
 
 ### 테스트 실행 방법
 
