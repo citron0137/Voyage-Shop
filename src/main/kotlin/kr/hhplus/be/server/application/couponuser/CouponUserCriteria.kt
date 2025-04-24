@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.couponuser
 
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
 
 /**
  * 쿠폰 유저 관련 요청 기준을 담는 클래스
@@ -58,7 +58,7 @@ sealed class CouponUserCriteria {
      */
     data class Create(
         val userId: String,
-        val benefitMethod: String,  // String으로 받아 도메인 객체로 변환
+        val benefitMethod: CouponUserBenefitMethod,
         val benefitAmount: String
     ) : CouponUserCriteria() {
         /**
@@ -69,7 +69,7 @@ sealed class CouponUserCriteria {
         fun toCommand(): CouponUserCommand.Create {
             return CouponUserCommand.Create(
                 userId = userId,
-                benefitMethod = CouponBenefitMethod.valueOf(benefitMethod),
+                benefitMethod = benefitMethod,
                 benefitAmount = benefitAmount
             )
         }

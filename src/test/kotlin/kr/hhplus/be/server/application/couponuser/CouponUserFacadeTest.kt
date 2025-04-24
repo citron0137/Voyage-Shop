@@ -1,6 +1,10 @@
 package kr.hhplus.be.server.application.couponuser
 
 import kr.hhplus.be.server.domain.coupon.*
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserService
 import org.assertj.core.api.Assertions.assertThat
@@ -41,7 +45,7 @@ class CouponUserFacadeTest {
             CouponUser(
                 couponUserId = "coupon1",
                 userId = userId,
-                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "1000",
                 usedAt = null,
                 createdAt = LocalDateTime.now(),
@@ -50,7 +54,7 @@ class CouponUserFacadeTest {
             CouponUser(
                 couponUserId = "coupon2",
                 userId = userId,
-                benefitMethod = CouponBenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "10",
                 usedAt = null,
                 createdAt = LocalDateTime.now(),
@@ -66,10 +70,10 @@ class CouponUserFacadeTest {
         // then
         assertThat(result.couponUsers).hasSize(2)
         assertThat(result.couponUsers[0].couponUserId).isEqualTo("coupon1")
-        assertThat(result.couponUsers[0].benefitMethod).isEqualTo(CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT)
+        assertThat(result.couponUsers[0].benefitMethod).isEqualTo(CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT)
         assertThat(result.couponUsers[0].benefitAmount).isEqualTo("1000")
         assertThat(result.couponUsers[1].couponUserId).isEqualTo("coupon2")
-        assertThat(result.couponUsers[1].benefitMethod).isEqualTo(CouponBenefitMethod.DISCOUNT_PERCENTAGE)
+        assertThat(result.couponUsers[1].benefitMethod).isEqualTo(CouponUserBenefitMethod.DISCOUNT_PERCENTAGE)
         assertThat(result.couponUsers[1].benefitAmount).isEqualTo("10")
         
         verify(couponUserService, times(1)).getAllCouponsByUserId(serviceCommand)
@@ -85,7 +89,7 @@ class CouponUserFacadeTest {
         val couponUser = CouponUser(
             couponUserId = couponUserId,
             userId = "user1",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = null,
             createdAt = LocalDateTime.now(),
@@ -99,7 +103,7 @@ class CouponUserFacadeTest {
         
         // then
         assertThat(result.couponUserId).isEqualTo(couponUserId)
-        assertThat(result.benefitMethod).isEqualTo(CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT)
+        assertThat(result.benefitMethod).isEqualTo(CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT)
         assertThat(result.benefitAmount).isEqualTo("1000")
         
         verify(couponUserService, times(1)).getCouponUser(serviceCommand)
@@ -110,9 +114,9 @@ class CouponUserFacadeTest {
     fun issueCoupon() {
         // given
         val userId = "user1"
-        val benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT
+        val benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT
         val benefitAmount = "1000"
-        val criteria = CouponUserCriteria.Create(userId, benefitMethod.name, benefitAmount)
+        val criteria = CouponUserCriteria.Create(userId, benefitMethod, benefitAmount)
         val serviceCommand = CouponUserCommand.Create(userId, benefitMethod, benefitAmount)
         
         val createdCouponUser = CouponUser(
@@ -149,7 +153,7 @@ class CouponUserFacadeTest {
         val couponUser = CouponUser(
             couponUserId = couponUserId,
             userId = "user1",
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             usedAt = LocalDateTime.now(),
             createdAt = LocalDateTime.now(),
@@ -198,7 +202,7 @@ class CouponUserFacadeTest {
             CouponUser(
                 couponUserId = "coupon1",
                 userId = "user1",
-                benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "1000",
                 usedAt = null,
                 createdAt = LocalDateTime.now(),
@@ -207,7 +211,7 @@ class CouponUserFacadeTest {
             CouponUser(
                 couponUserId = "coupon2",
                 userId = "user2",
-                benefitMethod = CouponBenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "10",
                 usedAt = null,
                 createdAt = LocalDateTime.now(),

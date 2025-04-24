@@ -1,5 +1,11 @@
 package kr.hhplus.be.server.application.order
 
+import kr.hhplus.be.server.domain.order.*
+import kr.hhplus.be.server.domain.payment.PaymentCommand
+import kr.hhplus.be.server.domain.product.ProductException
+import kr.hhplus.be.server.domain.product.ProductCommand
+import kr.hhplus.be.server.domain.product.ProductQuery
+
 /**
  * 주문 관련 요청 기준을 담는 클래스
  */
@@ -10,8 +16,32 @@ sealed class OrderCriteria {
     data class GetById(
         val orderId: String
     ) : OrderCriteria() {
-        init {
-            require(orderId.isNotBlank()) { "orderId must not be blank" }
+        
+        /**
+         * 도메인 Query로 변환
+         *
+         * @return OrderQuery.GetById 객체
+         */
+        fun toQuery(): OrderQuery.GetById {
+            return OrderQuery.GetById(orderId)
+        }
+        
+        /**
+         * 주문 항목 조회를 위한 Query로 변환
+         *
+         * @return OrderQuery.GetOrderItemsByOrderId 객체
+         */
+        fun toItemsQuery(): OrderQuery.GetOrderItemsByOrderId {
+            return OrderQuery.GetOrderItemsByOrderId(orderId)
+        }
+        
+        /**
+         * 주문 할인 조회를 위한 Query로 변환
+         *
+         * @return OrderQuery.GetOrderDiscountsByOrderId 객체
+         */
+        fun toDiscountsQuery(): OrderQuery.GetOrderDiscountsByOrderId {
+            return OrderQuery.GetOrderDiscountsByOrderId(orderId)
         }
     }
 
@@ -21,15 +51,30 @@ sealed class OrderCriteria {
     data class GetByUserId(
         val userId: String
     ) : OrderCriteria() {
-        init {
-            require(userId.isNotBlank()) { "userId must not be blank" }
+        
+        /**
+         * 도메인 Query로 변환
+         *
+         * @return OrderQuery.GetByUserId 객체
+         */
+        fun toQuery(): OrderQuery.GetByUserId {
+            return OrderQuery.GetByUserId(userId)
         }
     }
 
     /**
      * 모든 주문을 조회하는 기준
      */
-    object GetAll : OrderCriteria()
+    object GetAll : OrderCriteria() {
+        /**
+         * 도메인 Query로 변환
+         *
+         * @return OrderQuery.GetAll 객체
+         */
+        fun toQuery(): OrderQuery.GetAll {
+            return OrderQuery.GetAll
+        }
+    }
 
     /**
      * 주문을 생성하는 기준
@@ -39,10 +84,6 @@ sealed class OrderCriteria {
         val items: List<OrderItem>,
         val couponUserId: String? = null
     ) : OrderCriteria() {
-        init {
-            require(userId.isNotBlank()) { "userId must not be blank" }
-            require(items.isNotEmpty()) { "items must not be empty" }
-        }
 
         /**
          * 주문 항목 생성 기준
@@ -55,6 +96,60 @@ sealed class OrderCriteria {
                 require(productId.isNotBlank()) { "productId must not be blank" }
                 require(amount > 0) { "amount must be positive" }
             }
+            
+            /**
+             * 상품 가격 정보가 포함된 도메인 Command로 변환
+             *
+             * @param unitPrice 상품 단가
+             * @return OrderItemCommand.Create 객체
+             */
+            fun toCommand(unitPrice: Long): OrderItemCommand.Create {
+                return OrderItemCommand.Create(
+                    productId = productId,
+                    amount = amount,
+                    unitPrice = unitPrice
+                )
+            }
+            fun toDecreaseStockAmountCommand(): ProductCommand.DecreaseStock {
+                return ProductCommand.DecreaseStock(
+                    productId = productId,
+                    amount = amount
+                )
+            }
+        }
+
+        fun toDecreaseStockAmountCommands(): List<ProductCommand.DecreaseStock> {
+            return items.map { it.toDecreaseStockAmountCommand() }
+        }
+
+        fun toCreateOrderCommand(
+            paymentId: String,
+            productPriceMap: Map<String, Long>,
+            couponDiscountAmount: Long = 0
+        ): OrderCommand.Create {
+            return OrderCommand.Create(
+                userId = userId,
+                paymentId = paymentId,
+                orderItems = items.map { 
+                    it.toCommand(productPriceMap[it.productId] 
+                    ?: throw ProductException.NotFound("상품을 찾을 수 없습니다.")) 
+                },
+                orderDiscounts = couponUserId?.let {
+                    listOf(OrderDiscountCommand.Create(
+                        orderDiscountType = OrderDiscountType.COUPON,
+                        discountId = couponUserId,
+                        discountAmount = couponDiscountAmount
+                    ))
+                } ?: emptyList()
+            )
+        }
+
+        fun toGetProductQueries(): List<ProductQuery.GetById> {
+            return this.items.map { ProductQuery.GetById(it.productId) }
+        }
+
+        fun toPaymentCommand(totalPrice: Long, discountPrice: Long): PaymentCommand.Create {
+            return PaymentCommand.Create(this.userId, totalPrice - discountPrice)
         }
     }
 } 

@@ -21,7 +21,7 @@ sealed class UserPointResponse {
             /**
              * UserPointResult.Point를 UserPointResponse.Single로 변환합니다.
              */
-            fun from(result: UserPointResult.Point): Single {
+            fun from(result: UserPointResult.Single): Single {
                 return Single(
                     id = result.userPointId,
                     userId = result.userId,

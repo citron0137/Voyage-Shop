@@ -15,20 +15,20 @@ import org.springframework.stereotype.Repository
 class UserPointRepositoryImpl(private val userPointJpaRepository: UserPointJpaRepository) : UserPointRepository {
     
     override fun create(userPoint: UserPoint): UserPoint {
-        val userPointEntity = UserPointEntity.from(userPoint)
-        return userPointJpaRepository.save(userPointEntity).toUserPoint()
+        val userPointEntity = UserPointJpaEntity.fromDomain(userPoint)
+        return userPointJpaRepository.save(userPointEntity).toDomain()
     }
     
     override fun findByUserId(userId: String): UserPoint? {
-        return userPointJpaRepository.findByUserId(userId)?.toUserPoint()
+        return userPointJpaRepository.findByUserId(userId)?.toDomain()
     }
     
     override fun findByUserIdWithLock(userId: String): UserPoint? {
-        return userPointJpaRepository.findByUserIdWithLock(userId)?.toUserPoint()
+        return userPointJpaRepository.findByUserIdWithLock(userId)?.toDomain()
     }
     
     override fun save(userPoint: UserPoint): UserPoint {
-        val userPointEntity = UserPointEntity.from(userPoint)
-        return userPointJpaRepository.save(userPointEntity).toUserPoint()
+        val userPointEntity = UserPointJpaEntity.fromDomain(userPoint)
+        return userPointJpaRepository.save(userPointEntity).toDomain()
     }
 } 

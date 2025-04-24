@@ -15,19 +15,19 @@ import org.springframework.stereotype.Repository
 class PaymentRepositoryImpl(private val paymentJpaRepository: PaymentJpaRepository) : PaymentRepository {
     
     override fun create(payment: Payment): Payment {
-        val paymentEntity = PaymentEntity.from(payment)
-        return paymentJpaRepository.save(paymentEntity).toPayment()
+        val paymentEntity = PaymentJpaEntity.fromDomain(payment)
+        return paymentJpaRepository.save(paymentEntity).toDomain()
     }
     
     override fun findById(paymentId: String): Payment? {
-        return paymentJpaRepository.findByIdOrNull(paymentId)?.toPayment()
+        return paymentJpaRepository.findByIdOrNull(paymentId)?.toDomain()
     }
     
     override fun findByUserId(userId: String): List<Payment> {
-        return paymentJpaRepository.findByUserId(userId).map { it.toPayment() }
+        return paymentJpaRepository.findByUserId(userId).map { it.toDomain() }
     }
     
     override fun findAll(): List<Payment> {
-        return paymentJpaRepository.findAll().map { it.toPayment() }
+        return paymentJpaRepository.findAll().map { it.toDomain() }
     }
 } 

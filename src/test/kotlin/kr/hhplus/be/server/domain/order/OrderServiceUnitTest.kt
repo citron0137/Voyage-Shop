@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.LocalDateTime
 import java.util.UUID
 
 class OrderServiceUnitTest {
@@ -90,7 +89,7 @@ class OrderServiceUnitTest {
         )
         val orderDiscounts = listOf(
             OrderDiscountCommand.Create(
-                discountType = DiscountType.COUPON,
+                orderDiscountType = OrderDiscountType.COUPON,
                 discountId = "coupon-1",
                 discountAmount = 500
             )
@@ -131,7 +130,7 @@ class OrderServiceUnitTest {
     fun `ID로 주문을 조회할 수 있다`() {
         // given
         val orderId = UUID.randomUUID().toString()
-        val command = OrderCommand.GetById(orderId)
+        val command = OrderQuery.GetById(orderId)
         
         val expectedOrder = Order(
             orderId = orderId,
@@ -158,7 +157,7 @@ class OrderServiceUnitTest {
     fun `존재하지 않는 ID로 조회하면 예외가 발생한다`() {
         // given
         val orderId = UUID.randomUUID().toString()
-        val command = OrderCommand.GetById(orderId)
+        val command = OrderQuery.GetById(orderId)
         
         every { orderRepository.findById(orderId) } returns null
 
@@ -172,7 +171,7 @@ class OrderServiceUnitTest {
     fun `사용자 ID로 주문 목록을 조회할 수 있다`() {
         // given
         val userId = "test-user-id"
-        val command = OrderCommand.GetByUserId(userId)
+        val command = OrderQuery.GetByUserId(userId)
         
         val expectedOrders = listOf(
             Order(
@@ -233,7 +232,7 @@ class OrderServiceUnitTest {
         every { orderRepository.findAll() } returns expectedOrders
 
         // when
-        val results = orderService.getAllOrders()
+        val results = orderService.getAllOrders(OrderQuery.GetAll)
 
         // then
         verify { orderRepository.findAll() }
@@ -248,7 +247,7 @@ class OrderServiceUnitTest {
     fun `주문 ID로 주문 상품 목록을 조회할 수 있다`() {
         // given
         val orderId = "test-order-id"
-        val command = OrderItemCommand.GetByOrderId(orderId)
+        val command = OrderQuery.GetOrderItemsByOrderId(orderId)
         
         val expectedOrderItems = listOf(
             OrderItem(
@@ -288,13 +287,13 @@ class OrderServiceUnitTest {
     fun `주문 ID로 주문 할인 목록을 조회할 수 있다`() {
         // given
         val orderId = "test-order-id"
-        val command = OrderDiscountCommand.GetByOrderId(orderId)
+        val command = OrderQuery.GetOrderDiscountsByOrderId(orderId)
         
         val expectedOrderDiscounts = listOf(
             OrderDiscount(
                 orderDiscountId = UUID.randomUUID().toString(),
                 orderId = orderId,
-                discountType = DiscountType.COUPON,
+                type = OrderDiscountType.COUPON,
                 discountId = "coupon-1",
                 discountAmount = 500
             )

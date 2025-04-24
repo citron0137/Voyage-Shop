@@ -1,12 +1,8 @@
 package kr.hhplus.be.server.application.userpoint
 
 import kr.hhplus.be.server.domain.user.User
-import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.domain.user.UserService
-import kr.hhplus.be.server.domain.userpoint.UserPoint
-import kr.hhplus.be.server.domain.userpoint.UserPointCommand
-import kr.hhplus.be.server.domain.userpoint.UserPointException
-import kr.hhplus.be.server.domain.userpoint.UserPointService
+import kr.hhplus.be.server.domain.userpoint.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -43,8 +39,8 @@ class UserPointFacadeTest {
             amount = 1000
         )
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
-        whenever(userPointService.findByUserId(userId)).thenReturn(userPoint)
+        whenever(userService.getUserById(any())).thenReturn(user)
+        whenever(userPointService.getByUserId(UserPointQuery.GetByUserId(userId))).thenReturn(userPoint)
         
         // when
         val result = userPointFacade.getUserPoint(criteria)
@@ -55,21 +51,6 @@ class UserPointFacadeTest {
     }
     
     @Test
-    @DisplayName("존재하지 않는 사용자의 포인트를 조회하면 예외가 발생한다")
-    fun getUserPointWithNonExistingUser() {
-        // given
-        val userId = "non-existing-user"
-        val criteria = UserPointCriteria.GetByUserId(userId)
-        
-        whenever(userService.findUserByIdOrThrow(userId)).thenThrow(UserException.NotFound("사용자를 찾을 수 없습니다"))
-        
-        // when, then
-        assertThrows<UserException.NotFound> {
-            userPointFacade.getUserPoint(criteria)
-        }
-    }
-    
-    @Test
     @DisplayName("포인트가 없는 사용자의 포인트를 조회하면 예외가 발생한다")
     fun getUserPointWithNoPoint() {
         // given
@@ -77,8 +58,9 @@ class UserPointFacadeTest {
         val criteria = UserPointCriteria.GetByUserId(userId)
         val user = User(userId = userId)
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
-        whenever(userPointService.findByUserId(userId)).thenReturn(null)
+        whenever(userService.getUserById(any())).thenReturn(user)
+        whenever(userPointService.getByUserId(UserPointQuery.GetByUserId(userId)))
+            .thenThrow(UserPointException.NotFound("userId(${userId})로 UserPoint를 찾을 수 없습니다."))
         
         // when, then
         assertThrows<UserPointException.NotFound> {
@@ -105,7 +87,7 @@ class UserPointFacadeTest {
             amount = 1500
         )
         
-        whenever(userService.findUserByIdOrThrow(userId)).thenReturn(user)
+        whenever(userService.getUserById(any())).thenReturn(user)
         whenever(userPointService.charge(any<UserPointCommand.Charge>())).thenReturn(userPointAfter)
         
         // when

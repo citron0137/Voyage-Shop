@@ -22,7 +22,7 @@ sealed class ProductResponse {
             /**
              * ProductResult.Product를 ProductResponse.Single로 변환합니다.
              */
-            fun from(result: ProductResult.Product): Single {
+            fun from(result: ProductResult.Single): Single {
                 return Single(
                     productId = result.productId,
                     name = result.name,

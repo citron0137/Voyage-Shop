@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.couponevent
 
-import kr.hhplus.be.server.domain.coupon.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUser
 import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEvent
 import java.time.LocalDateTime

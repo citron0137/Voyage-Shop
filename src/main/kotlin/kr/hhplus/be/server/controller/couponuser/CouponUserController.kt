@@ -2,7 +2,7 @@ package kr.hhplus.be.server.controller.couponuser
 
 import kr.hhplus.be.server.application.couponuser.CouponUserFacade
 import kr.hhplus.be.server.controller.shared.BaseResponse
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -22,17 +22,17 @@ class CouponUserController(
         
         val responseList = result.couponUsers.map { couponUserResult ->
             val type = when (couponUserResult.benefitMethod) {
-                CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponUserResponse.Type.DISCOUNT_FIXED_AMOUNT
-                CouponBenefitMethod.DISCOUNT_PERCENTAGE -> CouponUserResponse.Type.DISCOUNT_PERCENTAGE
+                CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT -> CouponUserResponse.Type.DISCOUNT_FIXED_AMOUNT
+                CouponUserBenefitMethod.DISCOUNT_PERCENTAGE -> CouponUserResponse.Type.DISCOUNT_PERCENTAGE
             }
             
-            val fixedDiscountAmount = if (couponUserResult.benefitMethod == CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT) {
+            val fixedDiscountAmount = if (couponUserResult.benefitMethod == CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT) {
                 couponUserResult.benefitAmount.toLong()
             } else {
                 null
             }
             
-            val discountPercentage = if (couponUserResult.benefitMethod == CouponBenefitMethod.DISCOUNT_PERCENTAGE) {
+            val discountPercentage = if (couponUserResult.benefitMethod == CouponUserBenefitMethod.DISCOUNT_PERCENTAGE) {
                 couponUserResult.benefitAmount.toInt()
             } else {
                 null

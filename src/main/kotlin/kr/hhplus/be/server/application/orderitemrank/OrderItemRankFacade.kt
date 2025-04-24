@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.application.orderitemrank
 
 import kr.hhplus.be.server.domain.order.OrderItemCommand
+import kr.hhplus.be.server.domain.order.OrderQuery
 import kr.hhplus.be.server.domain.order.OrderService
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -26,12 +27,13 @@ class OrderItemRankFacade(
         val daysAgo = LocalDateTime.now().minusDays(criteria.days.toLong())
         
         // 모든 주문 조회 후 지정된 일수 이내 주문만 필터링
-        val recentOrders = orderService.getAllOrders()
+        val query = criteria.toQuery()
+        val recentOrders = orderService.getAllOrders(query)
             .filter { it.createdAt.isAfter(daysAgo) }
             
         // 최근 주문의 아이템만 조회
         val recentOrderItems = recentOrders.flatMap { order ->
-            orderService.getOrderItemsByOrderId(OrderItemCommand.GetByOrderId(order.orderId))
+            orderService.getOrderItemsByOrderId(OrderQuery.GetOrderItemsByOrderId(order.orderId))
         }
         
         // 상품 ID별로 그룹화하여 주문 횟수를 계산하고 상위 M개만 추출
@@ -41,7 +43,7 @@ class OrderItemRankFacade(
             .toList()
             .sortedByDescending { it.second }
             .take(criteria.limit)
-            .map { OrderItemRankResult.Rank(productId = it.first, orderCount = it.second) }
+            .map { OrderItemRankResult.Single.from(productId = it.first, orderCount = it.second) }
             
         return OrderItemRankResult.List(topRanks)
     }
@@ -50,7 +52,7 @@ class OrderItemRankFacade(
      * 최근 3일간의 주문 아이템 중 상위 5개 순위를 조회합니다. (호환성 메서드)
      */
     @Transactional(readOnly = true)
-    fun getRecentTopOrderItemRanks(): List<OrderItemRankResult.Rank> {
+    fun getRecentTopOrderItemRanks(): List<OrderItemRankResult.Single> {
         return getRecentTopOrderItemRanks(OrderItemRankCriteria.RecentTopRanks()).ranks
     }
 } 

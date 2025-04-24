@@ -4,6 +4,7 @@ import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.user.UserCriteria
 import kr.hhplus.be.server.application.user.UserFacade
 import kr.hhplus.be.server.domain.user.UserException
+import kr.hhplus.be.server.domain.userpoint.UserPointQuery
 import kr.hhplus.be.server.domain.userpoint.UserPointService
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
@@ -37,10 +38,10 @@ class UserRegistrationFlowIntegrationTest {
         assertNotNull(user.userId)
         
         // and then: 사용자 포인트 정보 검증
-        val userPoint = userPointService.findByUserId(user.userId)
+        val userPoint = userPointService.getByUserId(UserPointQuery.GetByUserId(user.userId))
         assertNotNull(userPoint)
-        assertEquals(user.userId, userPoint?.userId)
-        assertEquals(0L, userPoint?.amount)
+        assertEquals(user.userId, userPoint.userId)
+        assertEquals(0L, userPoint.amount)
     }
     
     @Test

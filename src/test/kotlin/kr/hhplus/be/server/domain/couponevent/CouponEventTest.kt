@@ -24,10 +24,10 @@ class CouponEventTest {
         )
 
         // when
-        couponEvent.decreaseLeftIssueAmount()
+        val updatedEvent = couponEvent.decreaseLeftIssueAmount()
 
         // then
-        assertEquals(9, couponEvent.leftIssueAmount)
+        assertEquals(9, updatedEvent.leftIssueAmount)
     }
 
     @Test

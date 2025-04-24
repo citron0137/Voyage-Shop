@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.couponuser
 
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUser
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import java.time.LocalDateTime
 
 /**
@@ -11,10 +11,10 @@ sealed class CouponUserResult {
     /**
      * 단일 쿠폰 유저 결과 DTO
      */
-    data class User(
+    data class Single(
         val couponUserId: String,
         val userId: String,
-        val benefitMethod: CouponBenefitMethod,
+        val benefitMethod: CouponUserBenefitMethod,
         val benefitAmount: String,
         val usedAt: LocalDateTime?,
         val createdAt: LocalDateTime,
@@ -22,10 +22,10 @@ sealed class CouponUserResult {
     ) : CouponUserResult() {
         companion object {
             /**
-             * CouponUser 도메인 객체를 CouponUserResult.User DTO로 변환합니다.
+             * CouponUser 도메인 객체를 CouponUserResult.Single DTO로 변환합니다.
              */
-            fun from(couponUser: CouponUser): User {
-                return User(
+            fun from(couponUser: CouponUser): Single {
+                return Single(
                     couponUserId = couponUser.couponUserId,
                     userId = couponUser.userId,
                     benefitMethod = couponUser.benefitMethod,
@@ -42,7 +42,7 @@ sealed class CouponUserResult {
      * 쿠폰 유저 목록 결과 DTO
      */
     data class List(
-        val couponUsers: kotlin.collections.List<User>
+        val couponUsers: kotlin.collections.List<Single>
     ) : CouponUserResult() {
         companion object {
             /**
@@ -50,7 +50,7 @@ sealed class CouponUserResult {
              */
             fun from(couponUsers: kotlin.collections.List<CouponUser>): List {
                 return List(
-                    couponUsers = couponUsers.map { User.from(it) }
+                    couponUsers = couponUsers.map { Single.from(it) }
                 )
             }
         }

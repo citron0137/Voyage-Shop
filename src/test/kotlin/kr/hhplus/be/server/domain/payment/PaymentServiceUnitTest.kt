@@ -60,7 +60,7 @@ class PaymentServiceUnitTest {
         every { paymentRepository.findById(paymentId) } returns expectedPayment
 
         // when
-        val result = paymentService.getPaymentById(paymentId)
+        val result = paymentService.getPaymentById(PaymentQuery.GetById(paymentId))
 
         // then
         verify { paymentRepository.findById(paymentId) }
@@ -78,7 +78,7 @@ class PaymentServiceUnitTest {
 
         // when & then
         assertThrows<PaymentException.NotFound> {
-            paymentService.getPaymentById(paymentId)
+            paymentService.getPaymentById(PaymentQuery.GetById(paymentId))
         }
     }
 
@@ -103,7 +103,7 @@ class PaymentServiceUnitTest {
         every { paymentRepository.findByUserId(userId) } returns expectedPayments
 
         // when
-        val results = paymentService.getPaymentsByUserId(userId)
+        val results = paymentService.getPaymentsByUserId(PaymentQuery.GetByUserId(userId))
 
         // then
         verify { paymentRepository.findByUserId(userId) }

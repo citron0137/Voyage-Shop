@@ -25,9 +25,9 @@ class UserRepositoryImpl(
      */
     @Transactional
     override fun create(user: User): User {
-        val userEntity = UserEntity.of(user)
+        val userEntity = UserJpaEntity.fromDomain(user)
         val savedEntity = userJpaRepository.save(userEntity)
-        return UserEntity.toDomain(savedEntity)
+        return savedEntity.toDomain()
     }
 
     /**
@@ -38,7 +38,7 @@ class UserRepositoryImpl(
      */
     @Transactional(readOnly = true)
     override fun findById(userId: String): User? {
-        return userJpaRepository.findByIdOrNull(userId)?.let { UserEntity.toDomain(it) }
+        return userJpaRepository.findByIdOrNull(userId)?.toDomain()
     }
 
     /**
@@ -48,6 +48,6 @@ class UserRepositoryImpl(
      */
     @Transactional(readOnly = true)
     override fun findAll(): List<User> {
-        return userJpaRepository.findAll().map { UserEntity.toDomain(it) }
+        return userJpaRepository.findAll().map { it.toDomain() }
     }
 } 

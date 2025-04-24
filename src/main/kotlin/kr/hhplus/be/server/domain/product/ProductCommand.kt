@@ -16,6 +16,11 @@ sealed class ProductCommand {
             if (name.isBlank()) throw ProductException.NameShouldNotBlank("상품명은 비어있을 수 없습니다.")
             if (price <= 0) throw ProductException.PriceShouldMoreThan0("가격은 0보다 커야합니다.")
             if (stock < 0) throw ProductException.StockAmountShouldMoreThan0("재고는 0보다 크거나 같아야 합니다.")
+            if (stock >= Product.MAX_STOCK_AMOUNT) throw ProductException.StockAmountOverflow("재고가 최대치를 초과합니다.")
+        }
+        
+        fun toProduct(): Product {
+            return Product.create(name, price, stock)
         }
     }
 

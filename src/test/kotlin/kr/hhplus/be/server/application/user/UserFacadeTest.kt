@@ -40,14 +40,14 @@ class UserFacadeTest {
             amount = 0
         )
 
-        `when`(userService.createUser()).thenReturn(mockUser)
+        `when`(userService.createUser(any())).thenReturn(mockUser)
         `when`(userPointService.create(any())).thenReturn(mockUserPoint)
 
         // when
         val result = userFacade.createUser()
 
         // then
-        verify(userService).createUser()
+        verify(userService).createUser(any())
         verify(userPointService).create(any())
         
         assertEquals(userId, result.userId)
@@ -62,13 +62,13 @@ class UserFacadeTest {
         val mockUser = User(userId = userId)
         val criteria = UserCriteria.GetById(userId)
         
-        `when`(userService.findUserByIdOrThrow(userId)).thenReturn(mockUser)
+        `when`(userService.getUserById(any())).thenReturn(mockUser)
         
         // when
         val result = userFacade.findUserById(criteria)
         
         // then
-        verify(userService).findUserByIdOrThrow(userId)
+        verify(userService).getUserById(any())
         assertEquals(userId, result.userId)
         assertEquals(mockUser.createdAt, result.createdAt)
         assertEquals(mockUser.updatedAt, result.updatedAt)
@@ -80,14 +80,14 @@ class UserFacadeTest {
         val userId = "non-existent-user-id"
         val criteria = UserCriteria.GetById(userId)
         
-        `when`(userService.findUserByIdOrThrow(userId)).thenThrow(UserException.NotFound("userId($userId)로 User를 찾을 수 없습니다."))
+        `when`(userService.getUserById(any())).thenThrow(UserException.NotFound("userId($userId)로 User를 찾을 수 없습니다."))
         
         // when & then
         assertThrows(UserException.NotFound::class.java) {
             userFacade.findUserById(criteria)
         }
         
-        verify(userService).findUserByIdOrThrow(userId)
+        verify(userService).getUserById(any())
     }
     
     @Test

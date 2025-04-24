@@ -1,13 +1,14 @@
 package kr.hhplus.be.server.integration.order
 
 import kr.hhplus.be.server.TestcontainersConfiguration
+import kr.hhplus.be.server.application.order.OrderCriteria
 import kr.hhplus.be.server.application.order.OrderFacade
-import kr.hhplus.be.server.application.order.OrderItemRequest
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserCommand
-import kr.hhplus.be.server.domain.coupon.CouponUserService
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.product.ProductCommand
 import kr.hhplus.be.server.domain.product.ProductService
+import kr.hhplus.be.server.domain.user.UserCommand
 import kr.hhplus.be.server.domain.user.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +42,7 @@ class OrderFacadeIntegrationTest {
     @BeforeEach
     fun setUp() {
         // 테스트용 사용자 생성
-        val user = userService.createUser()
+        val user = userService.createUser(UserCommand.Create)
         testUserId = user.userId
 
         // 테스트용 상품 생성
@@ -59,18 +60,18 @@ class OrderFacadeIntegrationTest {
     @Transactional
     fun createOrderTest() {
         // given
-        val orderItems = listOf(
-            OrderItemRequest(
-                productId = testProductId,
-                amount = 2
+        val orderCriteria = OrderCriteria.Create(
+            userId = testUserId,
+            items = listOf(
+                OrderCriteria.Create.OrderItem(
+                    productId = testProductId,
+                    amount = 2
+                )
             )
         )
 
         // when
-        val result = orderFacade.createOrder(
-            userId = testUserId,
-            orderItems = orderItems
-        )
+        val result = orderFacade.createOrder(orderCriteria)
 
         // then
         assertThat(result.orderId).isNotBlank()
@@ -87,19 +88,20 @@ class OrderFacadeIntegrationTest {
     @Transactional
     fun getOrderTest() {
         // given
-        val orderItems = listOf(
-            OrderItemRequest(
-                productId = testProductId,
-                amount = 1
+        // 주문 생성
+        val createCriteria = OrderCriteria.Create(
+            userId = testUserId,
+            items = listOf(
+                OrderCriteria.Create.OrderItem(
+                    productId = testProductId,
+                    amount = 1
+                )
             )
         )
-        val createdOrder = orderFacade.createOrder(
-            userId = testUserId,
-            orderItems = orderItems
-        )
+        val createdOrder = orderFacade.createOrder(createCriteria)
 
         // when
-        val result = orderFacade.getOrder(createdOrder.orderId)
+        val result = orderFacade.getOrder(OrderCriteria.GetById(createdOrder.orderId))
 
         // then
         assertThat(result.orderId).isEqualTo(createdOrder.orderId)
@@ -115,28 +117,32 @@ class OrderFacadeIntegrationTest {
         // given
         // 첫 번째 주문 생성
         orderFacade.createOrder(
-            userId = testUserId,
-            orderItems = listOf(
-                OrderItemRequest(
-                    productId = testProductId,
-                    amount = 1
+            OrderCriteria.Create(
+                userId = testUserId,
+                items = listOf(
+                    OrderCriteria.Create.OrderItem(
+                        productId = testProductId,
+                        amount = 1
+                    )
                 )
             )
         )
 
         // 두 번째 주문 생성
         orderFacade.createOrder(
-            userId = testUserId,
-            orderItems = listOf(
-                OrderItemRequest(
-                    productId = testProductId,
-                    amount = 2
+            OrderCriteria.Create(
+                userId = testUserId,
+                items = listOf(
+                    OrderCriteria.Create.OrderItem(
+                        productId = testProductId,
+                        amount = 2
+                    )
                 )
             )
         )
 
         // when
-        val result = orderFacade.getOrdersByUserId(testUserId)
+        val result = orderFacade.getOrdersByUserId(OrderCriteria.GetByUserId(testUserId))
 
         // then
         assertThat(result.orders).hasSize(2)
@@ -149,21 +155,23 @@ class OrderFacadeIntegrationTest {
     @Transactional
     fun getAllOrdersTest() {
         // given
-        val initialCount = orderFacade.getAllOrders().orders.size
+        val initialCount = orderFacade.getAllOrders(OrderCriteria.GetAll).orders.size
 
         // 주문 생성
         orderFacade.createOrder(
-            userId = testUserId,
-            orderItems = listOf(
-                OrderItemRequest(
-                    productId = testProductId,
-                    amount = 1
+            OrderCriteria.Create(
+                userId = testUserId,
+                items = listOf(
+                    OrderCriteria.Create.OrderItem(
+                        productId = testProductId,
+                        amount = 1
+                    )
                 )
             )
         )
 
         // when
-        val result = orderFacade.getAllOrders()
+        val result = orderFacade.getAllOrders(OrderCriteria.GetAll)
 
         // then
         assertThat(result.orders.size).isEqualTo(initialCount + 1)
@@ -177,24 +185,25 @@ class OrderFacadeIntegrationTest {
         // 테스트용 쿠폰 생성 (고정 금액 1000원 할인)
         val couponCommand = CouponUserCommand.Create(
             userId = testUserId,
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000"
         )
         val couponUser = couponUserService.create(couponCommand)
 
-        val orderItems = listOf(
-            OrderItemRequest(
-                productId = testProductId,
-                amount = 2
-            )
+        // 주문 생성 기준 설정
+        val orderCriteria = OrderCriteria.Create(
+            userId = testUserId,
+            items = listOf(
+                OrderCriteria.Create.OrderItem(
+                    productId = testProductId,
+                    amount = 2
+                )
+            ),
+            couponUserId = couponUser.couponUserId
         )
 
         // when
-        val result = orderFacade.createOrder(
-            userId = testUserId,
-            orderItems = orderItems,
-            couponUserId = couponUser.couponUserId
-        )
+        val result = orderFacade.createOrder(orderCriteria)
 
         // then
         assertThat(result.orderId).isNotBlank()

@@ -14,7 +14,7 @@ class OrderItemRankResponse {
         val orderCount: Long = 0
     ) {
         companion object {
-            fun from(result: OrderItemRankResult.Rank): Rank {
+            fun from(result: OrderItemRankResult.Single): Rank {
                 return Rank(
                     productId = result.productId,
                     orderCount = result.orderCount

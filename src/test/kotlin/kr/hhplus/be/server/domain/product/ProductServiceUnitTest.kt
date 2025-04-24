@@ -61,7 +61,7 @@ class ProductServiceUnitTest {
         every { productRepository.findById(productId) } returns expectedProduct
 
         // when
-        val actualProduct = productService.getProduct(productId)
+        val actualProduct = productService.getProductById(ProductQuery.GetById(productId))
 
         // then
         verify { productRepository.findById(productId) }
@@ -78,7 +78,7 @@ class ProductServiceUnitTest {
 
         // when & then
         assertThrows<ProductException.NotFound> {
-            productService.getProduct(productId)
+            productService.getProductById(ProductQuery.GetById(productId))
         }
     }
 
@@ -102,7 +102,7 @@ class ProductServiceUnitTest {
         every { productRepository.findAll() } returns products
 
         // when
-        val actualProducts = productService.getAllProducts()
+        val actualProducts = productService.getAllProducts(ProductQuery.GetAll)
 
         // then
         verify { productRepository.findAll() }
@@ -117,7 +117,9 @@ class ProductServiceUnitTest {
     fun `상품 재고를 수정할 수 있다`() {
         // given
         val productId = UUID.randomUUID().toString()
+        val initialStock = 10L
         val newStock = 20L
+        
         val command = ProductCommand.UpdateStock(
             productId = productId,
             amount = newStock
@@ -127,13 +129,19 @@ class ProductServiceUnitTest {
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L
+            stock = initialStock
+        )
+        
+        val updatedProduct = existingProduct.copy(
+            stock = newStock,
+            updatedAt = LocalDateTime.now()
         )
 
         every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.update(any()) } returns updatedProduct
 
         // when
-        val actualProduct = productService.updateStock(command)
+        val actualProduct = productService.updateProductStock(command)
 
         // then
         verify { productRepository.findByIdWithLock(productId) }
@@ -145,12 +153,14 @@ class ProductServiceUnitTest {
     fun `상품 재고를 감소시킬 수 있다`() {
         // given
         val productId = UUID.randomUUID().toString()
+        val initialStock = 10L
         val decreaseAmount = 5L
+        val finalStock = initialStock - decreaseAmount
+        
         val command = ProductCommand.DecreaseStock(
             productId = productId,
             amount = decreaseAmount
         )
-        val initialStock = 10L
 
         val existingProduct = Product(
             productId = productId,
@@ -158,88 +168,125 @@ class ProductServiceUnitTest {
             price = 1000L,
             stock = initialStock
         )
+        
+        val updatedProduct = existingProduct.copy(
+            stock = finalStock,
+            updatedAt = LocalDateTime.now()
+        )
 
         every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.update(any()) } returns updatedProduct
 
         // when
-        val actualProduct = productService.decreaseStock(command)
+        val actualProduct = productService.decreaseProductStock(command)
 
         // then
         verify { productRepository.findByIdWithLock(productId) }
         verify { productRepository.update(any()) }
-        assertEquals(initialStock - decreaseAmount, actualProduct.stock)
+        assertEquals(finalStock, actualProduct.stock)
     }
 
     @Test
     fun `상품 재고를 증가시킬 수 있다`() {
         // given
-        val productId = UUID.randomUUID().toString()
-        val increaseAmount = 5L
-        val command = ProductCommand.IncreaseStock(
-            productId = productId,
-            amount = increaseAmount
-        )
+        val productId = "test-product-id"
         val initialStock = 10L
-
+        val increaseAmount = 5L
+        val finalStock = initialStock + increaseAmount
+        
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
             stock = initialStock
         )
-
+        
+        val command = ProductCommand.IncreaseStock(
+            productId = productId,
+            amount = increaseAmount
+        )
+        
+        val updatedProduct = existingProduct.copy(
+            stock = finalStock,
+            updatedAt = LocalDateTime.now()
+        )
+        
         every { productRepository.findByIdWithLock(productId) } returns existingProduct
-
+        every { productRepository.update(any()) } returns updatedProduct
+        
         // when
-        val actualProduct = productService.increaseStock(command)
-
+        val actualProduct = productService.increaseProductStock(command)
+        
         // then
         verify { productRepository.findByIdWithLock(productId) }
         verify { productRepository.update(any()) }
-        assertEquals(initialStock + increaseAmount, actualProduct.stock)
+        assertEquals(finalStock, actualProduct.stock)
     }
 
     @Test
     fun `재고 감소 시 음수로 감소하면 예외가 발생한다`() {
         // given
         val productId = UUID.randomUUID().toString()
+        val initialStock = 10L
+        val decreaseAmount = 15L // 현재 재고보다 큰 값
+        
         val command = ProductCommand.DecreaseStock(
             productId = productId,
-            amount = 15L
+            amount = decreaseAmount
         )
+        
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 10L
+            stock = initialStock
         )
+
+        val finalStock = initialStock - decreaseAmount
+        val updatedProduct = existingProduct.copy(
+            stock = finalStock,
+            updatedAt = LocalDateTime.now()
+        )
+        
         every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.update(any()) } returns updatedProduct
 
         // when & then
-        val exception = assertThrows<ProductException.StockAmountUnderflow> {
-            productService.decreaseStock(command)
+        assertThrows<ProductException.StockAmountUnderflow> {
+            productService.decreaseProductStock(command)
         }
+        
+        // update 호출 안됨 검증
+        verify(exactly = 0) { productRepository.update(any()) }
     }
 
     @Test
     fun `재고 증가 시 최대치를 초과하면 예외가 발생한다`() {
         // given
         val productId = UUID.randomUUID().toString()
+        val initialStock = 1L
+        val increaseAmount = Long.MAX_VALUE
+        
         val command = ProductCommand.IncreaseStock(
             productId = productId,
-            amount = Long.MAX_VALUE
+            amount = increaseAmount
         )
+        
         val existingProduct = Product(
             productId = productId,
             name = "테스트 상품",
             price = 1000L,
-            stock = 1L
+            stock = initialStock
         )
+        
         every { productRepository.findByIdWithLock(productId) } returns existingProduct
 
         // when & then
         assertThrows<ProductException.StockAmountOverflow> {
-            productService.increaseStock(command)
+            productService.increaseProductStock(command)
         }
+        
+        // update 호출 안됨 검증
+        verify(exactly = 0) { productRepository.update(any()) }
     }
 } 
