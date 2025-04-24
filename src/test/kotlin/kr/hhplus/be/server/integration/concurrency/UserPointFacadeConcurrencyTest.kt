@@ -33,7 +33,7 @@ class UserPointFacadeConcurrencyTest {
         // given: 사용자 생성 및 초기 포인트 확인 (0이어야 함)
         val user = userFacade.createUser()
         val userId = user.userId
-        val initialPoint: UserPointResult.Point = userPointFacade.getUserPoint(UserPointCriteria.GetByUserId(userId))
+        val initialPoint: UserPointResult.Single = userPointFacade.getUserPoint(UserPointCriteria.GetByUserId(userId))
         assertEquals(0L, initialPoint.amount, "초기 포인트는 0이어야 합니다.")
 
         val numberOfThreads = 100
@@ -70,7 +70,7 @@ class UserPointFacadeConcurrencyTest {
         executor.shutdown()
 
         // then: 최종 포인트 잔액 확인
-        val finalPoint: UserPointResult.Point = userPointFacade.getUserPoint(UserPointCriteria.GetByUserId(userId))
+        val finalPoint: UserPointResult.Single = userPointFacade.getUserPoint(UserPointCriteria.GetByUserId(userId))
         val expectedBalance = chargeAmount * successCount.get() // 성공한 만큼만 충전
 
         println("Total Attempts: $numberOfThreads")

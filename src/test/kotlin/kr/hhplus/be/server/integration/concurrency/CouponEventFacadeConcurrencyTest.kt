@@ -7,8 +7,9 @@ import kr.hhplus.be.server.application.couponevent.CouponEventResult
 import kr.hhplus.be.server.application.couponuser.CouponUserFacade
 import kr.hhplus.be.server.application.couponuser.CouponUserResult
 import kr.hhplus.be.server.application.user.UserFacade
-import kr.hhplus.be.server.domain.coupon.CouponException
-import kr.hhplus.be.server.domain.couponevent.CEOutOfStockException
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CouponEventException
+import kr.hhplus.be.server.domain.couponuser.CouponUserException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -42,9 +43,9 @@ class CouponEventFacadeConcurrencyTest {
     fun issueCouponUserConcurrencyTest() {
         // given: 발급 수량 10개인 쿠폰 이벤트 생성
         val totalIssueAmount = 10L
-        val couponEvent: CouponEventResult.Get = couponEventFacade.createCouponEvent(
+        val couponEvent: CouponEventResult.Single = couponEventFacade.createCouponEvent(
             CouponEventCriteria.Create(
-                benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "1000",
                 totalIssueAmount = totalIssueAmount
             )
@@ -77,9 +78,9 @@ class CouponEventFacadeConcurrencyTest {
                     optimisticLockFailCount.incrementAndGet()
                 } catch (e: OptimisticLockingFailureException) {
                     optimisticLockFailCount.incrementAndGet()
-                } catch (e: CouponException.AlreadyUsed) {
+                } catch (e: CouponUserException.AlreadyUsed) {
                     alreadyIssuedCount.incrementAndGet()
-                } catch (e: CEOutOfStockException) {
+                } catch (e: CouponEventException.OutOfStock) {
                     soldOutCount.incrementAndGet()
                 } catch (e: Exception) {
                     logger.error("쿠폰 발급 중 예상치 못한 예외 발생: userId={}, eventId={}", user.userId, couponEventId, e)
@@ -93,7 +94,7 @@ class CouponEventFacadeConcurrencyTest {
         executor.shutdown()
 
         // then: 최종 발급된 쿠폰 수량 및 이벤트 상태 확인
-        val finalCouponEvent: CouponEventResult.Get = couponEventFacade.getCouponEvent(CouponEventCriteria.GetById(couponEventId))
+        val finalCouponEvent: CouponEventResult.Single = couponEventFacade.getCouponEvent(CouponEventCriteria.GetById(couponEventId))
         val issuedCouponUsers: CouponUserResult.List = couponUserFacade.getAllCoupons()
 
         // CouponUserResult.List 내부에 couponUsers 필드 사용 (coupons -> couponUsers)

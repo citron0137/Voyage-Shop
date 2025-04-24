@@ -1,11 +1,12 @@
 package kr.hhplus.be.server.integration.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
+import kr.hhplus.be.server.application.couponuser.CouponUserCriteria
 import kr.hhplus.be.server.application.couponuser.CouponUserFacade
 import kr.hhplus.be.server.application.couponuser.CouponUserResult
 import kr.hhplus.be.server.application.user.UserFacade
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponException
+import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
+import kr.hhplus.be.server.domain.couponuser.CouponUserException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.DisplayName
@@ -38,10 +39,12 @@ class CouponUserFacadeConcurrencyTest {
         // given: 사용자 생성 및 쿠폰 발급
         val user = userFacade.createUser()
         val userId = user.userId
-        val issuedCoupon: CouponUserResult.User = couponUserFacade.issueCoupon(
-            userId = userId,
-            benefitMethod = CouponBenefitMethod.DISCOUNT_FIXED_AMOUNT,
-            benefitAmount = "1000"
+        val issuedCoupon: CouponUserResult.Single = couponUserFacade.issueCoupon(
+            CouponUserCriteria.Create(
+                userId = userId,
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitAmount = "1000"
+            )
         )
         val couponUserId = issuedCoupon.couponUserId
 
@@ -56,13 +59,17 @@ class CouponUserFacadeConcurrencyTest {
         for (i in 1..numberOfThreads) {
             executor.submit {
                 try {
-                    couponUserFacade.useCoupon(couponUserId)
+                    couponUserFacade.useCoupon(
+                        CouponUserCriteria.Use(
+                            couponUserId = couponUserId,
+                        )
+                    )
                     successCount.incrementAndGet()
                 } catch (e: ObjectOptimisticLockingFailureException) {
                     optimisticLockFailCount.incrementAndGet()
                 } catch (e: OptimisticLockingFailureException) {
                     optimisticLockFailCount.incrementAndGet()
-                } catch (e: CouponException.AlreadyUsed) {
+                } catch (e: CouponUserException.AlreadyUsed) {
                     alreadyUsedCount.incrementAndGet()
                 } catch (e: Exception) {
                     logger.error("쿠폰 사용 중 예상치 못한 예외 발생: couponUserId={}", couponUserId, e)
@@ -76,7 +83,7 @@ class CouponUserFacadeConcurrencyTest {
         executor.shutdown()
 
         // then: 최종 쿠폰 상태 및 성공 횟수 확인
-        val finalCoupon: CouponUserResult.User = couponUserFacade.getCouponUser(couponUserId)
+        val finalCoupon: CouponUserResult.Single = couponUserFacade.getCouponUser(CouponUserCriteria.GetById(couponUserId))
 
         logger.info("Total Attempts: $numberOfThreads")
         logger.info("Successful Uses: ${successCount.get()}")
