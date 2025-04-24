@@ -38,7 +38,6 @@ class UserPointFacade(
     
     /**
      * 사용자 포인트를 충전합니다.
-     * 동시성 문제를 방지하기 위해 적절한 격리 수준을 설정합니다.
      *
      * @param criteria 사용자 포인트 충전 요청 기준
      * @return 충전 후 사용자 포인트 정보
@@ -48,17 +47,15 @@ class UserPointFacade(
      * @throws UserPointException.ChargeAmountShouldMoreThan0 충전 금액이 0 이하인 경우
      * @throws UserPointException.PointAmountOverflow 충전 후 포인트가 최대치를 초과하는 경우
      */
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
     fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Single {
         // 포인트 충전
         val userPoint = userPointService.charge(criteria.toCommand())
-        
         return UserPointResult.Single.from(userPoint)
     }
     
     /**
      * 사용자 포인트를 사용합니다.
-     * 동시성 문제를 방지하기 위해 적절한 격리 수준을 설정합니다.
+     * 비관적 락을 사용하여 동시성 문제를 방지합니다.
      *
      * @param criteria 사용자 포인트 사용 요청 기준
      * @return 사용 후 사용자 포인트 정보
@@ -68,11 +65,9 @@ class UserPointFacade(
      * @throws UserPointException.UseAmountShouldMoreThan0 사용 금액이 0 이하인 경우
      * @throws UserPointException.PointAmountUnderflow 사용 가능한 포인트가 부족한 경우
      */
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
     fun usePoint(criteria: UserPointCriteria.Use): UserPointResult.Single {
         // 포인트 사용
         val userPoint = userPointService.use(criteria.toCommand())
-        
         return UserPointResult.Single.from(userPoint)
     }
 } 

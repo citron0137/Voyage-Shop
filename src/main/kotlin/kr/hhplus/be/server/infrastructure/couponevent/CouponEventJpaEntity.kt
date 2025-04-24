@@ -16,7 +16,7 @@ import java.time.LocalDateTime
  * 쿠폰 이벤트 엔티티
  */
 @Entity
-@Table(name = "coupon_event")
+@Table(name = "coupon_events")
 data class CouponEventJpaEntity(
     @Id
     @Column(name = "id", length = 36, nullable = false)
@@ -74,4 +74,4 @@ data class CouponEventJpaEntity(
             )
         }
     }
-} 
+}

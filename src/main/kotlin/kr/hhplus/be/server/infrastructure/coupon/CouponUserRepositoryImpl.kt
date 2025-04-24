@@ -23,6 +23,11 @@ class CouponUserRepositoryImpl(private val couponUserJpaRepository: CouponUserJp
         return couponUserJpaRepository.findByIdOrNull(couponUserId)?.toDomain()
     }
     
+    override fun findByIdWithLock(couponUserId: String): CouponUser? {
+        return couponUserJpaRepository.findByIdWithLock(couponUserId)?.toDomain()
+    }
+    
+
     override fun findByUserId(userId: String): List<CouponUser> {
         return couponUserJpaRepository.findByUserId(userId).map { it.toDomain() }
     }

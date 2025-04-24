@@ -4,8 +4,7 @@ CREATE TABLE IF NOT EXISTS payments (
     user_id VARCHAR(255) NOT NULL,
     total_payment_amount BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_payments_user_id FOREIGN KEY (user_id) REFERENCES users(user_id)
+    updated_at TIMESTAMP NOT NULL
 );
 
 -- 인덱스 생성
