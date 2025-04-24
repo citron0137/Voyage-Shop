@@ -25,24 +25,19 @@ interface CouponEventControllerApi {
      */
     @Operation(
         summary = "쿠폰 이벤트 생성",
-        description = "새로운 쿠폰 이벤트를 생성합니다."
+        description = "새로운 쿠폰 이벤트를 생성합니다. 가능한 에러 코드:\n" +
+                "- COUPON_EVENT_INVALID_BENEFIT_METHOD: 지원하지 않는 혜택 방식이 입력된 경우\n" +
+                "- COUPON_EVENT_INVALID_BENEFIT_AMOUNT: 유효하지 않은 혜택 금액(음수 등)이 입력된 경우\n" +
+                "- COUPON_EVENT_INVALID_ISSUE_AMOUNT: 유효하지 않은 발급 수량(0 이하 등)이 입력된 경우"
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "생성 성공",
+                description = "성공 또는 에러 응답",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class, ref = "#/components/schemas/CouponEventResponse.Event")
-                )]
-            ),
-            ApiResponse(
-                responseCode = "400",
-                description = "잘못된 요청 파라미터",
-                content = [Content(
-                    mediaType = "application/json",
-                    schema = Schema(implementation = Any::class)
                 )]
             )
         ]
@@ -86,40 +81,19 @@ interface CouponEventControllerApi {
      */
     @Operation(
         summary = "쿠폰 발급",
-        description = "특정 쿠폰 이벤트에서 사용자에게 쿠폰을 발급합니다."
+        description = "특정 쿠폰 이벤트에서 사용자에게 쿠폰을 발급합니다. 가능한 에러 코드:\n" +
+                "- COUPON_EVENT_NOT_FOUND: 지정된 ID의 쿠폰 이벤트가 존재하지 않는 경우\n" +
+                "- COUPON_EVENT_OUT_OF_STOCK: 쿠폰 재고가 부족한 경우\n" +
+                "- COUPON_EVENT_STOCK_EMPTY: 쿠폰 재고가 완전히 소진된 경우"
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "발급 성공",
+                description = "성공 또는 에러 응답",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class, ref = "#/components/schemas/CouponEventResponse.IssueCoupon")
-                )]
-            ),
-            ApiResponse(
-                responseCode = "400",
-                description = "잘못된 요청 파라미터",
-                content = [Content(
-                    mediaType = "application/json",
-                    schema = Schema(implementation = Any::class)
-                )]
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "쿠폰 이벤트를 찾을 수 없음",
-                content = [Content(
-                    mediaType = "application/json",
-                    schema = Schema(implementation = Any::class)
-                )]
-            ),
-            ApiResponse(
-                responseCode = "409",
-                description = "재고 부족 또는 이미 발급된 쿠폰",
-                content = [Content(
-                    mediaType = "application/json",
-                    schema = Schema(implementation = Any::class)
                 )]
             )
         ]
