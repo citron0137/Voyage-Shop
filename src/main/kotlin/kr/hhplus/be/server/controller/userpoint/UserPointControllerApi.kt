@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -60,7 +61,7 @@ interface UserPointControllerApi {
     fun getUserPoint(
         @Parameter(description = "조회할 사용자 ID", required = true)
         @PathVariable userId: String
-    ): ResponseEntity<UserPointResponse.Single>
+    ): BaseResponse<UserPointResponse.Single>
 
     /**
      * 사용자의 포인트를 충전합니다.
@@ -107,5 +108,5 @@ interface UserPointControllerApi {
         @PathVariable userId: String,
         @Parameter(description = "충전 요청 정보", required = true)
         @RequestBody request: UserPointRequest.Charge
-    ): ResponseEntity<UserPointResponse.Single>
+    ): BaseResponse<UserPointResponse.Single>
 } 
