@@ -42,14 +42,6 @@ interface UserControllerApi {
             ),
             ApiResponse(
                 responseCode = "200",
-                description = "사용자 ID가 빈 값인 경우",
-                content = [Content(
-                    mediaType = "application/json",
-                    schema = Schema(implementation = Any::class, ref = "#/components/schemas/BaseResponse")
-                )]
-            ),
-            ApiResponse(
-                responseCode = "500",
                 description = "서버 오류",
                 content = [Content(
                     mediaType = "application/json",
@@ -83,7 +75,7 @@ interface UserControllerApi {
             ),
             ApiResponse(
                 responseCode = "200",
-                description = "사용자를 찾을 수 없는 경우 (U_NOT_FOUND)",
+                description = "사용자를 찾을 수 없는 경우 (USER_NOT_FOUND)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class, ref = "#/components/schemas/BaseResponse")
@@ -91,7 +83,7 @@ interface UserControllerApi {
             ),
             ApiResponse(
                 responseCode = "200",
-                description = "사용자 ID가 빈 값인 경우 (U_INVALID_ID)",
+                description = "사용자 ID가 빈 값인 경우 (USER_INVALID_ID)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class, ref = "#/components/schemas/BaseResponse")
@@ -125,7 +117,7 @@ interface UserControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "500",
+                responseCode = "200",
                 description = "서버 오류",
                 content = [Content(
                     mediaType = "application/json",

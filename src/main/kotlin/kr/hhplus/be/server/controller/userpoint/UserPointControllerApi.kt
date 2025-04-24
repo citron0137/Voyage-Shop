@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import kr.hhplus.be.server.controller.shared.BaseResponse
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -40,7 +39,7 @@ interface UserPointControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "400",
+                responseCode = "200",
                 description = "사용자 ID가 빈 값인 경우",
                 content = [Content(
                     mediaType = "application/json",
@@ -48,7 +47,7 @@ interface UserPointControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "404",
+                responseCode = "200",
                 description = "사용자를 찾을 수 없는 경우",
                 content = [Content(
                     mediaType = "application/json",
@@ -85,15 +84,15 @@ interface UserPointControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "400",
-                description = "충전 금액이 유효하지 않은 경우",
+                responseCode = "200",
+                description = "충전 금액이 0 이하인 경우",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
                 )]
             ),
             ApiResponse(
-                responseCode = "404",
+                responseCode = "200",
                 description = "사용자를 찾을 수 없는 경우",
                 content = [Content(
                     mediaType = "application/json",
