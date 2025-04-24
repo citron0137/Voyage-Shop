@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.product
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
@@ -28,6 +29,7 @@ class ProductService (
      * @return 조회된 상품
      * @throws ProductException.NotFound 상품을 찾을 수 없는 경우
      */
+    @Transactional(readOnly = true)
     fun getProductById(query: ProductQuery.GetById): Product {
         return repository.findById(query.productId)
             ?: throw ProductException.NotFound("Product with id: ${query.productId}")
@@ -39,12 +41,14 @@ class ProductService (
      * @param query 모든 상품 조회 쿼리
      * @return 모든 상품 목록
      */
+    @Transactional(readOnly = true)
     fun getAllProducts(query: ProductQuery.GetAll): List<Product> {
         return repository.findAll()
     }
 
     /**
      * 상품 재고를 특정 수량으로 갱신합니다.
+     * 비관적 락을 사용하여 동시성 문제를 방지합니다.
      *
      * @param command 상품 재고 갱신 명령
      * @return 갱신된 상품
@@ -61,6 +65,7 @@ class ProductService (
 
     /**
      * 상품 재고를 감소시킵니다.
+     * 비관적 락을 사용하여 동시성 문제를 방지합니다.
      *
      * @param command 상품 재고 감소 명령
      * @return 갱신된 상품
@@ -78,6 +83,7 @@ class ProductService (
 
     /**
      * 상품 재고를 증가시킵니다.
+     * 비관적 락을 사용하여 동시성 문제를 방지합니다.
      *
      * @param command 상품 재고 증가 명령
      * @return 갱신된 상품

@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.infrastructure.product
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
@@ -14,20 +15,44 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "products")
 data class ProductJpaEntity(
+    /**
+     * 상품 ID
+     */
     @Id
+    @Column(name = "product_id")
     val productId: String,
     
+    /**
+     * 상품명
+     */
+    @Column(name = "name")
     val name: String,
     
+    /**
+     * 상품 가격
+     */
+    @Column(name = "price")
     val price: Long,
     
+    /**
+     * 상품 재고
+     */
+    @Column(name = "stock")
     val stock: Long,
     
+    /**
+     * 생성 일시
+     */
     @CreationTimestamp
-    val createdAt: LocalDateTime,
+    @Column(name = "created_at", updatable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
     
+    /**
+     * 수정 일시
+     */
     @UpdateTimestamp
-    val updatedAt: LocalDateTime
+    @Column(name = "updated_at")
+    val updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
     /**
      * 엔티티 객체로부터 도메인 객체를 생성

@@ -35,6 +35,15 @@ class CouponEventRepositoryImpl(
     }
 
     /**
+     * 주어진 id의 쿠폰 이벤트를 비관적 락과 함께 조회
+     */
+    @Transactional
+    override fun findByIdWithLock(id: String): CouponEvent? {
+        val entity = couponEventJpaRepository.findByIdWithLock(id)
+        return entity?.toDomain()
+    }
+
+    /**
      * 모든 쿠폰 이벤트를 조회
      */
     @Transactional(readOnly = true)

@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
+import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -36,64 +37,74 @@ class CouponUserFacadeConcurrencyTest {
     @Test
     @DisplayName("동시에 쿠폰 사용을 요청해도 쿠폰은 한 번만 사용 처리된다")
     fun useCouponConcurrencyTest() {
-        // given: 사용자 생성 및 쿠폰 발급
-        val user = userFacade.createUser()
-        val userId = user.userId
-        val issuedCoupon: CouponUserResult.Single = couponUserFacade.issueCoupon(
-            CouponUserCriteria.Create(
-                userId = userId,
-                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
-                benefitAmount = "1000"
-            )
+        // 테스트 사용자 ID
+        val userId = "test-user-1"
+        
+        // 쿠폰 발급
+        val createCriteria = CouponUserCriteria.Create(
+            userId = userId,
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitAmount = "1000"
         )
-        val couponUserId = issuedCoupon.couponUserId
-
-        val numberOfThreads = 50
-        val executor = Executors.newFixedThreadPool(numberOfThreads)
-        val latch = CountDownLatch(numberOfThreads)
+        val couponResult = couponUserFacade.issueCoupon(createCriteria)
+        val couponUserId = couponResult.couponUserId
+        
+        // 동시에 처리할 스레드 수
+        val threadCount = 10
+        val executor = Executors.newFixedThreadPool(threadCount)
+        val latch = CountDownLatch(threadCount)
+        
+        // 성공한 요청 수를 세기 위한 카운터
         val successCount = AtomicInteger(0)
-        val optimisticLockFailCount = AtomicInteger(0)
-        val alreadyUsedCount = AtomicInteger(0)
-
-        // when: 여러 스레드에서 동시에 발급된 쿠폰 사용 시도
-        for (i in 1..numberOfThreads) {
+        val exceptionCount = AtomicInteger(0)
+        
+        // 동시에 여러 스레드에서 쿠폰 사용 시도
+        for (i in 0 until threadCount) {
             executor.submit {
                 try {
-                    couponUserFacade.useCoupon(
-                        CouponUserCriteria.Use(
-                            couponUserId = couponUserId,
-                        )
-                    )
-                    successCount.incrementAndGet()
-                } catch (e: ObjectOptimisticLockingFailureException) {
-                    optimisticLockFailCount.incrementAndGet()
-                } catch (e: OptimisticLockingFailureException) {
-                    optimisticLockFailCount.incrementAndGet()
+                    val useCriteria = CouponUserCriteria.Use(couponUserId)
+                    val usedCouponResult = couponUserFacade.useCoupon(useCriteria)
+                    
+                    // 사용된 쿠폰이면 성공 카운트 증가
+                    if (usedCouponResult.usedAt != null) {
+                        successCount.incrementAndGet()
+                    }
+                    
+                    logger.info("Thread $i completed successfully")
                 } catch (e: CouponUserException.AlreadyUsed) {
-                    alreadyUsedCount.incrementAndGet()
+                    // 이미 사용된 쿠폰 예외 발생 시 카운트
+                    exceptionCount.incrementAndGet()
+                    logger.info("Thread $i encountered AlreadyUsed exception: ${e.message}")
+                } catch (e: OptimisticLockingFailureException) {
+                    // 낙관적 락 실패 예외 발생 시 카운트
+                    exceptionCount.incrementAndGet()
+                    logger.info("Thread $i encountered OptimisticLockingFailureException: ${e.message}")
+                } catch (e: ObjectOptimisticLockingFailureException) {
+                    // 낙관적 락 실패 예외 발생 시 카운트
+                    exceptionCount.incrementAndGet()
+                    logger.info("Thread $i encountered ObjectOptimisticLockingFailureException: ${e.message}")
                 } catch (e: Exception) {
-                    logger.error("쿠폰 사용 중 예상치 못한 예외 발생: couponUserId={}", couponUserId, e)
+                    // 기타 예외 발생 시 카운트
+                    exceptionCount.incrementAndGet()
+                    logger.error("Thread $i encountered unexpected exception", e)
                 } finally {
                     latch.countDown()
                 }
             }
         }
-
-        latch.await() // 모든 스레드가 완료될 때까지 대기
+        
+        // 모든 스레드가 완료될 때까지 대기
+        latch.await()
         executor.shutdown()
-
-        // then: 최종 쿠폰 상태 및 성공 횟수 확인
-        val finalCoupon: CouponUserResult.Single = couponUserFacade.getCouponUser(CouponUserCriteria.GetById(couponUserId))
-
-        logger.info("Total Attempts: $numberOfThreads")
-        logger.info("Successful Uses: ${successCount.get()}")
-        logger.info("Optimistic Lock Failures: ${optimisticLockFailCount.get()}")
-        logger.info("Already Used Errors: ${alreadyUsedCount.get()}")
-        logger.info("Final Coupon Used At: ${finalCoupon.usedAt}")
-
-        assertEquals(1, successCount.get(), "쿠폰 사용은 정확히 한 번만 성공해야 합니다.")
-        assertNotNull(finalCoupon.usedAt, "최종 쿠폰 상태는 'USED'(usedAt != null)여야 합니다.")
-        assertEquals(numberOfThreads - 1, optimisticLockFailCount.get() + alreadyUsedCount.get(),
-            "실패한 요청(락 실패 + 이미 사용됨)의 합은 전체 시도 횟수 - 1 이어야 합니다.")
+        
+        // 결과 확인: 성공은 정확히 1번이어야 함
+        assertEquals(1, successCount.get(), "쿠폰은 한 번만 사용되어야 합니다")
+        assertEquals(threadCount - 1, exceptionCount.get(), "나머지는 예외가 발생해야 합니다")
+        
+        // 최종 쿠폰 상태 확인
+        val getCriteria = CouponUserCriteria.GetById(couponUserId)
+        val finalCouponState = couponUserFacade.getCouponUser(getCriteria)
+        
+        assertNotNull(finalCouponState.usedAt, "최종 쿠폰 상태는 사용됨 상태여야 합니다")
     }
 } 

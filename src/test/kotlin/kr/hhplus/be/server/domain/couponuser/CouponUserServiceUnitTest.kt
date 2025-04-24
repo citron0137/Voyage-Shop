@@ -1,16 +1,16 @@
 package kr.hhplus.be.server.domain.coupon
 
 import kr.hhplus.be.server.domain.couponuser.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.any
+import org.mockito.kotlin.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -41,7 +41,7 @@ class CouponUserServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponUserRepository.create(any<CouponUser>())).thenReturn(expectedCouponUser)
+        `when`(couponUserRepository.create(argThat { this.userId == command.userId })).thenReturn(expectedCouponUser)
 
         // when
         val result = couponUserService.create(command)
@@ -69,8 +69,9 @@ class CouponUserServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
-        `when`(couponUserRepository.update(any<CouponUser>())).thenReturn(couponUser)
+        `when`(couponUserRepository.findByIdWithLock(couponUserId)).thenReturn(couponUser)
+        `when`(couponUserRepository.update(argThat { this.couponUserId == couponUserId && this.usedAt != null }))
+            .thenReturn(couponUser.use())
 
         // when
         val result = couponUserService.useCoupon(command)
@@ -97,7 +98,7 @@ class CouponUserServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
+        `when`(couponUserRepository.findByIdWithLock(couponUserId)).thenReturn(couponUser)
 
         // when & then
         assertThrows<CouponUserException.AlreadyUsed> {
@@ -111,7 +112,7 @@ class CouponUserServiceUnitTest {
         // given
         val couponUserId = UUID.randomUUID().toString()
         val command = CouponUserCommand.Use(couponUserId = couponUserId)
-        `when`(couponUserRepository.findById(couponUserId)).thenReturn(null)
+        `when`(couponUserRepository.findByIdWithLock(couponUserId)).thenReturn(null)
 
         // when & then
         assertThrows<CouponUserException.NotFound> {
@@ -194,6 +195,116 @@ class CouponUserServiceUnitTest {
         val command = CouponUserCommand.GetById(couponUserId)
         assertThrows<CouponUserException.NotFound> {
             couponUserService.getCouponUser(command)
+        }
+    }
+    
+    @Test
+    @DisplayName("모든 쿠폰 사용자 정보를 조회할 수 있다")
+    fun `모든 쿠폰 사용자 정보를 조회할 수 있다`() {
+        // given
+        val command = CouponUserCommand.GetAll()
+        val couponUsers = listOf(
+            CouponUser(
+                couponUserId = UUID.randomUUID().toString(),
+                userId = "user-id-1",
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+                benefitAmount = "1000",
+                usedAt = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            ),
+            CouponUser(
+                couponUserId = UUID.randomUUID().toString(),
+                userId = "user-id-2",
+                benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
+                benefitAmount = "10",
+                usedAt = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
+        )
+        `when`(couponUserRepository.findAll()).thenReturn(couponUsers)
+
+        // when
+        val result = couponUserService.getAllCouponUsers(command)
+
+        // then
+        assertEquals(2, result.size)
+        assertEquals(couponUsers[0].couponUserId, result[0].couponUserId)
+        assertEquals(couponUsers[1].couponUserId, result[1].couponUserId)
+    }
+    
+    @Test
+    @DisplayName("쿠폰으로 할인 금액을 계산할 수 있다 - 고정 금액 할인")
+    fun `쿠폰으로 할인 금액을 계산할 수 있다 - 고정 금액 할인`() {
+        // given
+        val couponUserId = UUID.randomUUID().toString()
+        val originalAmount = 10000L
+        val command = CouponUserCommand.CalculateDiscount(
+            couponUserId = couponUserId,
+            originalAmount = originalAmount
+        )
+        val couponUser = CouponUser(
+            couponUserId = couponUserId,
+            userId = "user-id",
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
+            benefitAmount = "1000",
+            usedAt = null,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
+        `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
+
+        // when
+        val discountAmount = couponUserService.calculateDiscountAmount(command)
+
+        // then
+        assertEquals(1000L, discountAmount)
+    }
+    
+    @Test
+    @DisplayName("쿠폰으로 할인 금액을 계산할 수 있다 - 퍼센트 할인")
+    fun `쿠폰으로 할인 금액을 계산할 수 있다 - 퍼센트 할인`() {
+        // given
+        val couponUserId = UUID.randomUUID().toString()
+        val originalAmount = 10000L
+        val command = CouponUserCommand.CalculateDiscount(
+            couponUserId = couponUserId,
+            originalAmount = originalAmount
+        )
+        val couponUser = CouponUser(
+            couponUserId = couponUserId,
+            userId = "user-id",
+            benefitMethod = CouponUserBenefitMethod.DISCOUNT_PERCENTAGE,
+            benefitAmount = "10",
+            usedAt = null,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
+        `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
+
+        // when
+        val discountAmount = couponUserService.calculateDiscountAmount(command)
+
+        // then
+        assertEquals(1000L, discountAmount) // 10000의 10%인 1000
+    }
+    
+    @Test
+    @DisplayName("존재하지 않는 쿠폰으로 할인 계산하면 예외가 발생한다")
+    fun `존재하지 않는 쿠폰으로 할인 계산하면 예외가 발생한다`() {
+        // given
+        val couponUserId = UUID.randomUUID().toString()
+        val originalAmount = 10000L
+        val command = CouponUserCommand.CalculateDiscount(
+            couponUserId = couponUserId,
+            originalAmount = originalAmount
+        )
+        `when`(couponUserRepository.findById(couponUserId)).thenReturn(null)
+
+        // when & then
+        assertThrows<CouponUserException.NotFound> {
+            couponUserService.calculateDiscountAmount(command)
         }
     }
 } 

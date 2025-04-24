@@ -33,6 +33,7 @@ class UserPointService(
      * @param query 사용자 ID로 포인트 조회 쿼리
      * @return 조회된 사용자 포인트(없으면 null)
      */
+    @Transactional(readOnly = true)
     fun getByUserId(query: UserPointQuery.GetByUserId): UserPoint {
         return this.userPointRepository.findByUserId(query.userId)
             ?: throw UserPointException.NotFound("userId(${query.userId})로 UserPoint를 찾을 수 없습니다.")
@@ -47,7 +48,7 @@ class UserPointService(
      * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
      * @throws UserPointException.PointAmountOverflow 충전 가능 최대치를 초과한 경우
      */
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     fun charge(command: UserPointCommand.Charge): UserPoint {
         val userPoint = userPointRepository.findByUserIdWithLock(userId = command.userId)
             ?: throw UserPointException.NotFound("userId(${command.userId})로 UserPoint를 찾을 수 없습니다.")
@@ -69,7 +70,7 @@ class UserPointService(
      * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
      * @throws UserPointException.PointAmountUnderflow 사용 가능한 포인트가 부족한 경우
      */
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional    
     fun use(command: UserPointCommand.Use): UserPoint {
         val userPoint = userPointRepository.findByUserIdWithLock(userId = command.userId)
             ?: throw UserPointException.NotFound("userId(${command.userId})로 UserPoint를 찾을 수 없습니다.")

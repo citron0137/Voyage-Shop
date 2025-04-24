@@ -7,8 +7,7 @@ CREATE TABLE IF NOT EXISTS orders (
     total_discount_amount BIGINT NOT NULL,
     final_amount BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_orders_user_id FOREIGN KEY (user_id) REFERENCES users(user_id)
+    updated_at TIMESTAMP NOT NULL
 );
 
 -- 주문 항목 테이블 생성
@@ -20,9 +19,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     unit_price BIGINT NOT NULL,
     total_price BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_order_items_order_id FOREIGN KEY (order_id) REFERENCES orders(order_id),
-    CONSTRAINT fk_order_items_product_id FOREIGN KEY (product_id) REFERENCES products(product_id)
+    updated_at TIMESTAMP NOT NULL
 );
 
 -- 주문 할인 테이블 생성
@@ -33,8 +30,7 @@ CREATE TABLE IF NOT EXISTS order_discounts (
     discount_id VARCHAR(255) NOT NULL,
     discount_amount BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_order_discounts_order_id FOREIGN KEY (order_id) REFERENCES orders(order_id)
+    updated_at TIMESTAMP NOT NULL
 );
 
 -- 인덱스 생성

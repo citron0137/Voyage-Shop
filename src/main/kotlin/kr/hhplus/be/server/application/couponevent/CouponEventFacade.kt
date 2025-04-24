@@ -1,10 +1,7 @@
 package kr.hhplus.be.server.application.couponevent
 
+import kr.hhplus.be.server.domain.couponevent.*
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
-import kr.hhplus.be.server.domain.couponevent.CouponEventException
-import kr.hhplus.be.server.domain.couponevent.CouponEventService
-import kr.hhplus.be.server.domain.couponevent.CouponEventQuery
-import kr.hhplus.be.server.domain.couponevent.CouponEventCommand
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,9 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class CouponEventFacade(
     private val couponEventService: CouponEventService,
-    private val couponUserService: CouponUserService
+    private val couponUserService: CouponUserService,
 ) {
-    
     /**
      * 쿠폰 이벤트를 생성합니다.
      * 
@@ -60,6 +56,7 @@ class CouponEventFacade(
 
     /**
      * 사용자에게 쿠폰을 발급합니다.
+     * 비관적 락을 사용하여 동시성 문제를 방지합니다.
      * 
      * @param criteria 쿠폰 발급 요청 기준
      * @return 발급된 쿠폰 정보
@@ -67,22 +64,17 @@ class CouponEventFacade(
      * @throws CouponEventException.OutOfStock 쿠폰 재고가 없는 경우
      * @throws kr.hhplus.be.server.domain.coupon.CouponUserException.AlreadyIssuedException 이미 발급된 쿠폰인 경우
      */
-    @Transactional
+    @Transactional()
     fun issueCouponUser(criteria: CouponEventCriteria.IssueCoupon): CouponEventResult.IssueCoupon {
-        // 1. 쿠폰 이벤트 조회 및 존재 여부 확인
-        val couponEvent = couponEventService.getCouponEvent(CouponEventQuery.GetById(criteria.couponEventId))
-        
-        // 2. 재고 확인 (이 시점에 재고 없으면 예외 발생)
-        couponEvent.validateCanIssue()
-        
-        // 3. 재고 감소 시도 (실패 시 예외 발생)
-        couponEventService.decreaseStock(CouponEventCommand.Issue(criteria.couponEventId))
-        
-        // 4. 쿠폰 유저 생성 (실제 CouponUserService 호출)
-        // Criteria에서 Command로 변환 (내부에서 BenefitMethod 변환도 수행)
-        val createCommand = criteria.toCommand(couponEvent.benefitMethod, couponEvent.benefitAmount)
-        
+        // 재고 감소 - 비관적 락으로 동시성 제어
+        val updatedCouponEvent = couponEventService.decreaseStock(CouponEventCommand.Issue(criteria.couponEventId))
+
+        // 쿠폰 유저 생성
+        val createCommand =
+                criteria.toCommand(updatedCouponEvent.benefitMethod, updatedCouponEvent.benefitAmount)
         val couponUser = couponUserService.create(createCommand)
+
         return CouponEventResult.IssueCoupon.from(couponUser)
     }
+
 } 
