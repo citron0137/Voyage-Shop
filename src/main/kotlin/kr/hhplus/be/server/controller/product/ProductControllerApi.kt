@@ -7,9 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.http.ResponseEntity
+import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
-
 /**
  * 상품 API
  * 상품 조회 및 관리 기능을 제공합니다.
@@ -40,7 +39,7 @@ interface ProductControllerApi {
         ]
     )
     @GetMapping
-    fun getAllProducts(): ResponseEntity<ProductResponse.List>
+    fun getAllProducts(): BaseResponse<ProductResponse.List>
 
     /**
      * 상품을 조회합니다.
@@ -63,8 +62,16 @@ interface ProductControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "404",
-                description = "상품을 찾을 수 없는 경우",
+                responseCode = "200",
+                description = "상품 ID가 빈 값인 경우 (PRODUCT_INVALID_ID)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "상품을 찾을 수 없는 경우 (PRODUCT_NOT_FOUND)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
@@ -76,7 +83,7 @@ interface ProductControllerApi {
     fun getProduct(
         @Parameter(description = "조회할 상품 ID", required = true)
         @PathVariable productId: String
-    ): ResponseEntity<ProductResponse.Single>
+    ): BaseResponse<ProductResponse.Single>
 
     /**
      * 상품을 생성합니다.
@@ -99,8 +106,32 @@ interface ProductControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "400",
-                description = "유효하지 않은 상품 정보",
+                responseCode = "200",
+                description = "상품명이 빈 값인 경우 (PRODUCT_INVALID_NAME)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "가격이 0 이하인 경우 (PRODUCT_INVALID_PRICE)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "재고가 0 미만인 경우 (PRODUCT_INVALID_STOCK)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "재고가 최대치를 초과하는 경우 (PRODUCT_STOCK_OVERFLOW)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
@@ -112,7 +143,7 @@ interface ProductControllerApi {
     fun createProduct(
         @Parameter(description = "상품 생성 요청 정보", required = true)
         @RequestBody request: ProductRequest.Create
-    ): ResponseEntity<ProductResponse.Single>
+    ): BaseResponse<ProductResponse.Single>
 
     /**
      * 상품 재고를 업데이트합니다.
@@ -136,16 +167,32 @@ interface ProductControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "404",
-                description = "상품을 찾을 수 없는 경우",
+                responseCode = "200",
+                description = "상품 ID가 빈 값인 경우 (PRODUCT_INVALID_ID)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
                 )]
             ),
             ApiResponse(
-                responseCode = "400",
-                description = "유효하지 않은 재고 값",
+                responseCode = "200",
+                description = "상품을 찾을 수 없는 경우 (PRODUCT_NOT_FOUND)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "재고가 0 미만인 경우 (PRODUCT_INVALID_STOCK)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "재고가 최대치를 초과하는 경우 (PRODUCT_STOCK_OVERFLOW)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
@@ -159,7 +206,7 @@ interface ProductControllerApi {
         @PathVariable productId: String,
         @Parameter(description = "재고 업데이트 요청 정보", required = true)
         @RequestBody request: ProductRequest.UpdateStock
-    ): ResponseEntity<ProductResponse.Single>
+    ): BaseResponse<ProductResponse.Single>
 
     /**
      * 상품 재고를 증가시킵니다.
@@ -183,16 +230,32 @@ interface ProductControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "404",
-                description = "상품을 찾을 수 없는 경우",
+                responseCode = "200",
+                description = "상품 ID가 빈 값인 경우 (PRODUCT_INVALID_ID)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
                 )]
             ),
             ApiResponse(
-                responseCode = "400",
-                description = "유효하지 않은 증가량",
+                responseCode = "200",
+                description = "상품을 찾을 수 없는 경우 (PRODUCT_NOT_FOUND)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "증가량이 0 이하인 경우 (PRODUCT_INVALID_INC_STOCK)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "증가 후 재고가 최대치를 초과하는 경우 (PRODUCT_STOCK_OVERFLOW)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
@@ -206,7 +269,7 @@ interface ProductControllerApi {
         @PathVariable productId: String,
         @Parameter(description = "재고 증가 요청 정보", required = true)
         @RequestBody request: ProductRequest.IncreaseStock
-    ): ResponseEntity<ProductResponse.Single>
+    ): BaseResponse<ProductResponse.Single>
 
     /**
      * 상품 재고를 감소시킵니다.
@@ -230,16 +293,32 @@ interface ProductControllerApi {
                 )]
             ),
             ApiResponse(
-                responseCode = "404",
-                description = "상품을 찾을 수 없는 경우",
+                responseCode = "200",
+                description = "상품 ID가 빈 값인 경우 (PRODUCT_INVALID_ID)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
                 )]
             ),
             ApiResponse(
-                responseCode = "400",
-                description = "유효하지 않은 감소량 또는 재고 부족",
+                responseCode = "200",
+                description = "상품을 찾을 수 없는 경우 (PRODUCT_NOT_FOUND)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "감소량이 0 이하인 경우 (PRODUCT_INVALID_DEC_STOCK)",
+                content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = Any::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "200",
+                description = "감소 후 재고가 0 미만인 경우 (PRODUCT_STOCK_UNDERFLOW)",
                 content = [Content(
                     mediaType = "application/json",
                     schema = Schema(implementation = Any::class)
@@ -253,5 +332,5 @@ interface ProductControllerApi {
         @PathVariable productId: String,
         @Parameter(description = "재고 감소 요청 정보", required = true)
         @RequestBody request: ProductRequest.DecreaseStock
-    ): ResponseEntity<ProductResponse.Single>
+    ): BaseResponse<ProductResponse.Single>
 } 

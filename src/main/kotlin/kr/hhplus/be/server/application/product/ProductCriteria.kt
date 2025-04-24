@@ -16,10 +16,6 @@ class ProductCriteria {
         fun toQuery(): ProductQuery.GetById {
             return ProductQuery.GetById(productId)
         }
-
-        init {
-            require(productId.isNotBlank()) { "상품 ID는 비어있을 수 없습니다." }
-        }
     }
 
     /**
@@ -46,12 +42,6 @@ class ProductCriteria {
                 stock = stock
             )
         }
-
-        init {
-            require(name.isNotBlank()) { "상품명은 비어있을 수 없습니다." }
-            require(price > 0) { "가격은 0보다 커야 합니다." }
-            require(stock >= 0) { "재고는 0 이상이어야 합니다." }
-        }
     }
 
     /**
@@ -66,11 +56,6 @@ class ProductCriteria {
                 productId = productId,
                 amount = stock
             )
-        }
-
-        init {
-            require(productId.isNotBlank()) { "상품 ID는 비어있을 수 없습니다." }
-            require(stock >= 0) { "재고는 0 이상이어야 합니다." }
         }
     }
 
@@ -87,11 +72,6 @@ class ProductCriteria {
                 amount = amount
             )
         }
-
-        init {
-            require(productId.isNotBlank()) { "상품 ID는 비어있을 수 없습니다." }
-            require(amount > 0) { "증가량은 0보다 커야 합니다." }
-        }
     }
 
     /**
@@ -106,11 +86,6 @@ class ProductCriteria {
                 productId = productId,
                 amount = amount
             )
-        }
-
-        init {
-            require(productId.isNotBlank()) { "상품 ID는 비어있을 수 없습니다." }
-            require(amount > 0) { "감소량은 0보다 커야 합니다." }
         }
     }
 } 
