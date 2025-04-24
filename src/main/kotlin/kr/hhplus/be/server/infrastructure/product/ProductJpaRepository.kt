@@ -7,10 +7,10 @@ import org.springframework.stereotype.Repository
 import jakarta.persistence.LockModeType
 
 /**
- * ProductEntity에 대한 Spring Data JPA 리포지토리 인터페이스
+ * ProductJpaEntity에 대한 Spring Data JPA 리포지토리 인터페이스
  */
 @Repository
-interface ProductJpaRepository : JpaRepository<ProductEntity, String> {
+interface ProductJpaRepository : JpaRepository<ProductJpaEntity, String> {
     /**
      * ID로 상품 정보를 조회하면서 동시성 제어를 위한 락을 획득합니다.
      * 
@@ -18,6 +18,6 @@ interface ProductJpaRepository : JpaRepository<ProductEntity, String> {
      * @return 해당 상품 정보 (락 획득)
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM ProductEntity p WHERE p.productId = :id")
-    fun findByIdWithLock(id: String): ProductEntity?
+    @Query("SELECT p FROM ProductJpaEntity p WHERE p.productId = :id")
+    fun findByIdWithLock(id: String): ProductJpaEntity?
 } 

@@ -48,6 +48,7 @@ class UserPointServiceUnitTest {
     fun `포인트 조회 테스트 - 존재하는 경우`() {
         // given
         val userId = "test-user-id"
+        val query = UserPointQuery.GetByUserId(userId)
         val expectedUserPoint = UserPoint(
             userPointId = "test-point-id",
             userId = userId,
@@ -57,7 +58,7 @@ class UserPointServiceUnitTest {
         `when`(userPointRepository.findByUserId(userId)).thenReturn(expectedUserPoint)
 
         // when
-        val result = userPointService.findByUserId(userId)
+        val result = userPointService.getByUserId(query)
 
         // then
         assertNotNull(result)
@@ -71,13 +72,14 @@ class UserPointServiceUnitTest {
     fun `포인트 조회 테스트 - 존재하지 않는 경우`() {
         // given
         val userId = "non-existent-user-id"
+        val query = UserPointQuery.GetByUserId(userId)
         `when`(userPointRepository.findByUserId(userId)).thenReturn(null)
 
         // when
-        val result = userPointService.findByUserId(userId)
-
         // then
-        assertNull(result)
+        assertThrows<UserPointException.NotFound> {
+            userPointService.getByUserId(query)
+        }
         verify(userPointRepository).findByUserId(userId)
     }
 
@@ -107,8 +109,8 @@ class UserPointServiceUnitTest {
         `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
         `when`(userPointRepository.save(any())).thenAnswer {
             val saved = it.arguments[0] as UserPoint
-            saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
-            saved
+            // 불변 객체이므로 직접 필드를 수정하는 대신 새 객체 생성
+            saved.copy(updatedAt = LocalDateTime.now())
         }
 
         // when
@@ -170,8 +172,8 @@ class UserPointServiceUnitTest {
         `when`(userPointRepository.findByUserIdWithLock(userId)).thenReturn(existingUserPoint)
         `when`(userPointRepository.save(any())).thenAnswer {
             val saved = it.arguments[0] as UserPoint
-            saved.updatedAt = LocalDateTime.now() // 저장 시 updatedAt 업데이트 시뮬레이션
-            saved
+            // 불변 객체이므로 직접 필드를 수정하는 대신 새 객체 생성
+            saved.copy(updatedAt = LocalDateTime.now())
         }
 
         // when

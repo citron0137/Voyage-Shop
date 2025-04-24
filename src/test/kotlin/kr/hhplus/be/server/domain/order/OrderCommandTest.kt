@@ -58,7 +58,7 @@ class OrderCommandTest {
         )
         val orderDiscounts = listOf(
             OrderDiscountCommand.Create(
-                discountType = DiscountType.COUPON,
+                orderDiscountType = OrderDiscountType.COUPON,
                 discountId = "coupon-1",
                 discountAmount = 500
             )
@@ -135,7 +135,7 @@ class OrderCommandTest {
         )
         val orderDiscounts = listOf(
             OrderDiscountCommand.Create(
-                discountType = DiscountType.COUPON,
+                orderDiscountType = OrderDiscountType.COUPON,
                 discountId = "coupon-1",
                 discountAmount = 1000
             )
@@ -146,48 +146,4 @@ class OrderCommandTest {
             OrderCommand.Create("test-user-id", "test-payment-id", orderItems, orderDiscounts)
         }
     }
-    
-    @Test
-    @DisplayName("GetById 커맨드를 정상적으로 생성할 수 있다")
-    fun `GetById 커맨드를 정상적으로 생성할 수 있다`() {
-        // given
-        val orderId = "test-order-id"
-        
-        // when
-        val command = OrderCommand.GetById(orderId)
-        
-        // then
-        assertEquals(orderId, command.orderId)
-    }
-    
-    @Test
-    @DisplayName("GetById 커맨드 생성 시 주문 ID가 비어있으면 예외가 발생한다")
-    fun `GetById 커맨드 생성 시 주문 ID가 비어있으면 예외가 발생한다`() {
-        // when & then
-        assertThrows<OrderException.OrderIdShouldNotBlank> {
-            OrderCommand.GetById("")
-        }
-    }
-    
-    @Test
-    @DisplayName("GetByUserId 커맨드를 정상적으로 생성할 수 있다")
-    fun `GetByUserId 커맨드를 정상적으로 생성할 수 있다`() {
-        // given
-        val userId = "test-user-id"
-        
-        // when
-        val command = OrderCommand.GetByUserId(userId)
-        
-        // then
-        assertEquals(userId, command.userId)
-    }
-    
-    @Test
-    @DisplayName("GetByUserId 커맨드 생성 시 사용자 ID가 비어있으면 예외가 발생한다")
-    fun `GetByUserId 커맨드 생성 시 사용자 ID가 비어있으면 예외가 발생한다`() {
-        // when & then
-        assertThrows<OrderException.UserIdShouldNotBlank> {
-            OrderCommand.GetByUserId("")
-        }
-    }
-} 
+}

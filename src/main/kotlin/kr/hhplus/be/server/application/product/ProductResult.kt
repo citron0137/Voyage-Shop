@@ -10,7 +10,7 @@ class ProductResult {
     /**
      * 단일 상품 정보 응답
      */
-    data class Product(
+    data class Single(
         val productId: String,
         val name: String,
         val price: Long,
@@ -20,10 +20,10 @@ class ProductResult {
     ) {
         companion object {
             /**
-             * 도메인 Product 객체를 ProductResult.Product DTO로 변환합니다.
+             * 도메인 Product 객체를 ProductResult.Single DTO로 변환합니다.
              */
-            fun from(product: kr.hhplus.be.server.domain.product.Product): Product {
-                return Product(
+            fun from(product: kr.hhplus.be.server.domain.product.Product): Single {
+                return Single(
                     productId = product.productId,
                     name = product.name,
                     price = product.price,
@@ -39,7 +39,7 @@ class ProductResult {
      * 상품 목록 응답
      */
     data class List(
-        val products: kotlin.collections.List<Product>
+        val products: kotlin.collections.List<Single>
     ) {
         companion object {
             /**
@@ -47,7 +47,7 @@ class ProductResult {
              */
             fun from(products: kotlin.collections.List<kr.hhplus.be.server.domain.product.Product>): List {
                 return List(
-                    products = products.map { Product.from(it) }
+                    products = products.map { Single.from(it) }
                 )
             }
         }

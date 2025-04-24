@@ -4,12 +4,12 @@ import kr.hhplus.be.server.shared.exception.AbstractDomainException
 
 sealed class UserException {
     class NotFound(message: String) : AbstractDomainException(
-        errorCode = "U_NOT_FOUND",
+        errorCode = "USER_NOT_FOUND",
         errorMessage = "user not found: $message"
     )
     
     class UserIdShouldNotBlank(message: String) : AbstractDomainException(
-        errorCode = "U_INVALID_ID",
+        errorCode = "USER_INVALID_ID",
         errorMessage = "User id should not blank: $message"
     )
 } 

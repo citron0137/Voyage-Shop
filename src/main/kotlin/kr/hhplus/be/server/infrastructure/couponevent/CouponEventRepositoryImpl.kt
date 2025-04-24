@@ -5,6 +5,7 @@ import kr.hhplus.be.server.domain.couponevent.CouponEventRepository
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 /**
  * CouponEventRepository 인터페이스의 JPA 구현체
@@ -19,9 +20,9 @@ class CouponEventRepositoryImpl(
      */
     @Transactional
     override fun create(couponEvent: CouponEvent): CouponEvent {
-        val entity = CouponEventEntity.of(couponEvent)
+        val entity = CouponEventJpaEntity.fromDomain(couponEvent)
         val savedEntity = couponEventJpaRepository.save(entity)
-        return CouponEventEntity.toDomain(savedEntity)
+        return savedEntity.toDomain()
     }
 
     /**
@@ -30,7 +31,7 @@ class CouponEventRepositoryImpl(
     @Transactional(readOnly = true)
     override fun findById(id: String): CouponEvent? {
         val entity = couponEventJpaRepository.findById(id).orElse(null)
-        return entity?.let { CouponEventEntity.toDomain(it) }
+        return entity?.toDomain()
     }
 
     /**
@@ -39,18 +40,16 @@ class CouponEventRepositoryImpl(
     @Transactional(readOnly = true)
     override fun findAll(): List<CouponEvent> {
         return couponEventJpaRepository.findAll()
-            .map { CouponEventEntity.toDomain(it) }
+            .map { it.toDomain() }
     }
 
     /**
-     * 쿠폰 이벤트의 수량을 감소
-     * 락을 획득한 상태에서 남은 수량을 1 감소시킴
+     * 주어진 쿠폰 이벤트를 저장
      */
     @Transactional
-    override fun decreaseStock(id: String): CouponEvent? {
-        val entity = couponEventJpaRepository.findByIdWithLock(id) ?: return null
-        entity.leftIssueAmount = entity.leftIssueAmount - 1
+    override fun save(couponEvent: CouponEvent): CouponEvent {
+        val entity = CouponEventJpaEntity.fromDomain(couponEvent)
         val savedEntity = couponEventJpaRepository.save(entity)
-        return CouponEventEntity.toDomain(savedEntity)
+        return savedEntity.toDomain()
     }
 } 

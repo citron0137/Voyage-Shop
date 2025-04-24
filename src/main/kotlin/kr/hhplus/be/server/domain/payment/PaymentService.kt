@@ -9,46 +9,11 @@ class PaymentService(
     private val repository: PaymentRepository
 ) {
     /**
-     * 결제 생성 명령을 처리합니다.
+     * 결제를 생성합니다.
      *
      * @param command 결제 생성 명령
      * @return 생성된 결제
      */
-    fun handle(command: PaymentCommand.Create): Payment {
-        return createPayment(command)
-    }
-    
-    /**
-     * 결제 ID로 조회 쿼리를 처리합니다.
-     *
-     * @param query 결제 ID로 조회 쿼리
-     * @return 조회된 결제
-     * @throws PaymentException.NotFound 결제를 찾을 수 없는 경우
-     */
-    fun handle(query: PaymentQuery.GetById): Payment {
-        return getPaymentById(query.paymentId)
-    }
-    
-    /**
-     * 사용자 ID로 결제 조회 쿼리를 처리합니다.
-     *
-     * @param query 사용자 ID로 결제 조회 쿼리
-     * @return 조회된 결제 목록
-     */
-    fun handle(query: PaymentQuery.GetByUserId): List<Payment> {
-        return getPaymentsByUserId(query.userId)
-    }
-    
-    /**
-     * 모든 결제 조회 쿼리를 처리합니다.
-     *
-     * @param query 모든 결제 조회 쿼리
-     * @return 모든 결제 목록
-     */
-    fun handle(query: PaymentQuery.GetAll): List<Payment> {
-        return getAllPayments()
-    }
-
     fun createPayment(command: PaymentCommand.Create): Payment {
         val paymentId = UUID.randomUUID().toString()
         val payment = Payment(
@@ -59,15 +24,33 @@ class PaymentService(
         return repository.create(payment)
     }
 
-    fun getPaymentById(paymentId: String): Payment {
-        return repository.findById(paymentId)
-            ?: throw PaymentException.NotFound("Payment with id: ${paymentId}")
+    /**
+     * 결제 ID로 결제를 조회합니다.
+     *
+     * @param query 결제 ID로 조회 쿼리
+     * @return 조회된 결제
+     * @throws PaymentException.NotFound 결제를 찾을 수 없는 경우
+     */
+    fun getPaymentById(query: PaymentQuery.GetById): Payment {
+        return repository.findById(query.paymentId)
+            ?: throw PaymentException.NotFound("Payment with id: ${query.paymentId}")
     }
-
-    fun getPaymentsByUserId(userId: String): List<Payment> {
-        return repository.findByUserId(userId)
+    
+    /**
+     * 사용자 ID로 결제를 조회합니다.
+     *
+     * @param query 사용자 ID로 결제 조회 쿼리
+     * @return 조회된 결제 목록
+     */
+    fun getPaymentsByUserId(query: PaymentQuery.GetByUserId): List<Payment> {
+        return repository.findByUserId(query.userId)
     }
-
+    
+    /**
+     * 모든 결제를 조회합니다.
+     *
+     * @return 모든 결제 목록
+     */
     fun getAllPayments(): List<Payment> {
         return repository.findAll()
     }

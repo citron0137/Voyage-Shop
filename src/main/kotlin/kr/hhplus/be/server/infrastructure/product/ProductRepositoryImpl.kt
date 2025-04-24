@@ -15,24 +15,24 @@ import org.springframework.transaction.annotation.Transactional
 class ProductRepositoryImpl(private val productJpaRepository: ProductJpaRepository) : ProductRepository {
     
     override fun create(product: Product): Product {
-        val productEntity = ProductEntity.from(product)
-        return productJpaRepository.save(productEntity).toProduct()
+        val productEntity = ProductJpaEntity.fromDomain(product)
+        return productJpaRepository.save(productEntity).toDomain()
     }
     
     override fun findById(productId: String): Product? {
-        return productJpaRepository.findByIdOrNull(productId)?.toProduct()
+        return productJpaRepository.findByIdOrNull(productId)?.toDomain()
     }
     
     override fun findByIdWithLock(id: String): Product? {
-        return productJpaRepository.findByIdWithLock(id)?.toProduct()
+        return productJpaRepository.findByIdWithLock(id)?.toDomain()
     }
     
     override fun findAll(): List<Product> {
-        return productJpaRepository.findAll().map { it.toProduct() }
+        return productJpaRepository.findAll().map { it.toDomain() }
     }
     
     override fun update(product: Product): Product {
-        val productEntity = ProductEntity.from(product)
-        return productJpaRepository.save(productEntity).toProduct()
+        val productEntity = ProductJpaEntity.fromDomain(product)
+        return productJpaRepository.save(productEntity).toDomain()
     }
 } 

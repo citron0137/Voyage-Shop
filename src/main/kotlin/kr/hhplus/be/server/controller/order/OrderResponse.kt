@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.controller.order
 
+import kr.hhplus.be.server.application.order.OrderDiscountResult
+import kr.hhplus.be.server.application.order.OrderItemResult
 import kr.hhplus.be.server.application.order.OrderResult
 import java.time.LocalDateTime
 
@@ -25,7 +27,7 @@ class OrderResponse {
             /**
              * OrderResult.Get DTO를 Order로 변환합니다.
              */
-            fun from(orderResult: OrderResult.Get): Order {
+            fun from(orderResult: OrderResult.Single): Order {
                 return Order(
                     id = orderResult.orderId,
                     userId = orderResult.userId,
@@ -43,7 +45,7 @@ class OrderResponse {
              * 하위 호환성을 위한 메서드
              */
             fun from(orderResult: OrderResult): Order {
-                return from(orderResult as OrderResult.Get)
+                return from(orderResult as OrderResult.Single)
             }
         }
     }
@@ -62,7 +64,7 @@ class OrderResponse {
             /**
              * OrderResult.OrderItem을 OrderItem으로 변환합니다.
              */
-            fun from(orderItemResult: OrderResult.OrderItem): OrderItem {
+            fun from(orderItemResult: OrderItemResult): OrderItem {
                 return OrderItem(
                     id = orderItemResult.orderItemId,
                     productId = orderItemResult.productId,
@@ -87,10 +89,10 @@ class OrderResponse {
             /**
              * OrderResult.OrderDiscount를 OrderDiscount로 변환합니다.
              */
-            fun from(orderDiscountResult: OrderResult.OrderDiscount): OrderDiscount {
+            fun from(orderDiscountResult: OrderDiscountResult): OrderDiscount {
                 return OrderDiscount(
                     id = orderDiscountResult.orderDiscountId,
-                    type = orderDiscountResult.discountType.name,
+                    type = orderDiscountResult.orderDiscountType.name,
                     discountId = orderDiscountResult.discountId,
                     amount = orderDiscountResult.discountAmount
                 )
@@ -108,7 +110,7 @@ class OrderResponse {
             /**
              * OrderResult.Orders를 OrderList로 변환합니다.
              */
-            fun from(orderListResult: OrderResult.Orders): OrderList {
+            fun from(orderListResult: OrderResult.List): OrderList {
                 return OrderList(
                     items = orderListResult.orders.map { Order.from(it) }
                 )
@@ -118,7 +120,7 @@ class OrderResponse {
              * 하위 호환성을 위한 메서드
              */
             fun from(orderListResult: OrderResult): OrderList {
-                return from(orderListResult as OrderResult.Orders)
+                return from(orderListResult as OrderResult.List)
             }
         }
     }

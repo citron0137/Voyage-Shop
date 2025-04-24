@@ -16,7 +16,7 @@ sealed class UserResponse {
         val updatedAt: LocalDateTime
     ) : UserResponse() {
         companion object {
-            fun from(result: UserResult.User): Single {
+            fun from(result: UserResult.Single): Single {
                 return Single(
                     id = result.userId,
                     createdAt = result.createdAt,

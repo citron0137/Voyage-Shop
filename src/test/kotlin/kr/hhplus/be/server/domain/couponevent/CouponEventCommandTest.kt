@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test
 
 class CouponEventCommandTest {
     @Test
-    @DisplayName("CreateCouponEventCommand가 CouponEvent 엔티티로, 변환된다")
-    fun `CreateCouponEventCommand가 CouponEvent 엔티티로 변환된다`() {
+    @DisplayName("CouponEventCommand.Create가 CouponEvent 엔티티로 변환된다")
+    fun `CouponEventCommand Create가 CouponEvent 엔티티로 변환된다`() {
         // given
-        val command = CreateCouponEventCommand(
-            benefitMethod = BenefitMethod.DISCOUNT_FIXED_AMOUNT,
+        val command = CouponEventCommand.Create(
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100
         )

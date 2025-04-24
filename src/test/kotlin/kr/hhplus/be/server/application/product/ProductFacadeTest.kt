@@ -1,9 +1,6 @@
 package kr.hhplus.be.server.application.product
 
-import kr.hhplus.be.server.domain.product.Product
-import kr.hhplus.be.server.domain.product.ProductCommand
-import kr.hhplus.be.server.domain.product.ProductException
-import kr.hhplus.be.server.domain.product.ProductService
+import kr.hhplus.be.server.domain.product.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -39,7 +36,7 @@ class ProductFacadeTest {
             stock = 100
         )
         
-        whenever(productService.getProduct(productId)).thenReturn(product)
+        whenever(productService.getProductById(ProductQuery.GetById(productId))).thenReturn(product)
         
         // when
         val result = productFacade.getProduct(criteria)
@@ -58,7 +55,7 @@ class ProductFacadeTest {
         val productId = "non-existing-id"
         val criteria = ProductCriteria.GetById(productId)
         
-        whenever(productService.getProduct(productId)).thenThrow(ProductException.NotFound("상품을 찾을 수 없습니다"))
+        whenever(productService.getProductById(ProductQuery.GetById(productId))).thenThrow(ProductException.NotFound("상품을 찾을 수 없습니다"))
         
         // when, then
         assertThrows<ProductException.NotFound> {
@@ -86,7 +83,7 @@ class ProductFacadeTest {
             )
         )
         
-        whenever(productService.getAllProducts()).thenReturn(products)
+        whenever(productService.getAllProducts(ProductQuery.GetAll)).thenReturn(products)
         
         // when
         val result = productFacade.getAllProducts(criteria)
@@ -142,7 +139,7 @@ class ProductFacadeTest {
             stock = newStock
         )
         
-        whenever(productService.updateStock(any<ProductCommand.UpdateStock>())).thenReturn(updatedProduct)
+        whenever(productService.updateProductStock(any<ProductCommand.UpdateStock>())).thenReturn(updatedProduct)
         
         // when
         val result = productFacade.updateStock(criteria)
@@ -169,7 +166,7 @@ class ProductFacadeTest {
             stock = expectedStock
         )
         
-        whenever(productService.increaseStock(any<ProductCommand.IncreaseStock>())).thenReturn(updatedProduct)
+        whenever(productService.increaseProductStock(any<ProductCommand.IncreaseStock>())).thenReturn(updatedProduct)
         
         // when
         val result = productFacade.increaseStock(criteria)
@@ -196,7 +193,7 @@ class ProductFacadeTest {
             stock = expectedStock
         )
         
-        whenever(productService.decreaseStock(any<ProductCommand.DecreaseStock>())).thenReturn(updatedProduct)
+        whenever(productService.decreaseProductStock(any<ProductCommand.DecreaseStock>())).thenReturn(updatedProduct)
         
         // when
         val result = productFacade.decreaseStock(criteria)

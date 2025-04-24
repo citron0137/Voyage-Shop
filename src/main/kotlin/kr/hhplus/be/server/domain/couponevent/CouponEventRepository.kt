@@ -9,5 +9,5 @@ interface CouponEventRepository {
     fun create(couponEvent: CouponEvent): CouponEvent
     fun findById(id: String): CouponEvent?
     fun findAll(): List<CouponEvent>
-    fun decreaseStock(id: String): CouponEvent?
+    fun save(couponEvent: CouponEvent): CouponEvent
 }

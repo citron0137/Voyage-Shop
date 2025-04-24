@@ -3,12 +3,11 @@ package kr.hhplus.be.server.integration.couponevent
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
 import kr.hhplus.be.server.application.couponevent.CouponEventFacade
-import kr.hhplus.be.server.domain.coupon.CouponBenefitMethod
-import kr.hhplus.be.server.domain.coupon.CouponUserService
-import kr.hhplus.be.server.domain.couponevent.BenefitMethod
-import kr.hhplus.be.server.domain.couponevent.CENotFoundException
-import kr.hhplus.be.server.domain.couponevent.CEOutOfStockException
+import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
+import kr.hhplus.be.server.domain.couponevent.CouponEventException
+import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.user.User
+import kr.hhplus.be.server.domain.user.UserCommand
 import kr.hhplus.be.server.domain.user.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -40,7 +39,7 @@ class CouponEventFacadeIntegrationTest {
     fun setUp() {
         // 테스트용 사용자 생성
         for (i in 1..5) {
-            val user = userService.createUser()
+            val user = userService.createUser(UserCommand.Create)
             testUsers.add(user)
         }
     }
@@ -51,7 +50,7 @@ class CouponEventFacadeIntegrationTest {
     fun createCouponEventTest() {
         // given
         val criteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000",
             totalIssueAmount = 100
         )
@@ -61,7 +60,7 @@ class CouponEventFacadeIntegrationTest {
 
         // then
         assertThat(result.id).isNotNull()
-        assertThat(result.benefitMethod).isEqualTo(BenefitMethod.DISCOUNT_FIXED_AMOUNT)
+        assertThat(result.benefitMethod).isEqualTo(CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT)
         assertThat(result.benefitAmount).isEqualTo("1000")
         assertThat(result.totalIssueAmount).isEqualTo(100)
         assertThat(result.leftIssueAmount).isEqualTo(100)
@@ -73,7 +72,7 @@ class CouponEventFacadeIntegrationTest {
     fun getCouponEventTest() {
         // given
         val createCriteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_PERCENTAGE",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
             benefitAmount = "10",
             totalIssueAmount = 50
         )
@@ -85,7 +84,7 @@ class CouponEventFacadeIntegrationTest {
         
         // then
         assertThat(result.id).isEqualTo(createdEvent.id)
-        assertThat(result.benefitMethod).isEqualTo(BenefitMethod.DISCOUNT_PERCENTAGE)
+        assertThat(result.benefitMethod).isEqualTo(CouponEventBenefitMethod.DISCOUNT_PERCENTAGE)
         assertThat(result.benefitAmount).isEqualTo("10")
     }
 
@@ -98,7 +97,7 @@ class CouponEventFacadeIntegrationTest {
         val getCriteria = CouponEventCriteria.GetById(notExistingId)
         
         // when & then
-        assertThrows<CENotFoundException> {
+        assertThrows<CouponEventException.NotFound> {
             couponEventFacade.getCouponEvent(getCriteria)
         }
     }
@@ -113,7 +112,7 @@ class CouponEventFacadeIntegrationTest {
         // 쿠폰 이벤트 2개 생성
         couponEventFacade.createCouponEvent(
             CouponEventCriteria.Create(
-                benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "2000",
                 totalIssueAmount = 30
             )
@@ -121,7 +120,7 @@ class CouponEventFacadeIntegrationTest {
         
         couponEventFacade.createCouponEvent(
             CouponEventCriteria.Create(
-                benefitMethod = "DISCOUNT_PERCENTAGE",
+                benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "20",
                 totalIssueAmount = 40
             )
@@ -140,7 +139,7 @@ class CouponEventFacadeIntegrationTest {
     fun issueCouponUserTest() {
         // given
         val createCriteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_FIXED_AMOUNT",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "3000",
             totalIssueAmount = 5
         )
@@ -169,7 +168,7 @@ class CouponEventFacadeIntegrationTest {
     fun issueCouponUserOutOfStockTest() {
         // given
         val createCriteria = CouponEventCriteria.Create(
-            benefitMethod = "DISCOUNT_PERCENTAGE",
+            benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
             benefitAmount = "15",
             totalIssueAmount = 1 // 재고를 1개만 설정
         )
@@ -187,7 +186,7 @@ class CouponEventFacadeIntegrationTest {
             couponEventId = createdEvent.id,
             userId = testUsers[2].userId
         )
-        assertThrows<CEOutOfStockException> {
+        assertThrows<CouponEventException.OutOfStock> {
             couponEventFacade.issueCouponUser(issueCriteria2)
         }
     }

@@ -10,14 +10,14 @@ class UserResult {
     /**
      * 단일 사용자 정보 응답
      */
-    data class User(
+    data class Single(
         val userId: String,
         val createdAt: LocalDateTime,
         val updatedAt: LocalDateTime
     ) {
         companion object {
-            fun from(user: kr.hhplus.be.server.domain.user.User): User {
-                return User(
+            fun from(user: User): Single {
+                return Single(
                     userId = user.userId,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt
@@ -30,12 +30,12 @@ class UserResult {
      * 사용자 목록 응답
      */
     data class List(
-        val users: kotlin.collections.List<User>
+        val users: kotlin.collections.List<Single>
     ) {
         companion object {
-            fun from(users: kotlin.collections.List<kr.hhplus.be.server.domain.user.User>): List {
+            fun from(users: kotlin.collections.List<User>): List {
                 return List(
-                    users = users.map { User.from(it) }
+                    users = users.map { Single.from(it) }
                 )
             }
         }
