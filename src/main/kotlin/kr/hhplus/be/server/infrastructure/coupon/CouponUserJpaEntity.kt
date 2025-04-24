@@ -3,6 +3,8 @@ package kr.hhplus.be.server.infrastructure.coupon
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import kr.hhplus.be.server.domain.couponuser.CouponUser
 import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import org.hibernate.annotations.CreationTimestamp
@@ -20,6 +22,7 @@ data class CouponUserJpaEntity(
 
     val userId: String,
 
+    @Enumerated(EnumType.STRING)
     val benefitMethod: CouponUserBenefitMethod,
 
     val benefitAmount: String,
