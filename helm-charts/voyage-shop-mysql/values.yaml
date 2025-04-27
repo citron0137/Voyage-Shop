@@ -1,0 +1,46 @@
+# Global configuration
+nameOverride: ""
+fullnameOverride: ""
+
+# MySQL configuration
+mysql:
+  enabled: true
+  name: mysql
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  port: 3306
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  persistence:
+    enabled: true
+    storageClass: standard
+    size: 1Gi
+    hostPath: "/run/desktop/mnt/host/c/tmp/mysqldata"
+  config:
+    MYSQL_DATABASE: hhplus
+    MYSQL_USER: voyage
+    MYSQL_ROOT_PASSWORD: password
+    MYSQL_PASSWORD: voyage_password
+
+# Environment-specific configuration
+environments:
+  dev:
+    mysql:
+      persistence:
+        hostPath: "/run/desktop/mnt/host/c/tmp/mysqldata-dev"
+  staging:
+    mysql:
+      persistence:
+        hostPath: "/run/desktop/mnt/host/c/tmp/mysqldata-staging"
+  prod:
+    mysql:
+      persistence:
+        hostPath: "/mnt/data/mysql"
+        size: 5Gi 

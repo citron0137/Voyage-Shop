@@ -37,3 +37,6 @@ out/
 .vscode/
 
 data
+
+# Helm charts
+helm-charts/*/charts/

@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "voyage-shop.fullname" . }}-app
+  labels:
+    {{- include "voyage-shop.labels" . | nindent 4 }}
+    app: {{ .Values.app.name }}
+spec:
+  replicas: {{ .Values.app.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "voyage-shop.selectorLabels" . | nindent 6 }}
+      app: {{ .Values.app.name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        {{- include "voyage-shop.selectorLabels" . | nindent 8 }}
+        app: {{ .Values.app.name }}
+    spec:
+      {{- with .Values.app.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.app.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.app.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Values.app.name }}
+        image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+        imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.app.port }}
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?characterEncoding=UTF-8&serverTimezone=UTC
+        - name: SPRING_DATASOURCE_USERNAME
+          value: {{ .Values.database.user }}
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: {{ .Values.database.password }}
+        resources:
+          {{- toYaml .Values.app.resources | nindent 10 }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.app.readinessProbe.path }}
+            port: {{ .Values.app.port }}
+          initialDelaySeconds: {{ .Values.app.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.app.readinessProbe.periodSeconds }}
+          failureThreshold: {{ .Values.app.readinessProbe.failureThreshold }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.app.livenessProbe.path }}
+            port: {{ .Values.app.port }}
+          initialDelaySeconds: {{ .Values.app.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.app.livenessProbe.periodSeconds }}
+          failureThreshold: {{ .Values.app.livenessProbe.failureThreshold }} 

@@ -1,0 +1,18 @@
+apiVersion: v2
+name: voyage-shop
+description: A Helm chart for Voyage Shop Application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - voyage-shop
+  - spring-boot
+  - mysql
+maintainers:
+  - name: Voyage Team
+    email: info@voyage.com
+dependencies:
+  - name: voyage-shop-mysql
+    version: 0.1.0
+    repository: "file://../voyage-shop-mysql"
+    condition: mysql.enabled 

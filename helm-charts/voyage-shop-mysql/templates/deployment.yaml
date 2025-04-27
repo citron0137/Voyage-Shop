@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.mysql.name }}
+  labels:
+    {{- include "voyage-shop-mysql.labels" . | nindent 4 }}
+    app: {{ .Values.mysql.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mysql.name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mysql.name }}
+    spec:
+      containers:
+      - image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+        name: {{ .Values.mysql.name }}
+        ports:
+        - containerPort: {{ .Values.mysql.port }}
+          name: mysql
+        envFrom:
+        - configMapRef:
+            name: {{ include "voyage-shop-mysql.fullname" . }}-config
+        - secretRef:
+            name: {{ include "voyage-shop-mysql.fullname" . }}-secret
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+        resources:
+          {{- toYaml .Values.mysql.resources | nindent 10 }}
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: {{ include "voyage-shop-mysql.fullname" . }}-pvc 

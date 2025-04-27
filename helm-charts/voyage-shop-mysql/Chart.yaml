@@ -1,0 +1,13 @@
+apiVersion: v2
+name: voyage-shop-mysql
+description: MySQL for Voyage Shop
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - mysql
+  - database
+  - voyage-shop
+maintainers:
+  - name: Voyage Team
+    email: team@voyage.com 

@@ -1,0 +1,71 @@
+# Global configuration
+nameOverride: ""
+fullnameOverride: ""
+
+# Application configuration
+app:
+  name: voyage-shop
+  replicaCount: 1
+  image:
+    repository: voyage-shop
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8080
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  livenessProbe:
+    path: /actuator/health
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 3
+  readinessProbe:
+    path: /actuator/health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: voyage-shop.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Database connection settings
+database:
+  host: mysql
+  port: 3306
+  user: voyage
+  name: hhplus
+  password: voyage_password
+
+# MySQL configuration
+mysql:
+  enabled: true
+  name: voyage-shop-mysql
+  port: 3306
+  config:
+    MYSQL_DATABASE: hhplus
+    MYSQL_USER: voyage
+  
+# Environment-specific configuration
+environments:
+  dev:
+    app:
+      replicaCount: 1 

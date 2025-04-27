@@ -90,11 +90,18 @@ docker compose -f docker-compose.yml -f docker-compose.app.yml up -d
 # 도커 이미지 빌드
 docker build -t voyage-shop:latest .
 
-# 쿠버네티스에 배포
+# Helm 차트를 사용한 배포
+# 1. MySQL 배포
+helm install voyage-shop-mysql helm-charts/voyage-shop-mysql --values helm-charts/voyage-shop-mysql/values-dev.yaml
+
+# 2. Voyage Shop 애플리케이션 배포
+helm install voyage-shop helm-charts/voyage-shop --values helm-charts/voyage-shop/values-dev.yaml --set database.host=mysql
+
+# 또는 기존 kubectl 방식으로 배포
 kubectl apply -k k8s/
 ```
 
-> 자세한 Kubernetes 설정은 [k8s/README.md](./k8s/README.md)를 참조하세요.
+> Helm 차트를 통해 애플리케이션과 데이터베이스를 더 쉽게 배포하고 관리할 수 있습니다. 자세한 Kubernetes 및 Helm 설정은 [k8s/README.md](./k8s/README.md)와 [helm-charts/README.md](./helm-charts/README.md)를 참조하세요.
 
 #### 방법 C: 로컬 환경에서 직접 실행
 
