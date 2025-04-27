@@ -8,16 +8,36 @@
 ## 📑 목차
 
 - [소개](#소개)
+- [프로젝트 문서](#프로젝트-문서)
 - [기술 스택](#기술-스택)
 - [시작하기](#시작하기)
 - [프로젝트 구조](#프로젝트-구조)
 - [테스트](#테스트)
-- [성능 최적화 가이드](#성능-최적화-가이드)
-- [프로젝트 문서](#프로젝트-문서)
+- [모니터링](#모니터링)
+- [성능 최적화](#성능-최적화)
 
 ## 📌 소개
 
 **Voyage Shop**은 온라인 쇼핑몰 백엔드 서비스입니다. 제품 관리, 주문 처리, 사용자 관리, 쿠폰 및 포인트 시스템을 포함하고 있습니다.
+
+## 📋 프로젝트 문서
+
+프로젝트에 대한 상세 문서는 다음 카테고리로 구분됩니다.
+
+### ✅ 요구사항 문서 (Requirements)
+
+비즈니스 요구사항과 기능 명세를 담고 있습니다:
+
+- [기능 요구사항](./docs/requirements/01-functional-requirements.md) - 주요 기능 목록
+- [도메인 요구사항](./docs/requirements/02-domain-requirements.md) - 도메인 규칙 및 제약조건
+- [비기능 요구사항](./docs/requirements/03-non-functional-requirements.md) - 성능, 보안 등 품질 요구사항
+
+### 📐 설계 문서 (Design)
+
+시스템 설계와 아키텍처에 관한 문서입니다:
+
+- [시퀀스 다이어그램](./docs/design/sequence-diagram.md) - 주요 기능 흐름도
+- [데이터베이스 설계](./docs/design/database-design.md) - DB 스키마 및 테이블 구조
 
 ## 🛠 기술 스택
 
@@ -45,7 +65,7 @@ Voyage Shop은 다음 기술 스택을 사용하여 개발되었습니다.
 1. **저장소 클론**
 
    ```bash
-   git clone https://github.com/your-username/voyage-shop.git
+   git clone https://github.com/citron0137/voyage-shop.git
    cd voyage-shop
    ```
 
@@ -66,7 +86,7 @@ Voyage Shop은 다음 기술 스택을 사용하여 개발되었습니다.
 프로젝트는 레이어드 아키텍처 패턴을 따릅니다. 주요 패키지 구조는 다음과 같습니다:
 
 ```
-src/
+src/main/kotlin/kr/hhplus/be/server/
   ├── controller/     # API 엔드포인트 및 요청 처리
   ├── application/    # 비즈니스 유스케이스 구현
   ├── domain/         # 핵심 비즈니스 로직 및 규칙
@@ -74,6 +94,14 @@ src/
 ```
 
 자세한 설계 원칙과 규약은 [프로젝트 컨벤션](./docs/conventions/01.common-conventions.md) 문서를 참조하세요.
+
+### 📏 개발 규약 (Conventions)
+
+개발 과정에서 준수해야 할 규칙과 패턴을 정의합니다:
+
+- [프로젝트 컨벤션 개요](./docs/conventions/01.common-conventions.md) - 전체 컨벤션 요약 및 링크
+- [레이어드 아키텍처](./docs/conventions/03.layered-architecture.md) - 아키텍처 선택 이유 및 구조
+- [도메인 레이어 규약](./docs/conventions/07.domain-layer.md) - 핵심 비즈니스 로직 작성 규칙
 
 ## 🧪 테스트
 
@@ -103,41 +131,22 @@ src/
 ./gradlew test --tests "kr.hhplus.be.server.api.*"
 ```
 
-## ⚡️ 성능 최적화 가이드
+## 📊 모니터링
+
+시스템 성능과 안정성을 모니터링하기 위한 방법을 설명합니다.
+
+- [조회 성능 모니터링 구축 방안](docs/monitoring/06-performance-monitoring.md)
+
+## ⚡️ 성능 최적화
 
 현재 문서들은 데이터 조회 성능 최적화에 중점을 두고 있습니다. 대규모 데이터셋에서 효율적인 데이터 검색 및 조회 방법을 다루고 있으며, 향후 쓰기 성능 및 트랜잭션 처리 최적화에 대한 가이드가 추가될 예정입니다.
 
+### 성능 개선 방안
 - [성능 이슈 분석 개요](docs/performance/01-performance-issues.md)
 - [주문 아이템 순위 조회 성능 개선 방안](docs/performance/02-order-rank-performance-solution.md)
 - [주문 목록 조회 성능 개선 방안](docs/performance/03-order-list-performance-solution.md)
 - [쿠폰 사용자 및 상품 조회 성능 개선 방안](docs/performance/04-coupon-user-product-performance-solution.md)
 - [락(Lock)을 사용하는 조회 기능 성능 개선 방안](docs/performance/05-lock-performance-solution.md)
-- [조회 성능 모니터링 구축 방안](docs/performance/06-performance-monitoring.md)
+
+### 성능 테스트
 - [부하 테스트 방안](docs/performance/07-load-testing.md)
-
-## 📋 프로젝트 문서
-
-프로젝트에 대한 상세 문서는 다음 카테고리로 구분됩니다.
-
-### ✅ 요구사항 문서 (Requirements)
-
-비즈니스 요구사항과 기능 명세를 담고 있습니다:
-
-- [기능 요구사항](./docs/requirements/01-functional-requirements.md) - 주요 기능 목록
-- [도메인 요구사항](./docs/requirements/02-domain-requirements.md) - 도메인 규칙 및 제약조건
-- [비기능 요구사항](./docs/requirements/03-non-functional-requirements.md) - 성능, 보안 등 품질 요구사항
-
-### 📐 설계 문서 (Design)
-
-시스템 설계와 아키텍처에 관한 문서입니다:
-
-- [시퀀스 다이어그램](./docs/design/sequence-diagram.md) - 주요 기능 흐름도
-- [데이터베이스 설계](./docs/design/database-design.md) - DB 스키마 및 테이블 구조
-
-### 📏 개발 규약 (Conventions)
-
-개발 과정에서 준수해야 할 규칙과 패턴을 정의합니다:
-
-- [프로젝트 컨벤션 개요](./docs/conventions/01.common-conventions.md) - 전체 컨벤션 요약 및 링크
-- [레이어드 아키텍처](./docs/conventions/03.layered-architecture.md) - 아키텍처 선택 이유 및 구조
-- [도메인 레이어 규약](./docs/conventions/07.domain-layer.md) - 핵심 비즈니스 로직 작성 규칙
