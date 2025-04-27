@@ -71,7 +71,7 @@ Voyage Shop은 다음 기술 스택을 사용하여 개발되었습니다.
 
 ```bash
 # MySQL과 애플리케이션 모두 실행
-docker-compose -f docker-compose.yml -f docker-compose.app.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.app.yml up -d
 ```
 
 필요한 경우 특정 버전을 지정할 수도 있습니다:
@@ -79,7 +79,7 @@ docker-compose -f docker-compose.yml -f docker-compose.app.yml up -d
 ```bash
 # Git 커밋 해시를 버전으로 사용하는 예
 docker build -t voyage-shop-app --build-arg VERSION=$(git rev-parse --short HEAD) .
-docker-compose -f docker-compose.yml -f docker-compose.app.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.app.yml up -d
 ```
 
 #### 방법 B: Kubernetes 사용
@@ -102,7 +102,7 @@ kubectl apply -k k8s/
 
 ```bash
 # MySQL만 도커로 실행
-docker-compose up -d
+docker compose up -d
 
 # 애플리케이션 실행
 ./gradlew bootRun
