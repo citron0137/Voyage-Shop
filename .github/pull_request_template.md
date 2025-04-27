@@ -1,15 +1,11 @@
 <!--
-  제목은 [유형] 내용 형식으로 작성해 주세요
-  
-  유형 예시:
-  - [STEP-n] : 과제 진행 단계 (예: [STEP-1] 회원 도메인 개발)
-  - [FEAT] : 새로운 기능 추가 (예: [FEAT] 상품 검색 기능 구현)
-  - [FIX] : 버그 수정 (예: [FIX] 주문 처리 중 발생하는 NPE 수정)
-  - [REFACTOR] : 코드 리팩토링 (예: [REFACTOR] 주문 서비스 로직 개선)
-  - [PERF] : 성능 개선 (예: [PERF] 상품 목록 조회 쿼리 최적화)
-  - [TEST] : 테스트 추가/수정 (예: [TEST] 쿠폰 적용 테스트 케이스 추가)
-  - [DOCS] : 문서 추가/수정 (예: [DOCS] API 문서 업데이트)
-  - [CHORE] : 빌드, 설정 파일 등 변경 (예: [CHORE] 프로젝트 의존성 업데이트)
+PR 유형을 선택하려면 URL에 다음과 같이 추가해주세요:
+- 기능 개발: ?template=feature.md
+- 버그 수정: ?template=bugfix.md
+- 리팩토링: ?template=refactor.md
+- 문서 업데이트: ?template=docs.md
+
+예시: https://github.com/citron0137/voyage-shop/compare/main...feature/abc?template=feature.md
 -->
 
 ## 🔗 관련 이슈
