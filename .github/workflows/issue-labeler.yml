@@ -1,0 +1,371 @@
+name: Issue Labeler
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  apply-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply Labels
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body;
+            
+            // 공통 함수: 드롭다운 값 추출
+            const getDropdownValue = (body, label) => {
+              const regex = new RegExp(`### ${label}\\s*\\n\\s*([^\\n]+)`, 'i');
+              const match = body.match(regex);
+              return match ? match[1].trim() : null;
+            };
+            
+            // 공통 함수: 체크박스 값 추출
+            const getSelectedCheckboxes = (body, section) => {
+              const regex = new RegExp(`### ${section}[\\s\\S]*?\\n((?:- \\[[xX]\\] .*\\n)*)`, 'i');
+              const match = body.match(regex);
+              if (!match || !match[1]) return [];
+              
+              const checkboxLines = match[1].split('\n').filter(line => line.trim());
+              return checkboxLines
+                .filter(line => line.match(/- \[[xX]\]/))
+                .map(line => {
+                  const labelMatch = line.match(/- \[[xX]\] (.*)/);
+                  return labelMatch ? labelMatch[1].trim() : null;
+                })
+                .filter(Boolean);
+            };
+            
+            // 1. 기술적 개선 이슈 처리
+            if (body.includes('📝 개선 유형')) {
+              // 우선순위 라벨 처리
+              const existingLabels = issue.labels.map(label => label.name);
+              const priorityLabels = existingLabels.filter(label => label.startsWith('priority:'));
+              
+              if (priorityLabels.length > 0) {
+                for (const label of priorityLabels) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: label
+                  });
+                }
+              }
+              
+              // 우선순위 드롭다운 값 찾기
+              const priorityValue = getDropdownValue(body, '🏷️ 우선순위');
+              
+              if (priorityValue) {
+                let priorityLabel = '';
+                
+                if (priorityValue.startsWith('높음')) {
+                  priorityLabel = 'priority:high';
+                } else if (priorityValue.startsWith('중간')) {
+                  priorityLabel = 'priority:medium';
+                } else if (priorityValue.startsWith('낮음')) {
+                  priorityLabel = 'priority:low';
+                } else if (priorityValue.startsWith('백로그')) {
+                  priorityLabel = 'priority:backlog';
+                }
+                
+                if (priorityLabel) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: [priorityLabel]
+                  });
+                  
+                  console.log(`Applied priority label: ${priorityLabel}`);
+                }
+              }
+              
+              // 개선 유형 라벨 처리
+              const typeLabels = existingLabels.filter(label => label.startsWith('type:'));
+              
+              if (typeLabels.length > 0) {
+                for (const label of typeLabels) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: label
+                  });
+                }
+              }
+              
+              // 개선 유형 체크박스 가져오기
+              const selectedTypes = getSelectedCheckboxes(body, '📝 개선 유형');
+              
+              if (selectedTypes.length > 0) {
+                const newLabels = [];
+                
+                // 선택된 각 유형에 대한 라벨 매핑
+                const typeMap = {
+                  '코드 리팩토링': 'type:refactoring',
+                  '아키텍처 개선': 'type:architecture',
+                  '성능 최적화': 'type:performance',
+                  '기술 부채 해소': 'type:tech-debt',
+                  '데이터베이스 최적화': 'type:database',
+                  '보안 강화': 'type:security',
+                  '테스트 개선': 'type:testing',
+                  '로깅/모니터링 개선': 'type:logging',
+                  'CI/CD 파이프라인 개선': 'type:ci-cd',
+                  '기타': 'type:other'
+                };
+                
+                // 선택된 유형들에 대한 라벨 추가
+                for (const type of selectedTypes) {
+                  // 정확한 매칭을 위해 type과 객체 키 비교
+                  Object.keys(typeMap).forEach(key => {
+                    if (type.includes(key)) {
+                      newLabels.push(typeMap[key]);
+                    }
+                  });
+                }
+                
+                // 새 라벨 적용
+                if (newLabels.length > 0) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: newLabels
+                  });
+                  
+                  console.log(`Applied type labels: ${newLabels.join(', ')}`);
+                }
+              }
+            }
+            
+            // 2. 기능 요청 이슈 처리
+            if (body.includes('📝 기능 요약') && body.includes('🔍 기능 유형')) {
+              // 우선순위 라벨 처리
+              const existingLabels = issue.labels.map(label => label.name);
+              const priorityLabels = existingLabels.filter(label => label.startsWith('priority:'));
+              
+              if (priorityLabels.length > 0) {
+                for (const label of priorityLabels) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: label
+                  });
+                }
+              }
+              
+              // 우선순위 드롭다운 값 찾기
+              const priorityValue = getDropdownValue(body, '🏷️ 우선순위');
+              
+              if (priorityValue) {
+                let priorityLabel = '';
+                
+                if (priorityValue.startsWith('높음')) {
+                  priorityLabel = 'priority:high';
+                } else if (priorityValue.startsWith('중간')) {
+                  priorityLabel = 'priority:medium';
+                } else if (priorityValue.startsWith('낮음')) {
+                  priorityLabel = 'priority:low';
+                } else if (priorityValue.startsWith('아이디어')) {
+                  priorityLabel = 'priority:idea';
+                }
+                
+                if (priorityLabel) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: [priorityLabel]
+                  });
+                  
+                  console.log(`Applied priority label: ${priorityLabel}`);
+                }
+              }
+              
+              // 기능 유형 라벨 처리
+              const featureLabels = existingLabels.filter(label => label.startsWith('feature:'));
+              
+              if (featureLabels.length > 0) {
+                for (const label of featureLabels) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: label
+                  });
+                }
+              }
+              
+              // 기능 유형 체크박스 가져오기
+              const selectedTypes = getSelectedCheckboxes(body, '🔍 기능 유형');
+              
+              if (selectedTypes.length > 0) {
+                const newLabels = [];
+                
+                // 선택된 각 유형에 대한 라벨 매핑
+                const featureMap = {
+                  '신규 엔드포인트': 'feature:new-endpoint',
+                  '기존 엔드포인트 개선': 'feature:endpoint-enhancement',
+                  '데이터 모델 변경': 'feature:data-model',
+                  '비즈니스 로직 개선': 'feature:business-logic',
+                  '성능 개선': 'feature:performance',
+                  '보안 강화': 'feature:security',
+                  'API 문서 개선': 'feature:docs',
+                  '기타': 'feature:other'
+                };
+                
+                // 선택된 유형들에 대한 라벨 추가
+                for (const type of selectedTypes) {
+                  Object.keys(featureMap).forEach(key => {
+                    if (type.includes(key)) {
+                      newLabels.push(featureMap[key]);
+                    }
+                  });
+                }
+                
+                // 새 라벨 적용
+                if (newLabels.length > 0) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: newLabels
+                  });
+                  
+                  console.log(`Applied feature type labels: ${newLabels.join(', ')}`);
+                }
+              }
+            }
+            
+            // 3. 버그 리포트 이슈 처리
+            if (body.includes('📝 버그 설명') && body.includes('🔍 버그 유형')) {
+              // 심각도 라벨 처리
+              const existingLabels = issue.labels.map(label => label.name);
+              const severityLabels = existingLabels.filter(label => label.startsWith('severity:'));
+              
+              if (severityLabels.length > 0) {
+                for (const label of severityLabels) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: label
+                  });
+                }
+              }
+              
+              // 심각도 드롭다운 값 찾기
+              const severityValue = getDropdownValue(body, '🏷️ 심각도');
+              
+              if (severityValue) {
+                let severityLabel = '';
+                
+                if (severityValue.startsWith('긴급')) {
+                  severityLabel = 'severity:critical';
+                } else if (severityValue.startsWith('높음')) {
+                  severityLabel = 'severity:high';
+                } else if (severityValue.startsWith('중간')) {
+                  severityLabel = 'severity:medium';
+                } else if (severityValue.startsWith('낮음')) {
+                  severityLabel = 'severity:low';
+                }
+                
+                if (severityLabel) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: [severityLabel]
+                  });
+                  
+                  console.log(`Applied severity label: ${severityLabel}`);
+                }
+              }
+              
+              // 버그 유형 라벨 처리
+              const bugLabels = existingLabels.filter(label => label.startsWith('bug-type:'));
+              
+              if (bugLabels.length > 0) {
+                for (const label of bugLabels) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: label
+                  });
+                }
+              }
+              
+              // 버그 유형 체크박스 가져오기
+              const selectedTypes = getSelectedCheckboxes(body, '🔍 버그 유형');
+              
+              if (selectedTypes.length > 0) {
+                const newLabels = [];
+                
+                // 선택된 각 유형에 대한 라벨 매핑
+                const bugTypeMap = {
+                  '기능 오작동': 'bug-type:functionality',
+                  '성능 이슈': 'bug-type:performance',
+                  '데이터 문제': 'bug-type:data',
+                  '인증/권한 문제': 'bug-type:auth',
+                  '유효성 검사 오류': 'bug-type:validation',
+                  '서버 에러': 'bug-type:server',
+                  '보안 취약점': 'bug-type:security',
+                  '기타': 'bug-type:other'
+                };
+                
+                // 선택된 유형들에 대한 라벨 추가
+                for (const type of selectedTypes) {
+                  Object.keys(bugTypeMap).forEach(key => {
+                    if (type.includes(key)) {
+                      newLabels.push(bugTypeMap[key]);
+                    }
+                  });
+                }
+                
+                // 새 라벨 적용
+                if (newLabels.length > 0) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: newLabels
+                  });
+                  
+                  console.log(`Applied bug type labels: ${newLabels.join(', ')}`);
+                }
+              }
+              
+              // 환경 정보 라벨 처리
+              // 환경 라벨
+              const envValue = getDropdownValue(body, '환경');
+              if (envValue) {
+                let envLabel = '';
+                
+                if (envValue.startsWith('개발')) {
+                  envLabel = 'env:development';
+                } else if (envValue.startsWith('테스트')) {
+                  envLabel = 'env:testing';
+                } else if (envValue.startsWith('스테이징')) {
+                  envLabel = 'env:staging';
+                } else if (envValue.startsWith('프로덕션')) {
+                  envLabel = 'env:production';
+                }
+                
+                if (envLabel) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: [envLabel]
+                  });
+                  
+                  console.log(`Applied environment label: ${envLabel}`);
+                }
+              }
+            } 

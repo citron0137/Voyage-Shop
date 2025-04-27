@@ -1,0 +1,251 @@
+name: 🐞 버그 리포트
+description: 발견된 API 버그를 보고합니다
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 🏷️ 심각도
+      description: 이 버그의 심각도를 선택해주세요
+      options:
+        - 긴급 (서비스 중단 또는 심각한 데이터 손실)
+        - 높음 (주요 API 기능 장애 또는 성능 심각한 저하)
+        - 중간 (일부 API 엔드포인트 오작동 또는 일부 기능 영향)
+        - 낮음 (경미한 오류 또는 잠재적 문제)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: bug-type
+    attributes:
+      label: 🔍 버그 유형
+      description: 발생한 버그의 유형을 선택해주세요
+      options:
+        - label: 기능 오작동 (특정 API 엔드포인트가 제대로 동작하지 않음)
+        - label: 성능 이슈 (응답 시간 지연 또는 리소스 사용량 과다)
+        - label: 데이터 문제 (잘못된 데이터 처리 또는 응답)
+        - label: 인증/권한 문제 (인증 또는 권한 관련 오류)
+        - label: 유효성 검사 오류 (입력 값 검증 오류)
+        - label: 서버 에러 (50x 에러)
+        - label: 보안 취약점 (보안 관련 문제)
+        - label: 기타 (아래에 설명해주세요)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 버그 설명
+      description: 버그에 대해 명확하고 간결하게 설명해주세요
+      placeholder: |
+        ### 증상
+        (어떤 문제가 발생했는지 간결하게 설명해주세요)
+        예: "주문 API에서 특정 사용자의 주문 조회 시 500 에러가 발생합니다."
+
+        ### 발생 빈도
+        (버그가 항상 발생하나요, 아니면 간헐적으로 발생하나요?)
+        예: "특정 조건에서 100% 재현됨", "약 30%의 확률로 간헐적으로 발생"
+
+        ### 영향 범위
+        (이 버그가 어떤 사용자/기능에 영향을 미치나요?)
+        예: "VIP 등급 사용자의 주문 조회 기능에만 영향", "모든 사용자의 결제 기능에 영향"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: 🔄 재현 방법
+      description: 버그를 재현하는 단계를 명확하게 설명해주세요
+      placeholder: |
+        ### 재현 단계
+        1. 다음 API 엔드포인트로 요청: `GET /api/v1/orders/{id}`
+        2. `id` 파라미터 값으로 100 이상의 숫자 사용
+        3. 아래와 같은 헤더 포함:
+           ```
+           Authorization: Bearer {valid_token}
+           Content-Type: application/json
+           ```
+        4. 응답 상태 코드 확인: 500 Internal Server Error
+
+        ### 재현에 필요한 조건
+        - 특정 데이터베이스 상태 (예: 특정 ID의 주문이 존재해야 함)
+        - 특정 시스템 상태 (예: 캐시가 비어있는 상태)
+        - 동시성 조건 (예: 동일한 리소스에 대한 다중 요청)
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-request
+    attributes:
+      label: 📤 API 요청 정보
+      description: 문제가 발생한 API 요청 정보를 자세히 제공해주세요
+      placeholder: |
+        ### 엔드포인트
+        `GET /api/v1/orders/123456`
+        
+        ### 요청 헤더
+        ```
+        Content-Type: application/json
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        X-API-Key: abcdef123456
+        ```
+        
+        ### 요청 파라미터
+        - 쿼리 파라미터: `?status=pending&limit=10`
+        - 경로 변수: `id=123456`
+        
+        ### 요청 본문
+        ```json
+        {
+          "userId": "user_123",
+          "items": [
+            {
+              "productId": "prod_456",
+              "quantity": 2,
+              "options": {
+                "color": "red",
+                "size": "medium"
+              }
+            }
+          ],
+          "paymentMethod": "credit_card"
+        }
+        ```
+        
+        ### 요청 도구
+        - 사용한 도구/라이브러리: Postman, curl, 특정 SDK 등
+        - 요청 시간: 2023-05-15 13:45:30 KST
+    validations:
+      required: false
+
+  - type: textarea
+    id: api-response
+    attributes:
+      label: 📥 API 응답 정보
+      description: 받은 API 응답을 상세히 제공해주세요
+      placeholder: |
+        ### 상태 코드
+        500 Internal Server Error
+        
+        ### 응답 헤더
+        ```
+        Content-Type: application/json
+        X-Request-ID: req_789abcdef
+        Date: Mon, 15 May 2023 04:45:31 GMT
+        ```
+        
+        ### 응답 본문
+        ```json
+        {
+          "error": "Internal Server Error",
+          "message": "데이터베이스 쿼리 실행 중 오류가 발생했습니다",
+          "status": 500,
+          "timestamp": "2023-05-15T04:45:31Z",
+          "path": "/api/v1/orders/123456",
+          "requestId": "req_789abcdef"
+        }
+        ```
+        
+        ### 응답 시간
+        - 응답 소요 시간: 2500ms (비정상적으로 느림)
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: ✅ 기대한 동작
+      description: 기대했던 정상적인 API 동작을 설명해주세요
+      placeholder: |
+        ### 예상 응답 코드
+        200 OK
+        
+        ### 예상 응답 형식
+        ```json
+        {
+          "orderId": "123456",
+          "status": "pending",
+          "items": [...],
+          "totalAmount": 50000,
+          "createdAt": "2023-05-15T04:45:00Z"
+        }
+        ```
+        
+        ### 예상 동작 설명
+        주문 ID가 123456인 주문 정보가 정상적으로 조회되어야 합니다. 해당 주문이 존재하지 않을 경우 404 Not Found를 반환해야 합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 📋 로그 및 오류 메시지
+      description: 관련 로그나 오류 메시지가 있다면 첨부해주세요
+      placeholder: |
+        ### 서버 로그
+        ```
+        2023-05-15 13:45:30.123 ERROR [order-service,req_789abcdef] c.example.OrderService: Failed to fetch order with id 123456
+        java.sql.SQLException: Connection timeout while executing query
+            at com.example.repository.OrderRepository.findById(OrderRepository.java:142)
+            at com.example.service.OrderService.getOrderById(OrderService.java:56)
+            at com.example.controller.OrderController.getOrder(OrderController.java:28)
+        ```
+        
+        ### 클라이언트 측 오류 로그
+        ```
+        Fetch error: Failed to fetch order data: 500 Internal Server Error
+        ```
+      render: shell
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: "## 💻 환경 정보"
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 환경
+      description: 버그가 발생한 환경을 선택해주세요
+      options:
+        - 개발 환경 (Development)
+        - 테스트 환경 (Testing/QA)
+        - 스테이징 환경 (Staging)
+        - 프로덕션 환경 (Production)
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: API 버전/커밋 해시
+      description: 버그가 발생한 API 버전이나 커밋 해시를 입력해주세요
+      placeholder: 예) v1.2.3 또는 commit-abc123d
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: 📋 추가 정보
+      description: 문제 해결에 도움이 될 만한 추가 정보나 맥락을 제공해주세요
+      placeholder: |
+        ### 관련 이슈
+        - 이전에 발생했던 유사한 이슈: #123, #456
+        - 관련된 기능 요청: #789
+        
+        ### 임시 해결책
+        현재 알려진 우회 방법이 있다면 설명해주세요.
+        
+        ### 재현 환경 세부정보
+        - 데이터베이스 버전: MySQL 8.0.32
+        - Redis 버전: 6.2.10
+        - 시스템 부하 상태: 평균 부하, 높은 부하 등
+        
+        ### 추가 컨텍스트
+        이 버그가 발생한 전후 상황이나 비즈니스적 맥락이 있다면 설명해주세요.
+    validations:
+      required: false 
