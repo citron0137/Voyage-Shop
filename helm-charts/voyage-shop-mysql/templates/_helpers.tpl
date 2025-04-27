@@ -48,4 +48,15 @@ Selector labels
 {{- define "voyage-shop-mysql.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "voyage-shop-mysql.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }} 
+{{- end }}
+
+{{/*
+데이터 디렉토리 경로 헬퍼
+*/}}
+{{- define "voyage-shop-mysql.dataPath" -}}
+{{- if .Values.mysql.persistence.useRelativePath -}}
+{{ .Values.basePath.host }}/{{ .Values.basePath.data }}/mysql-{{ .Values.mysql.persistence.environment }}
+{{- else -}}
+{{ .Values.mysql.persistence.hostPath }}
+{{- end -}}
+{{- end -}} 

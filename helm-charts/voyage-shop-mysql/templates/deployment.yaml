@@ -17,6 +17,13 @@ spec:
       labels:
         app: {{ .Values.mysql.name }}
     spec:
+      initContainers:
+      - name: init-data-dir
+        image: busybox
+        command: ['sh', '-c', 'mkdir -p {{ template "voyage-shop-mysql.dataPath" . }}']
+        volumeMounts:
+        - name: host-root
+          mountPath: /host-root
       containers:
       - image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
         name: {{ .Values.mysql.name }}
@@ -35,5 +42,12 @@ spec:
           {{- toYaml .Values.mysql.resources | nindent 10 }}
       volumes:
       - name: mysql-persistent-storage
+        {{- if .Values.mysql.persistence.enabled }}
         persistentVolumeClaim:
-          claimName: {{ include "voyage-shop-mysql.fullname" . }}-pvc 
+          claimName: {{ template "voyage-shop-mysql.fullname" . }}-pvc
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: host-root
+        hostPath:
+          path: / 

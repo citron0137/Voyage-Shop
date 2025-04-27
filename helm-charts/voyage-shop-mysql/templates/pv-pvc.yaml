@@ -14,7 +14,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: {{ .Values.mysql.persistence.hostPath }}
+    path: {{ template "voyage-shop-mysql.dataPath" . }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

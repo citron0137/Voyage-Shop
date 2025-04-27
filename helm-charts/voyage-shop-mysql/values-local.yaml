@@ -1,0 +1,7 @@
+# 로컬 환경 설정
+basePath:
+  host: "/run/desktop/mnt/host/c/Users/citro/Personal/voyage/Voyage-Shop"
+
+mysql:
+  persistence:
+    environment: "local" 

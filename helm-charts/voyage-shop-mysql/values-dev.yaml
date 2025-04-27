@@ -1,3 +1,0 @@
-mysql:
-  persistence:
-    hostPath: "/run/desktop/mnt/host/c/tmp/mysqldata-dev" 
