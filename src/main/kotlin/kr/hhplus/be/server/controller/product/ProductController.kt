@@ -2,7 +2,7 @@ package kr.hhplus.be.server.controller.product
 
 import kr.hhplus.be.server.application.product.ProductCriteria
 import kr.hhplus.be.server.application.product.ProductFacade
-import org.springframework.http.ResponseEntity
+import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -17,10 +17,10 @@ class ProductController(
      *
      * @return 상품 목록 정보
      */
-    override fun getAllProducts(): ResponseEntity<ProductResponse.List> {
+    override fun getAllProducts(): BaseResponse<ProductResponse.List> {
         val criteria = ProductCriteria.GetAll()
         val result = productFacade.getAllProducts(criteria)
-        return ResponseEntity.ok(ProductResponse.List.from(result))
+        return BaseResponse.success(ProductResponse.List.from(result))
     }
     
     /**
@@ -29,10 +29,10 @@ class ProductController(
      * @param productId 상품 ID
      * @return 상품 정보
      */
-    override fun getProduct(@PathVariable productId: String): ResponseEntity<ProductResponse.Single> {
+    override fun getProduct(@PathVariable productId: String): BaseResponse<ProductResponse.Single> {
         val criteria = ProductCriteria.GetById(productId)
         val result = productFacade.getProduct(criteria)
-        return ResponseEntity.ok(ProductResponse.Single.from(result))
+        return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
     /**
@@ -41,14 +41,14 @@ class ProductController(
      * @param request 상품 생성 요청
      * @return 생성된 상품 정보
      */
-    override fun createProduct(@RequestBody request: ProductRequest.Create): ResponseEntity<ProductResponse.Single> {
+    override fun createProduct(@RequestBody request: ProductRequest.Create): BaseResponse<ProductResponse.Single> {
         val criteria = ProductCriteria.Create(
             name = request.name,
             price = request.price,
             stock = request.stock
         )
         val result = productFacade.createProduct(criteria)
-        return ResponseEntity.ok(ProductResponse.Single.from(result))
+        return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
     /**
@@ -61,13 +61,13 @@ class ProductController(
     override fun updateStock(
         @PathVariable productId: String,
         @RequestBody request: ProductRequest.UpdateStock
-    ): ResponseEntity<ProductResponse.Single> {
+    ): BaseResponse<ProductResponse.Single> {
         val criteria = ProductCriteria.UpdateStock(
             productId = productId,
             stock = request.stock
         )
         val result = productFacade.updateStock(criteria)
-        return ResponseEntity.ok(ProductResponse.Single.from(result))
+        return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
     /**
@@ -80,13 +80,13 @@ class ProductController(
     override fun increaseStock(
         @PathVariable productId: String,
         @RequestBody request: ProductRequest.IncreaseStock
-    ): ResponseEntity<ProductResponse.Single> {
+    ): BaseResponse<ProductResponse.Single> {
         val criteria = ProductCriteria.IncreaseStock(
             productId = productId,
             amount = request.amount
         )
         val result = productFacade.increaseStock(criteria)
-        return ResponseEntity.ok(ProductResponse.Single.from(result))
+        return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
     /**
@@ -99,12 +99,12 @@ class ProductController(
     override fun decreaseStock(
         @PathVariable productId: String,
         @RequestBody request: ProductRequest.DecreaseStock
-    ): ResponseEntity<ProductResponse.Single> {
+    ): BaseResponse<ProductResponse.Single> {
         val criteria = ProductCriteria.DecreaseStock(
             productId = productId,
             amount = request.amount
         )
         val result = productFacade.decreaseStock(criteria)
-        return ResponseEntity.ok(ProductResponse.Single.from(result))
+        return BaseResponse.success(ProductResponse.Single.from(result))
     }
 }
