@@ -4,6 +4,11 @@ on:
   issues:
     types: [opened, edited]
 
+# GitHub Actions의 권한 설정 추가
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   apply-labels:
     runs-on: ubuntu-latest
