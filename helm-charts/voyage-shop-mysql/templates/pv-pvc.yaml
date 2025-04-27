@@ -15,6 +15,7 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: {{ template "voyage-shop-mysql.dataPath" . }}
+    type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

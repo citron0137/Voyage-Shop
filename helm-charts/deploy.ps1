@@ -18,48 +18,37 @@ if ($deployments) {
     # Clean up Kubernetes resources
     Write-Host "Cleaning up remaining Kubernetes resources..." -ForegroundColor Yellow
     kubectl delete services --all
-    kubectl delete deployments --all
     kubectl delete pods --all --force --grace-period=0
     
     # Wait a moment
-    Write-Host "Waiting 10 seconds for cleanup to complete..." -ForegroundColor Yellow
-    Start-Sleep -Seconds 10
+    Write-Host "Waiting 5 seconds for cleanup to complete..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 5
 }
 
-# Deploy MySQL
-Write-Host "`nStarting MySQL deployment..." -ForegroundColor Cyan
-helm install voyage-shop-mysql voyage-shop-mysql --values voyage-shop-mysql/values-local.yaml --set basePath.host="$currentPath"
+# Update dependencies
+Write-Host "`nUpdating Helm dependencies..." -ForegroundColor Cyan
+helm dependency update voyage-shop
 
-# Wait for MySQL pod to be ready
-Write-Host "`nWaiting for MySQL pod to be ready..." -ForegroundColor Cyan
-$wait_success = $false
+# Deploy Voyage Shop (automatically includes MySQL via dependencies)
+Write-Host "`nDeploying Voyage Shop (including MySQL)..." -ForegroundColor Cyan
+helm install voyage-shop voyage-shop --values voyage-shop/values-local.yaml --set basePath.host="$currentPath" 
+
+# Wait for pods to be ready
+Write-Host "`nWaiting for pods to be ready..." -ForegroundColor Cyan
 $retry_count = 0
-$max_retries = 5
+$max_retries = 10
 
-while (-not $wait_success -and $retry_count -lt $max_retries) {
-    try {
-        kubectl wait --for=condition=ready pod -l app=mysql --timeout=30s
-        $wait_success = $true
-    } catch {
-        $retry_count++
-        Write-Host "Error while waiting for MySQL pod. Retrying $retry_count/$max_retries..." -ForegroundColor Yellow
-        Start-Sleep -Seconds 10
+Write-Host "Waiting for MySQL to be ready..." -ForegroundColor Yellow
+while ($retry_count -lt $max_retries) {
+    $mysqlPod = kubectl get pods -l app=mysql --no-headers 2>$null
+    if ($mysqlPod -and $mysqlPod -match "Running") {
+        Write-Host "MySQL is ready!" -ForegroundColor Green
+        break
     }
+    $retry_count++
+    Write-Host "Waiting for MySQL... ($retry_count/$max_retries)" -ForegroundColor Yellow
+    Start-Sleep -Seconds 5
 }
-
-if (-not $wait_success) {
-    Write-Host "MySQL pod is not ready. Check deployment status." -ForegroundColor Red
-    kubectl get pods
-    exit 1
-}
-
-# Check MySQL service name
-$mysql_service = kubectl get service -l app=mysql -o jsonpath="{.items[0].metadata.name}"
-Write-Host "`nMySQL service name: $mysql_service" -ForegroundColor Cyan
-
-# Deploy Voyage Shop application
-Write-Host "`nStarting Voyage Shop application deployment..." -ForegroundColor Cyan
-helm install voyage-shop voyage-shop --values voyage-shop/values-local.yaml --set database.host="voyage-shop-mysql-db" --set basePath.host="$currentPath"
 
 # Check deployed resources
 Write-Host "`nDeployed Helm releases:" -ForegroundColor Cyan
@@ -72,4 +61,14 @@ Write-Host "`nDeployed services:" -ForegroundColor Cyan
 kubectl get svc
 
 Write-Host "`nVoyage Shop has been successfully deployed!" -ForegroundColor Green
-Write-Host "To access the application, open http://localhost:3000 in your browser." -ForegroundColor Green 
+
+# Start port forwarding in background
+Write-Host "`nSetting up port forwarding (8080 -> voyage-shop service)..." -ForegroundColor Cyan
+$job = Start-Job -ScriptBlock {
+    kubectl port-forward svc/voyage-shop 8080:80
+}
+
+Write-Host "Port forwarding started in background (Job ID: $($job.Id))" -ForegroundColor Yellow
+Write-Host "To access the application, open http://localhost:8080 in your browser." -ForegroundColor Green
+Write-Host "`nTo stop port forwarding later, run:" -ForegroundColor Yellow
+Write-Host "Stop-Job $($job.Id); Remove-Job $($job.Id)" -ForegroundColor Yellow 

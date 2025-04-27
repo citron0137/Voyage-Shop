@@ -1,0 +1,6 @@
+dependencies:
+- name: voyage-shop-mysql
+  repository: file://../voyage-shop-mysql
+  version: 0.1.0
+digest: sha256:bba1fb7f54f67da64ef5b85dd76993015512756f00478764eeabf04134377e18
+generated: "2025-04-28T03:31:59.9931157+09:00"

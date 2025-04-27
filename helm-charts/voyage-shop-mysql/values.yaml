@@ -29,9 +29,8 @@ mysql:
   persistence:
     enabled: true
     storageClass: standard
-    size: 1Gi
+    size: 10Gi
     useRelativePath: true
-    environment: "default"
   config:
     MYSQL_DATABASE: hhplus
     MYSQL_USER: voyage

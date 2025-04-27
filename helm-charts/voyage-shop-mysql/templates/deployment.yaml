@@ -3,8 +3,8 @@ kind: Deployment
 metadata:
   name: {{ .Values.mysql.name }}
   labels:
-    {{- include "voyage-shop-mysql.labels" . | nindent 4 }}
     app: {{ .Values.mysql.name }}
+    {{- include "voyage-shop-mysql.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -16,38 +16,32 @@ spec:
     metadata:
       labels:
         app: {{ .Values.mysql.name }}
+        {{- include "voyage-shop-mysql.labels" . | nindent 8 }}
     spec:
-      initContainers:
-      - name: init-data-dir
-        image: busybox
-        command: ['sh', '-c', 'mkdir -p {{ template "voyage-shop-mysql.dataPath" . }}']
-        volumeMounts:
-        - name: host-root
-          mountPath: /host-root
       containers:
-      - image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
-        name: {{ .Values.mysql.name }}
-        ports:
-        - containerPort: {{ .Values.mysql.port }}
-          name: mysql
-        envFrom:
-        - configMapRef:
-            name: {{ include "voyage-shop-mysql.fullname" . }}-config
-        - secretRef:
-            name: {{ include "voyage-shop-mysql.fullname" . }}-secret
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
-        resources:
-          {{- toYaml .Values.mysql.resources | nindent 10 }}
+        - name: {{ .Values.mysql.name }}
+          image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.mysql.port }}
+          resources:
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+          env:
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mysql.config.MYSQL_DATABASE }}
+            - name: MYSQL_USER
+              value: {{ .Values.mysql.config.MYSQL_USER }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.mysql.config.MYSQL_PASSWORD }}
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .Values.mysql.config.MYSQL_ROOT_PASSWORD }}
+          args:
+            - --default-authentication-plugin=mysql_native_password
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+          volumeMounts:
+            - name: mysql-emptydir
+              mountPath: /var/lib/mysql
       volumes:
-      - name: mysql-persistent-storage
-        {{- if .Values.mysql.persistence.enabled }}
-        persistentVolumeClaim:
-          claimName: {{ template "voyage-shop-mysql.fullname" . }}-pvc
-        {{- else }}
-        emptyDir: {}
-        {{- end }}
-      - name: host-root
-        hostPath:
-          path: / 
+        - name: mysql-emptydir
+          emptyDir: {} 
