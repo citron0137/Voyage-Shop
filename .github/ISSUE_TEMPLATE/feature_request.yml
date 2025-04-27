@@ -1,0 +1,296 @@
+name: 💡 기능 요청
+description: 새로운 API 기능이나 개선점을 제안합니다
+title: "[FEAT] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 🏷️ 우선순위
+      description: 이 기능 요청의 우선순위를 선택해주세요
+      options:
+        - 높음 (핵심 API 기능 또는 비즈니스에 중요한 영향)
+        - 중간 (유용하지만 당장 필요하지 않음)
+        - 낮음 (향후 고려할만한 개선점)
+        - 아이디어 (논의가 필요한 제안)
+    validations:
+      required: true
+
+  - type: textarea
+    id: priority-reason
+    attributes:
+      label: 우선순위 설명
+      description: 선택한 우선순위의 이유를 간략히 설명해주세요
+      placeholder: |
+        ### 우선순위 선택 이유
+        (왜 이 우선순위를 선택했는지 설명해주세요)
+        예: "이 기능은 비즈니스의 핵심 KPI에 직접적인 영향을 미치므로 높은 우선순위로 설정했습니다."
+        
+        ### 시급성
+        (이 기능이 언제까지 필요한지, 어떤 일정과 연관되어 있는지 설명해주세요)
+        예: "새로운 마케팅 캠페인이 다음 달에 시작되므로 그 전에 구현되어야 합니다."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: feature-type
+    attributes:
+      label: 🔍 기능 유형
+      description: 요청하는 API 기능의 유형을 선택해주세요
+      options:
+        - label: 신규 엔드포인트 (새로운 API 엔드포인트 추가)
+        - label: 기존 엔드포인트 개선 (기존 API 엔드포인트 수정)
+        - label: 데이터 모델 변경 (데이터베이스 스키마 또는 모델 변경)
+        - label: 비즈니스 로직 개선 (기존 비즈니스 로직 개선)
+        - label: 성능 개선 (API 응답 시간 개선)
+        - label: 보안 강화 (인증, 권한, 암호화 등)
+        - label: API 문서 개선 (문서화 관련 요청)
+        - label: 기타 (아래에 설명해주세요)
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 📝 기능 요약
+      description: 제안하는 API 기능에 대해 간결하게 설명해주세요
+      placeholder: |
+        ### 기능 개요
+        (제안하는 기능을 간략히 설명해주세요)
+        예: "상품 리뷰 분석 API를 추가하여 사용자 리뷰의 감정 분석 및 키워드 추출 기능을 제공합니다."
+        
+        ### 주요 기능 포인트
+        (이 기능의 핵심 요소들을 나열해주세요)
+        - 리뷰 텍스트에서 긍정/부정 감정 점수 추출
+        - 리뷰에서 자주 언급되는 키워드 추출
+        - 리뷰 트렌드 시계열 데이터 제공
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-situation
+    attributes:
+      label: 🔄 현재 상황
+      description: 이 기능이 해결하려는 문제나 불편함은 무엇인가요?
+      placeholder: |
+        ### 현재 문제점
+        (현재 상황의 문제점이나 불편함을 설명해주세요)
+        예: "현재는 상품 리뷰 데이터가 단순 저장만 되고, 분석 기능이 없어 마케팅 팀이 리뷰 트렌드를 파악하기 위해 수동으로 데이터를 분석해야 합니다."
+        
+        ### 영향 받는 사용자/시스템
+        (이 문제로 영향을 받는 사용자나 시스템은 누구인가요?)
+        예: "마케팅 팀, 상품 관리자, 그리고 데이터 분석 팀이 영향을 받고 있습니다."
+        
+        ### 현재 대응 방식
+        (현재는 이 문제를 어떻게 해결하고 있나요?)
+        예: "현재는 리뷰 데이터를 수동으로 엑셀로 내보내 분석하고 있어 주기적인 리포트 생성에 많은 시간이 소요됩니다."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: 💡 제안하는 기능
+      description: 원하는 API 솔루션이나 기능에 대해 명확하게 설명해주세요
+      placeholder: |
+        ### API 엔드포인트 제안
+        ```
+        POST /api/v1/reviews/analyze
+        GET /api/v1/products/{productId}/review-analysis
+        GET /api/v1/reviews/trends?period=monthly&from=2023-01&to=2023-06
+        ```
+        
+        ### 요청 파라미터
+        **POST /api/v1/reviews/analyze**
+        ```json
+        {
+          "reviewId": "string (필수): 분석할 리뷰 ID",
+          "reviewText": "string (필수): 리뷰 텍스트 내용",
+          "analysisOptions": {
+            "includeSentiment": "boolean (선택): 감정 분석 포함 여부, 기본값: true",
+            "includeKeywords": "boolean (선택): 키워드 추출 포함 여부, 기본값: true"
+          }
+        }
+        ```
+        
+        **GET /api/v1/products/{productId}/review-analysis**
+        - `productId`: 상품 ID (경로 변수)
+        - `period`: 분석 기간 (쿼리 파라미터, 선택), 기본값: "all"
+        - `limit`: 결과 제한 (쿼리 파라미터, 선택), 기본값: 50
+        
+        ### 응답 형식
+        **POST /api/v1/reviews/analyze**
+        ```json
+        {
+          "reviewId": "string: 분석된 리뷰 ID",
+          "sentiment": {
+            "score": "number: -1.0 ~ 1.0 사이의 감정 점수",
+            "type": "string: 'positive', 'neutral', 'negative' 중 하나"
+          },
+          "keywords": [
+            {
+              "word": "string: 추출된 키워드",
+              "count": "number: 출현 빈도",
+              "relevance": "number: 0.0 ~ 1.0 사이의 관련성 점수"
+            }
+          ],
+          "analyzedAt": "datetime: 분석 시간"
+        }
+        ```
+        
+        ### 비즈니스 규칙
+        - 하나의 리뷰는 최대 1000자까지 분석 가능
+        - 분석 결과는 24시간 동안 캐싱됨
+        - 동일한 리뷰에 대한 반복 분석 요청은 캐시된 결과를 반환
+        - 리뷰 트렌드 분석은 최대 12개월까지의 데이터만 제공
+        
+        ### 의존성 및 통합
+        - 감정 분석을 위한 자연어 처리 라이브러리나 서비스 필요
+        - 분석 결과는 기존 리뷰 데이터베이스와 통합되어야 함
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 🔄 대안 방법
+      description: 고려했던 다른 대안 솔루션이 있다면 설명해주세요
+      placeholder: |
+        ### 고려한 대안
+        (고려했던 다른 해결 방법들을 설명해주세요)
+        
+        **대안 1: 외부 분석 서비스 통합**
+        - 설명: Google Cloud Natural Language API와 같은 외부 서비스를 직접 통합
+        - 장점: 빠른 구현 가능, 고급 분석 기능 사용 가능
+        - 단점: 서비스 비용 발생, 외부 의존성 증가, 데이터 유출 우려
+        
+        **대안 2: 배치 처리 방식**
+        - 설명: 실시간 API 대신 매일 밤 모든 리뷰 데이터를 배치 분석하여 결과 저장
+        - 장점: 시스템 부하 분산, 비용 효율성
+        - 단점: 실시간 분석 불가, 신규 리뷰에 대한 즉시 반응 어려움
+        
+        ### 선택한 방법의 이유
+        (위에서 제안한 솔루션을 선택한 이유)
+        실시간 분석 필요성과 데이터 독립성을 고려하여 자체 API 개발 방식을 선택했습니다. 초기에는 개발 비용이 더 들지만, 장기적으로 비용 절감과 유연성을 확보할 수 있습니다.
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected-benefits
+    attributes:
+      label: 📈 기대 효과
+      description: 이 API 기능이 추가됨으로써 어떤 가치나 이점이 있을지 설명해주세요
+      placeholder: |
+        ### 비즈니스 효과
+        - **마케팅 최적화**: 상품에 대한 사용자 피드백을 실시간으로 분석하여 마케팅 전략 조정 가능
+        - **상품 개선**: 사용자가 자주 언급하는 문제점을 파악하여 제품 개선 방향 설정 가능
+        - **사용자 경험 개선**: 사용자 피드백에 더 빠르게 대응하여 고객 만족도 향상
+        - **비용 절감**: 수동 분석에 소요되던 인력 및 시간 절약 (월 약 40시간 절감 예상)
+        
+        ### 기술적 효과
+        - **데이터 활용도 증가**: 기존에 단순 저장만 되던 리뷰 데이터의 활용도 증가
+        - **시스템 통합**: 분석 결과를 다른 시스템(상품 관리, CRM)과 통합하여 데이터 일관성 확보
+        - **확장성**: 향후 추가될 수 있는 다른 유형의 사용자 콘텐츠 분석에도 동일한 아키텍처 활용 가능
+        
+        ### 정량적 목표
+        - 데이터 분석 작업 시간 90% 감소
+        - 리뷰 데이터 기반 의사결정 속도 70% 향상
+        - 마케팅 팀의 리뷰 데이터 활용률 50% 증가
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-considerations
+    attributes:
+      label: 🧪 기술적 고려사항
+      description: 이 API 기능 구현 시 고려해야 할 기술적 사항이 있다면 작성해주세요
+      placeholder: |
+        ### 성능 고려사항
+        - **예상 사용량**: 일일 약 5,000건의 리뷰 분석 요청 예상
+        - **응답 시간 요구사항**: 단일 리뷰 분석은 1초 이내, 대량 분석은 30초 이내 응답
+        - **처리량**: 초당 최대 10건의 분석 요청 처리 가능해야 함
+        - **확장성**: 향후 사용량 증가에 따라 수평적 확장 가능한 설계 필요
+        
+        ### 보안 고려사항
+        - **인증**: API 키 또는 OAuth 2.0 인증 필요
+        - **권한**: 관리자와 일반 사용자 간 접근 권한 차등화
+        - **데이터 보안**: 민감한 리뷰 데이터 저장 시 암호화 고려
+        - **API 호출 제한**: 과도한 API 호출 방지를 위한 Rate Limiting 적용
+        
+        ### 의존성
+        - **자연어 처리 라이브러리**: 감정 분석 및 키워드 추출을 위한 NLP 라이브러리 필요
+        - **데이터베이스**: 분석 결과 저장을 위한 NoSQL 데이터베이스 권장
+        - **캐싱**: 분석 결과 캐싱을 위한 Redis 또는 유사 시스템 필요
+        - **백그라운드 작업**: 대량 분석을 위한 비동기 작업 처리 시스템 필요
+        
+        ### 테스트 및 배포 고려사항
+        - **단위 테스트**: 분석 알고리즘 및 비즈니스 로직 테스트
+        - **통합 테스트**: 외부 시스템과의 통합 테스트
+        - **성능 테스트**: 부하 테스트를 통한 성능 검증
+        - **점진적 배포**: 카나리 배포를 통한 리스크 최소화 고려
+    validations:
+      required: false
+
+  - type: textarea
+    id: implementation-plan
+    attributes:
+      label: 📅 구현 계획
+      description: 이 기능을 어떻게 구현할 계획인지 단계별로 작성해주세요
+      placeholder: |
+        ### 구현 단계
+        1. **설계 및 분석 (1-2주)**
+           - 상세 요구사항 분석 및 기술 스택 결정
+           - API 스펙 작성 및 데이터 모델 설계
+           - 분석 알고리즘 연구 및 선택
+        
+        2. **프로토타입 개발 (2-3주)**
+           - 감정 분석 엔진 구현 또는 통합
+           - 키워드 추출 로직 구현
+           - 기본 API 엔드포인트 구현
+        
+        3. **통합 및 최적화 (2주)**
+           - 기존 리뷰 시스템과 통합
+           - 성능 최적화 및 캐싱 구현
+           - 보안 강화 및 권한 관리 구현
+        
+        4. **테스트 및 검증 (1-2주)**
+           - 단위 테스트 및 통합 테스트 작성
+           - 성능 테스트 및 최적화
+           - 사용자 피드백 수집 및 반영
+        
+        5. **배포 및 모니터링 (1주)**
+           - 스테이징 환경 배포 및 검증
+           - 프로덕션 환경 점진적 배포
+           - 모니터링 시스템 구축
+        
+        ### 예상 구현 일정
+        - 시작일: 2023-07-01
+        - 완료 예상일: 2023-08-15 (약 6-7주)
+        - 중간 점검: 2023-07-15 (프로토타입 리뷰)
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: 📋 추가 정보
+      description: 기능 구현에 도움이 될 만한 추가 정보나 예시, 참고 자료 등을 제공해주세요
+      placeholder: |
+        ### 참고 자료
+        - [NLP 감정 분석 라이브러리 비교](https://example.com/nlp-libraries)
+        - [비슷한 기능을 구현한 타사 API 문서](https://example.com/similar-api)
+        - [리뷰 분석 관련 논문](https://example.com/research-paper)
+        
+        ### 예시 사용 시나리오
+        1. 마케팅 팀이 특정 상품의 리뷰 트렌드를 분석하여 마케팅 캠페인 성과 측정
+        2. 상품 관리자가 부정적인 리뷰가 많은 제품 속성 파악하여 개선 사항 도출
+        3. 고객 지원팀이 실시간으로 부정적 리뷰를 파악하여 신속한 대응
+        
+        ### 관련 이슈 및 PR
+        - 관련 이슈: #123 (리뷰 시스템 개선 제안)
+        - 관련 PR: #456 (리뷰 데이터 모델 리팩토링)
+        
+        ### 스크린샷/모형
+        필요하다면 API 응답 형식이나 데이터 모델에 대한 다이어그램을 첨부해주세요.
+    validations:
+      required: false 
