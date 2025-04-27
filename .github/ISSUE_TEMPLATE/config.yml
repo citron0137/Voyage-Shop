@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📝 프로젝트 문서
+    url: https://github.com/citron0137/voyage-shop/blob/main/README.md
+    about: 프로젝트에 대한 전반적인 정보를 확인해보세요
+  - name: 💬 질문하기
+    url: https://github.com/citron0137/voyage-shop/discussions
+    about: 일반적인 질문이나 도움이 필요하신 경우 Discussions를 이용해주세요 
