@@ -1,0 +1,11 @@
+# 로컬 환경 설정
+basePath:
+  host: "/run/desktop/mnt/host/c/Users/citro/Personal/voyage/Voyage-Shop"
+  data: "data"
+
+mysql:
+  persistence:
+    enabled: false
+    useRelativePath: false
+    environment: "local"
+    #hostPath: "/tmp/mysql-data"

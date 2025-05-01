@@ -1,0 +1,77 @@
+# Global configuration
+nameOverride: ""
+fullnameOverride: ""
+
+# 경로 설정
+basePath:
+  # 프로젝트 루트 경로 (Docker Desktop에서 호스트 파일시스템 접근 경로)
+  # 각 환경별 values 파일에서 설정해야 합니다
+  host: ""
+  # 프로젝트 내 데이터 저장 디렉토리 (상대 경로)
+  data: "data"
+  # 환경 접미사
+  environment: "default"
+
+# Application configuration
+app:
+  name: voyage-shop
+  replicaCount: 1
+  image:
+    repository: voyage-shop
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8080
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  livenessProbe:
+    path: /actuator/health
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 3
+  readinessProbe:
+    path: /actuator/health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: voyage-shop.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Database connection settings
+database:
+  # Use the MySQL service name created by the voyage-shop-mysql Helm chart
+  # This is important to avoid service name conflicts
+  host: voyage-shop-mysql-db
+  port: 3306
+  user: voyage
+  name: hhplus
+  password: voyage_password
+
+# MySQL configuration
+mysql:
+  enabled: true
+  name: voyage-shop-mysql-db
+  port: 3306
+  config:
+    MYSQL_DATABASE: hhplus
+    MYSQL_USER: voyage 

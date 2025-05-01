@@ -1,0 +1,34 @@
+{{- if .Values.mysql.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "voyage-shop-mysql.fullname" . }}-pv
+  labels:
+    type: local
+    app: {{ .Values.mysql.name }}
+    {{- include "voyage-shop-mysql.labels" . | nindent 4 }}
+spec:
+  storageClassName: {{ .Values.mysql.persistence.storageClass }}
+  capacity:
+    storage: {{ .Values.mysql.persistence.size }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ template "voyage-shop-mysql.dataPath" . }}
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "voyage-shop-mysql.fullname" . }}-pvc
+  labels:
+    app: {{ .Values.mysql.name }}
+    {{- include "voyage-shop-mysql.labels" . | nindent 4 }}
+spec:
+  storageClassName: {{ .Values.mysql.persistence.storageClass }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mysql.persistence.size }}
+{{- end }} 

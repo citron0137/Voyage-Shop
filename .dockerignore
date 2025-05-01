@@ -1,0 +1,13 @@
+.git
+.gradle
+.idea
+build
+data
+!gradle/wrapper/gradle-wrapper.jar
+**/build/
+*.iml
+*.ipr
+*.iws
+out/
+.DS_Store
+k8s/ 

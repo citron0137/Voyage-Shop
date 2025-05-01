@@ -1,0 +1,23 @@
+# Local environment specific values
+# 경로 설정
+basePath:
+  host: "/run/desktop/mnt/host/c/Users/citro/Personal/voyage/Voyage-Shop"
+  environment: "local"
+
+app:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  replicaCount: 1
+
+# 로컬 환경 데이터베이스 설정
+database:
+  host: voyage-shop-mysql-db
+  port: 3306
+  user: voyage
+  name: hhplus
+  password: voyage_password 

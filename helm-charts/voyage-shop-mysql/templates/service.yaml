@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.mysql.name }}
+  labels:
+    app: {{ .Values.mysql.name }}
+    {{- include "voyage-shop-mysql.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ .Values.mysql.name }}
+  ports:
+  - name: mysql
+    port: {{ .Values.mysql.port }}
+    targetPort: {{ .Values.mysql.port }}
+  type: ClusterIP 
