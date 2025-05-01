@@ -1,10 +1,3 @@
----
-name: 🔄 리팩토링
-about: 코드 개선 및 리팩토링을 위한 PR
-title: '[REFACTOR] '
-labels: refactor
----
-
 <!--
   제목은 [REFACTOR] 리팩토링 내용 형식으로 작성해 주세요
   예시: [REFACTOR] 주문 서비스 로직 개선

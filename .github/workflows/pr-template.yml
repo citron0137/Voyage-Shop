@@ -1,0 +1,84 @@
+name: PR Template Selector
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  select-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check PR branch name
+        id: check-branch
+        run: |
+          BRANCH_NAME=$(echo ${{ github.head_ref }} | tr '[:upper:]' '[:lower:]')
+          if [[ $BRANCH_NAME == feature/* ]]; then
+            echo "TEMPLATE=feature.md" >> $GITHUB_ENV
+            echo "TITLE_PREFIX=✨ [FEATURE] " >> $GITHUB_ENV
+            echo "LABEL=feature" >> $GITHUB_ENV
+          elif [[ $BRANCH_NAME == bugfix/* ]]; then
+            echo "TEMPLATE=bugfix.md" >> $GITHUB_ENV
+            echo "TITLE_PREFIX=🐛 [FIX] " >> $GITHUB_ENV
+            echo "LABEL=bug" >> $GITHUB_ENV
+          elif [[ $BRANCH_NAME == refactor/* ]]; then
+            echo "TEMPLATE=refactor.md" >> $GITHUB_ENV
+            echo "TITLE_PREFIX=♻️ [REFACTOR] " >> $GITHUB_ENV
+            echo "LABEL=refactor" >> $GITHUB_ENV
+          elif [[ $BRANCH_NAME == docs/* ]]; then
+            echo "TEMPLATE=docs.md" >> $GITHUB_ENV
+            echo "TITLE_PREFIX=📝 [DOCS] " >> $GITHUB_ENV
+            echo "LABEL=documentation" >> $GITHUB_ENV
+          elif [[ $BRANCH_NAME == step* ]]; then
+            echo "TEMPLATE=step.md" >> $GITHUB_ENV
+            STEP_NAME=$(echo $BRANCH_NAME | cut -d'/' -f1 | tr '[:lower:]' '[:upper:]')
+            echo "TITLE_PREFIX=🚀 [$STEP_NAME] " >> $GITHUB_ENV
+            echo "LABEL=step" >> $GITHUB_ENV
+          else
+            echo "TEMPLATE=default.md" >> $GITHUB_ENV
+            echo "TITLE_PREFIX=[ETC]" >> $GITHUB_ENV
+            echo "LABEL=other" >> $GITHUB_ENV
+          fi
+
+      - name: Read template file
+        id: read-template
+        run: |
+          TEMPLATE_CONTENT=$(cat .github/PULL_REQUEST_TEMPLATE/${{ env.TEMPLATE }})
+          echo "TEMPLATE_CONTENT<<EOF" >> $GITHUB_ENV
+          echo "$TEMPLATE_CONTENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Update PR title, body and labels
+        uses: actions/github-script@v6
+        env:
+          TEMPLATE_CONTENT: ${{ env.TEMPLATE_CONTENT }}
+          TITLE_PREFIX: ${{ env.TITLE_PREFIX }}
+          LABEL: ${{ env.LABEL }}
+        with:
+          script: |
+            const branchName = context.payload.pull_request.head.ref;
+            const title = process.env.TITLE_PREFIX + branchName.split('/').pop().replace(/-/g, ' ');
+            
+            // Update PR title and body
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              title: title,
+              body: process.env.TEMPLATE_CONTENT
+            });
+
+            // Add label to PR
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [process.env.LABEL]
+            }); 
