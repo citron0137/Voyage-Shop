@@ -116,6 +116,7 @@ docker compose up -d
 ```
 
 브라우저에서 `http://localhost:8080`으로 접속하여 API를 사용할 수 있습니다.
+Swagger UI는 `http://localhost:8080/swagger-ui/index.html#/`에서 확인할 수 있습니다.
 
 ## 프로젝트 구조
 
