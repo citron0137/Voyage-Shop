@@ -31,21 +31,23 @@ jobs:
             echo "TEMPLATE=default.md" >> $GITHUB_ENV
           fi
 
+      - name: Read template file
+        id: read-template
+        run: |
+          TEMPLATE_CONTENT=$(cat .github/PULL_REQUEST_TEMPLATE/${{ env.TEMPLATE }})
+          echo "TEMPLATE_CONTENT<<EOF" >> $GITHUB_ENV
+          echo "$TEMPLATE_CONTENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Update PR body
         uses: actions/github-script@v6
         env:
-          TEMPLATE: ${{ env.TEMPLATE }}
+          TEMPLATE_CONTENT: ${{ env.TEMPLATE_CONTENT }}
         with:
           script: |
-            const fs = require('fs');
-            const path = require('path');
-            
-            const templatePath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'PULL_REQUEST_TEMPLATE', process.env.TEMPLATE);
-            const templateContent = fs.readFileSync(templatePath, 'utf8');
-            
             await github.rest.pulls.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
-              body: templateContent
+              body: process.env.TEMPLATE_CONTENT
             }); 
