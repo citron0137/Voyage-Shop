@@ -1,0 +1,45 @@
+name: PR Template Selector
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  select-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR branch name
+        id: check-branch
+        run: |
+          BRANCH_NAME=$(echo ${{ github.head_ref }} | tr '[:upper:]' '[:lower:]')
+          if [[ $BRANCH_NAME == feature/* ]]; then
+            echo "TEMPLATE=feature.md" >> $GITHUB_ENV
+          elif [[ $BRANCH_NAME == bugfix/* ]]; then
+            echo "TEMPLATE=bugfix.md" >> $GITHUB_ENV
+          elif [[ $BRANCH_NAME == refactor/* ]]; then
+            echo "TEMPLATE=refactor.md" >> $GITHUB_ENV
+          elif [[ $BRANCH_NAME == docs/* ]]; then
+            echo "TEMPLATE=docs.md" >> $GITHUB_ENV
+          else
+            echo "TEMPLATE=default.md" >> $GITHUB_ENV
+          fi
+
+      - name: Update PR body
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const template = process.env.TEMPLATE;
+            const templateContent = fs.readFileSync(`.github/PULL_REQUEST_TEMPLATE/${template}`, 'utf8');
+            
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              body: templateContent
+            }); 
