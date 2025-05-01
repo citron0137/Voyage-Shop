@@ -263,6 +263,151 @@ Voyage-Shop 애플리케이션의 성능 특성을 정확히 파악하고 병목
   - 부하 감소 후 회복
   - 안정적인 운영 한계점 확인
 
+## 부하 테스트 실행 방법
+
+### 1. 테스트 환경 구성
+
+#### Docker Compose를 이용한 테스트 환경 구축
+```bash
+# 애플리케이션 및 데이터베이스 환경 시작
+docker-compose -f docker-compose.yml -f docker-compose.app.yml up -d
+
+# 테스트 환경 중지
+docker-compose -f docker-compose.yml -f docker-compose.app.yml down
+```
+
+#### 구성 요소
+- **MySQL**: 데이터베이스 서버
+  - 포트: 3306
+  - 데이터베이스: hhplus
+  - 사용자: application/application
+
+- **애플리케이션**: 테스트 대상 서버
+  - 포트: 8080
+  - 데이터베이스 연결 정보:
+    - URL: jdbc:mysql://mysql:3306/hhplus
+    - 사용자: application
+    - 비밀번호: application
+
+- **InfluxDB**: 테스트 결과 데이터 저장
+  - 포트: 8086
+  - 데이터베이스: k6
+  - 사용자: k6/k6password
+
+- **Grafana**: 테스트 결과 시각화
+  - 포트: 3000
+  - 기본 계정: admin/admin
+  - 대시보드 설정: ./grafana/provisioning
+
+- **K6**: 부하 테스트 실행
+  - 테스트 스크립트 위치: ./k6-tests
+  - 환경 변수:
+    - API_HOST: 테스트 대상 애플리케이션 주소
+    - K6_SCRIPT: 실행할 테스트 스크립트 (기본값: load-test.js)
+
+### 2. 테스트 실행 단계
+
+1. **테스트 스크립트 준비**
+   - `./k6-tests` 디렉토리에 테스트 스크립트 작성
+   - 각 API별 테스트 시나리오 구현
+
+2. **테스트 환경 시작**
+   ```bash
+   # 기본 테스트 스크립트로 시작
+   docker-compose -f docker-compose.loadtest.yml up -d
+
+   # 특정 테스트 스크립트로 시작
+   K6_SCRIPT=order-test.js docker-compose -f docker-compose.loadtest.yml up -d
+
+   # 여러 환경 변수 설정
+   K6_SCRIPT=order-test.js API_HOST=app:8080 docker-compose -f docker-compose.loadtest.yml up -d
+   ```
+
+3. **Grafana 접속**
+   - http://localhost:3000 접속
+   - admin/admin으로 로그인
+   - 테스트 결과 대시보드 확인
+
+4. **테스트 실행**
+   ```bash
+   # 기본 테스트 스크립트 실행
+   docker-compose -f docker-compose.loadtest.yml run k6
+
+   # 특정 테스트 스크립트 실행
+   docker-compose -f docker-compose.loadtest.yml run -e K6_SCRIPT=order-test.js k6
+
+   # 여러 환경 변수 설정하여 실행
+   docker-compose -f docker-compose.loadtest.yml run -e K6_SCRIPT=order-test.js -e API_HOST=app:8080 k6
+   ```
+
+5. **결과 확인**
+   - Grafana 대시보드에서 실시간 모니터링
+   - 응답 시간, 처리량, 오류율 등 지표 확인
+
+### 3. 테스트 스크립트 예시
+
+```javascript
+// k6-tests/load-test.js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '1m', target: 10 },  // 1분 동안 10명으로 증가
+    { duration: '3m', target: 10 },  // 3분 동안 10명 유지
+    { duration: '1m', target: 0 },   // 1분 동안 0명으로 감소
+  ],
+};
+
+export default function() {
+  const res = http.get('http://${__ENV.API_HOST}/api/orders');
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+  });
+  sleep(1);
+}
+```
+
+### 4. 환경 변수 설정
+
+#### 주요 환경 변수
+- **K6_SCRIPT**: 실행할 테스트 스크립트 파일명 (기본값: load-test.js)
+- **API_HOST**: 테스트 대상 애플리케이션 주소 (기본값: app:8080)
+- **K6_INFLUXDB_USERNAME**: InfluxDB 사용자명 (기본값: k6)
+- **K6_INFLUXDB_PASSWORD**: InfluxDB 비밀번호 (기본값: k6password)
+- **K6_INFLUXDB_DB**: InfluxDB 데이터베이스명 (기본값: k6)
+
+#### 환경 변수 설정 방법
+1. **Docker Compose 실행 시 설정**
+   ```bash
+   K6_SCRIPT=order-test.js API_HOST=app:8080 docker-compose -f docker-compose.loadtest.yml up -d
+   ```
+
+2. **docker-compose.override.yml 파일 사용**
+   ```yaml
+   version: '3'
+   services:
+     k6:
+       environment:
+         - K6_SCRIPT=order-test.js
+         - API_HOST=app:8080
+   ```
+
+3. **.env 파일 사용**
+   ```bash
+   # .env 파일 생성
+   K6_SCRIPT=order-test.js
+   API_HOST=app:8080
+   ```
+
+### 5. 주의사항
+
+- 테스트 전에 충분한 테스트 데이터 준비
+- 테스트 환경의 리소스 모니터링
+- 점진적인 부하 증가로 시스템 한계점 파악
+- 테스트 결과의 지속적인 기록 및 분석
+
 ## 결론
 
-체계적인 부하 테스트를 통해 Voyage-Shop 애플리케이션의 성능 특성을 정확히 파악하고, 병목 지점을 식별할 수 있습니다. 테스트 결과를 바탕으로 지속적인 성능 최적화를 진행하여 시스템의 안정성과 확장성을 확보할 수 있습니다. 
+체계적인 부하 테스트를 통해 Voyage-Shop 애플리케이션의 성능 특성을 정확히 파악하고, 병목 지점을 식별할 수 있습니다. 테스트 결과를 바탕으로 지속적인 성능 최적화를 진행하여 시스템의 안정성과 확장성을 확보할 수 있습니다.
