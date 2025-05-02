@@ -481,6 +481,76 @@ class UserPointFacade(
 
 결론적으로, 대부분의 경우 AOP 기반 패턴이 최선의 선택이지만, 프로젝트의 특성과 팀의 기술적 배경에 따라 다른 패턴도 고려해볼 수 있습니다. 중요한 것은 비즈니스 로직과 락 관리 로직의 명확한 분리와 일관된 적용입니다.
 
+#### 아키텍처 계층별 락 적용 규칙
+
+프로젝트의 일관성과 유지보수성을 위해 다음과 같은 아키텍처 계층별 락 적용 규칙을 적용합니다:
+
+**1. 파사드 레이어 (Application Layer)**
+- **락 어노테이션 사용**: 파사드 레이어에서는 `@DistributedLock` 어노테이션 사용 허용
+- **트랜잭션 관리**: 트랜잭션 제어가 필요한 경우 `TransactionManager`를 명시적으로 사용
+- **적용 이유**:
+  - 파사드 레이어는 여러 도메인 서비스를 조합하는 책임이 있어 락의 경계를 명확히 표현할 필요가 있음
+  - 선언적 락 적용으로 코드의 의도가 명확하게 드러남
+  - 트랜잭션과 락의 범위를 세밀하게 제어 가능
+
+```kotlin
+@Component
+class UserPointFacade(
+    private val userPointService: UserPointService,
+    private val transactionManager: PlatformTransactionManager
+) {
+    @DistributedLock(key = "user-point", parameterName = "command.userId")
+    fun chargePoint(command: UserPointCommand.Charge): UserPoint {
+        val transactionTemplate = TransactionTemplate(transactionManager)
+        return transactionTemplate.execute {
+            userPointService.charge(command.userId, command.amount)
+        }
+    }
+}
+```
+
+**2. 도메인 서비스 레이어 (Domain Layer)**
+- **락 어노테이션 불허**: 도메인 서비스에서는 `@DistributedLock` 어노테이션 사용 금지
+- **트랜잭션 관리**: `@Transactional` 어노테이션 또는 `TransactionManager` 중 선택하여 사용 가능
+- **적용 이유**:
+  - 도메인 서비스는 순수 비즈니스 로직에 집중해야 함
+  - 락 관리는 애플리케이션 계층의 책임으로 분리
+  - 테스트 용이성 향상 (락 의존성 없이 비즈니스 로직 테스트 가능)
+
+```kotlin
+@Service
+class UserPointService(
+    private val userPointRepository: UserPointRepository
+) {
+    @Transactional // 어노테이션 방식 허용
+    fun charge(userId: String, amount: Long): UserPoint {
+        val userPoint = userPointRepository.findByUserId(userId)
+            ?: throw UserPointException.NotFound()
+        
+        val chargedPoint = userPoint.charge(amount)
+        return userPointRepository.save(chargedPoint)
+    }
+    
+    // 또는 명시적 트랜잭션 관리 방식 허용
+    fun useWithTransactionManager(userId: String, amount: Long, transactionManager: PlatformTransactionManager): UserPoint {
+        val transactionTemplate = TransactionTemplate(transactionManager)
+        return transactionTemplate.execute {
+            val userPoint = userPointRepository.findByUserId(userId)
+                ?: throw UserPointException.NotFound()
+            
+            val usedPoint = userPoint.use(amount)
+            userPointRepository.save(usedPoint)
+        }
+    }
+}
+```
+
+이러한 규칙을 적용함으로써 다음과 같은 이점을 얻을 수 있습니다:
+- **관심사의 명확한 분리**: 비즈니스 로직과 인프라 관심사(락, 트랜잭션)의 명확한 분리
+- **일관된 코드 스타일**: 팀 전체가 일관된 방식으로 락과 트랜잭션을 적용
+- **책임 경계 명확화**: 각 계층의 책임이 명확하게 구분되어 유지보수성 향상
+- **테스트 용이성**: 도메인 로직을 락과 분리하여 단위 테스트 작성 용이
+
 ### 5. 결론 및 추가 개선 방향
 
 #### 결론
