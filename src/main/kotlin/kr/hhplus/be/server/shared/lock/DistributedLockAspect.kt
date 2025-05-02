@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.shared.aop
+package kr.hhplus.be.server.shared.lock
 
 import kr.hhplus.be.server.shared.lock.DistributedLock
 import kr.hhplus.be.server.shared.lock.DistributedLockManager
@@ -24,11 +24,14 @@ class DistributedLockAspect(private val lockManager: DistributedLockManager) {
      * 락을 획득한 후 메서드를 실행하고 락을 해제합니다.
      *
      * @param joinPoint 메서드 실행 지점
-     * @param distributedLock 어노테이션 정보
      * @return 메서드 실행 결과
      */
-    @Around("@annotation(distributedLock)")
-    fun executeWithLock(joinPoint: ProceedingJoinPoint, distributedLock: DistributedLock): Any {
+    @Around("@annotation(kr.hhplus.be.server.shared.lock.DistributedLock) && execution(* *(..))")
+    fun executeWithLock(joinPoint: ProceedingJoinPoint): Any {
+        val methodSignature = joinPoint.signature as MethodSignature
+        val method = methodSignature.method
+        val distributedLock = method.getAnnotation(DistributedLock::class.java)
+        
         val actualKey = resolveKey(distributedLock.key, distributedLock.parameterName, joinPoint)
         
         return lockManager.executeWithLock(
