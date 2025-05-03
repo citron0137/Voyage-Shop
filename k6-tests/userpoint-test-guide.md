@@ -50,6 +50,7 @@ $env:K6_SCRIPT="userpoint-concurrency-test.js";`
   docker-compose -f docker-compose.yml `
   -f docker-compose.app.yml `
   -f docker-compose.loadtest.yml `
+  -f docker-compose.monitoring.yml `
   up k6 --no-deps
 
 # Linux에서는:
@@ -57,6 +58,7 @@ $env:K6_SCRIPT="userpoint-concurrency-test.js";`
 #   docker-compose -f docker-compose.yml \
 #   -f docker-compose.app.yml \
 #   -f docker-compose.loadtest.yml \
+#   -f docker-compose.monitoring.yml \
 #   up k6 --no-deps
 
 # 테스트 2: 비관적 락 + 분산 락 테스트
@@ -64,6 +66,7 @@ $env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
   docker-compose -f docker-compose.yml `
   -f docker-compose.app.yml `
   -f docker-compose.loadtest.yml `
+  -f docker-compose.monitoring.yml `
   up k6 --no-deps
 
 # Linux에서는:
@@ -71,6 +74,7 @@ $env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
 #   docker-compose -f docker-compose.yml \
 #   -f docker-compose.app.yml \
 #   -f docker-compose.loadtest.yml \
+#   -f docker-compose.monitoring.yml \
 #   up k6 --no-deps
 
 # 단일 사용자 집중 테스트만 실행 (비관적 락 + 분산 락)
@@ -79,6 +83,7 @@ $env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
   docker-compose -f docker-compose.yml `
   -f docker-compose.app.yml `
   -f docker-compose.loadtest.yml `
+  -f docker-compose.monitoring.yml `
   up k6 --no-deps
 
 # Linux에서는:
@@ -87,6 +92,7 @@ $env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
 #   docker-compose -f docker-compose.yml \
 #   -f docker-compose.app.yml \
 #   -f docker-compose.loadtest.yml \
+#   -f docker-compose.monitoring.yml \
 #   up k6 --no-deps
 ```
 
@@ -102,7 +108,7 @@ Grafana 대시보드를 통해 테스트 결과를 확인할 수 있습니다:
 
 ```bash
 # 부하 테스트 환경 중지
-docker-compose -f docker-compose.loadtest.yml -f docker-compose.app.yml -f docker-compose.yml down
+docker-compose -f docker-compose.yml -f docker-compose.app.yml -f docker-compose.loadtest.yml -f docker-compose.monitoring.yml down
 ```
 
 ### 로컬 환경에서 직접 실행 (선택사항)
