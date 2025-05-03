@@ -46,7 +46,7 @@ class CouponUserApiTest {
     fun setUp() {
         // 테스트용 사용자 생성
         val createUserResponse = mockMvc.perform(
-            post("/users")
+            post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andReturn()
         
@@ -124,7 +124,7 @@ class CouponUserApiTest {
         fun checkUserCouponsWithExistingAPI() {
             // 새로운 사용자와 쿠폰 생성
             val createUserResponse = mockMvc.perform(
-                post("/users")
+                post("/api/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
             ).andReturn()
             
@@ -217,7 +217,7 @@ class CouponUserApiTest {
         fun testFullFlowWithRepository() {
             // 1. 사용자 생성
             val createUserResponse = mockMvc.perform(
-                post("/users")
+                post("/api/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
             ).andReturn()
             
