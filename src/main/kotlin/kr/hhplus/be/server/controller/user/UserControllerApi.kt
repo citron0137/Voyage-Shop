@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping
  * 사용자 생성 및 조회 기능을 제공합니다.
  */
 @Tag(name = "사용자 API", description = "사용자 생성 및 조회 기능을 제공하는 API")
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 interface UserControllerApi {
 
     /**
