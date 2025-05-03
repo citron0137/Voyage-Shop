@@ -2,13 +2,11 @@ package kr.hhplus.be.server.application.product
 
 import kr.hhplus.be.server.domain.product.*
 import kr.hhplus.be.server.shared.lock.DistributedLock
-import kr.hhplus.be.server.shared.lock.DistributedLockManager
-import kr.hhplus.be.server.shared.lock.DistributedLockUtils
+import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
-import java.util.concurrent.TimeUnit
 
 /**
  * 상품 파사드
@@ -17,7 +15,6 @@ import java.util.concurrent.TimeUnit
 @Component
 class ProductFacade(
     private val productService: ProductService,
-    private val lockManager: DistributedLockManager,
     private val transactionManager: PlatformTransactionManager
 ) {
     /**
@@ -73,7 +70,11 @@ class ProductFacade(
      * @throws ProductException.StockAmountShouldMoreThan0 재고가 0 미만인 경우
      * @throws ProductException.StockAmountOverflow 재고가 최대치를 초과하는 경우
      */
-    @DistributedLock(key = "product-stock", parameterName = "criteria.productId")
+    @DistributedLock(
+        domain = LockKeyConstants.PRODUCT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_STOCK,
+        resourceIdExpression = "criteria.productId"
+    )
     @Transactional
     fun updateStock(criteria: ProductCriteria.UpdateStock): ProductResult.Single {
         val product = productService.updateProductStock(criteria.toCommand())
@@ -91,7 +92,11 @@ class ProductFacade(
      * @throws ProductException.IncreaseStockAmountShouldMoreThan0 증가량이 0 이하인 경우
      * @throws ProductException.StockAmountOverflow 증가 후 재고가 최대치를 초과하는 경우
      */
-    @DistributedLock(key = "product-stock", parameterName = "criteria.productId")
+    @DistributedLock(
+        domain = LockKeyConstants.PRODUCT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_STOCK,
+        resourceIdExpression = "criteria.productId"
+    )
     @Transactional
     fun increaseStock(criteria: ProductCriteria.IncreaseStock): ProductResult.Single {
         val product = productService.increaseProductStock(criteria.toCommand())
@@ -109,7 +114,11 @@ class ProductFacade(
      * @throws ProductException.DecreaseStockAmountShouldMoreThan0 감소량이 0 이하인 경우
      * @throws ProductException.StockAmountUnderflow 감소 후 재고가 0 미만인 경우
      */
-    @DistributedLock(key = "product-stock", parameterName = "criteria.productId")
+    @DistributedLock(
+        domain = LockKeyConstants.PRODUCT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_STOCK,
+        resourceIdExpression = "criteria.productId"
+    )
     @Transactional
     fun decreaseStock(criteria: ProductCriteria.DecreaseStock): ProductResult.Single {
         val product = productService.decreaseProductStock(criteria.toCommand())

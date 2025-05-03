@@ -44,4 +44,29 @@ class RedisDistributedLockManager(private val redissonClient: RedissonClient) : 
             }
         }
     }
+    
+    /**
+     * 지정된 키에 대한 분산 락을 획득합니다.
+     *
+     * @param key 락을 획득할 리소스 키
+     * @param timeout 락 획득 대기 시간
+     * @param unit 시간 단위
+     * @return 락 획득 성공 여부
+     */
+    override fun tryLock(key: String, timeout: Long, unit: TimeUnit): Boolean {
+        val lock = redissonClient.getLock("lock:$key")
+        return lock.tryLock(timeout, unit)
+    }
+    
+    /**
+     * 지정된 키에 대한 분산 락을 해제합니다.
+     *
+     * @param key 해제할 락의 리소스 키
+     */
+    override fun unlock(key: String) {
+        val lock = redissonClient.getLock("lock:$key")
+        if (lock.isHeldByCurrentThread) {
+            lock.unlock()
+        }
+    }
 } 

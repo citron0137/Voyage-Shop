@@ -3,6 +3,7 @@ package kr.hhplus.be.server.application.couponuser
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.shared.lock.DistributedLock
 import kr.hhplus.be.server.shared.lock.DistributedLockManager
+import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -15,7 +16,6 @@ import java.util.concurrent.TimeUnit
 @Component
 class CouponUserFacade(
     private val couponUserService: CouponUserService,
-    private val lockManager: DistributedLockManager,
     private val transactionHelper: TransactionHelper
 ) {
     /**
@@ -51,7 +51,11 @@ class CouponUserFacade(
      * @return 발급된 쿠폰 정보
      * @throws kr.hhplus.be.server.domain.coupon.CouponException.InvalidBenefitAmount 유효하지 않은 혜택 금액인 경우
      */
-    @DistributedLock(key = "coupon-user-issue", parameterName = "criteria.userId")
+    @DistributedLock(
+        domain = LockKeyConstants.COUPON_USER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_USER,
+        resourceIdExpression = "criteria.userId"
+    )
     fun issueCoupon(criteria: CouponUserCriteria.Create): CouponUserResult.Single {
         return transactionHelper.executeInTransaction {
             CouponUserResult.Single.from(couponUserService.create(criteria.toCommand()))
@@ -67,7 +71,11 @@ class CouponUserFacade(
      * @throws kr.hhplus.be.server.domain.coupon.CouponException.CouponNotFound 쿠폰을 찾을 수 없는 경우
      * @throws kr.hhplus.be.server.domain.coupon.CouponException.CouponAlreadyUsed 쿠폰이 이미 사용된 경우
      */
-    @DistributedLock(key = "coupon-user", parameterName = "criteria.couponId")
+    @DistributedLock(
+        domain = LockKeyConstants.COUPON_USER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_ID,
+        resourceIdExpression = "criteria.couponUserId"
+    )
     fun useCoupon(criteria: CouponUserCriteria.Use): CouponUserResult.Single {
         return transactionHelper.executeInTransaction {
             CouponUserResult.Single.from(couponUserService.useCoupon(criteria.toCommand()))

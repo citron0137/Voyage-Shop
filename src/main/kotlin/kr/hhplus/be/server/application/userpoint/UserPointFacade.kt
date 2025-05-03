@@ -8,6 +8,7 @@ import kr.hhplus.be.server.domain.userpoint.UserPointException
 import kr.hhplus.be.server.domain.userpoint.UserPointQuery
 import kr.hhplus.be.server.domain.userpoint.UserPointService
 import kr.hhplus.be.server.shared.lock.DistributedLock
+import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
@@ -52,7 +53,11 @@ class UserPointFacade(
      * @throws UserPointException.ChargeAmountShouldMoreThan0 충전 금액이 0 이하인 경우
      * @throws UserPointException.PointAmountOverflow 충전 후 포인트가 최대치를 초과하는 경우
      */
-    @DistributedLock(key = "user-point", parameterName = "criteria.userId")
+    @DistributedLock(
+        domain = LockKeyConstants.USER_POINT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_USER,
+        resourceIdExpression = "criteria.userId"
+    )
     fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Single {
         return transactionHelper.executeInTransaction {
             // 포인트 충전
@@ -73,7 +78,11 @@ class UserPointFacade(
      * @throws UserPointException.UseAmountShouldMoreThan0 사용 금액이 0 이하인 경우
      * @throws UserPointException.PointAmountUnderflow 사용 가능한 포인트가 부족한 경우
      */
-    @DistributedLock(key = "user-point", parameterName = "criteria.userId")
+    @DistributedLock(
+        domain = LockKeyConstants.USER_POINT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_USER,
+        resourceIdExpression = "criteria.userId"
+    )
     fun usePoint(criteria: UserPointCriteria.Use): UserPointResult.Single {
         return transactionHelper.executeInTransaction {
             // 포인트 사용

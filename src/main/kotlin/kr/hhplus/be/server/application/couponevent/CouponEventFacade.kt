@@ -4,6 +4,7 @@ import kr.hhplus.be.server.domain.couponevent.*
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.shared.lock.DistributedLock
 import kr.hhplus.be.server.shared.lock.DistributedLockManager
+import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -17,7 +18,6 @@ import java.util.concurrent.TimeUnit
 class CouponEventFacade(
     private val couponEventService: CouponEventService,
     private val couponUserService: CouponUserService,
-    private val lockManager: DistributedLockManager,
     private val transactionHelper: TransactionHelper
 ) {
     /**
@@ -73,7 +73,12 @@ class CouponEventFacade(
      * @throws CouponEventException.OutOfStock 쿠폰 재고가 없는 경우
      * @throws kr.hhplus.be.server.domain.coupon.CouponUserException.AlreadyIssuedException 이미 발급된 쿠폰인 경우
      */
-    @DistributedLock(key = "coupon-event", parameterName = "criteria.couponEventId")
+    @DistributedLock(
+        domain = LockKeyConstants.COUPON_EVENT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_ID,
+        resourceIdExpression = "criteria.couponEventId",
+        timeout = LockKeyConstants.EXTENDED_TIMEOUT
+    )
     fun issueCouponUser(criteria: CouponEventCriteria.IssueCoupon): CouponEventResult.IssueCoupon {
         return transactionHelper.executeInTransaction {
             // 재고 감소 - 비관적 락으로 동시성 제어

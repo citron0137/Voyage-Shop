@@ -10,6 +10,8 @@ import kr.hhplus.be.server.domain.product.ProductService
 import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.shared.lock.DistributedLockManager
 import kr.hhplus.be.server.shared.lock.DistributedLockUtils
+import kr.hhplus.be.server.shared.lock.LockKeyConstants
+import kr.hhplus.be.server.shared.lock.LockKeyGenerator
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
@@ -144,20 +146,21 @@ class OrderFacade(
      */
     fun createOrder(criteria: OrderCriteria.Create): OrderResult.Single {
         // 1. 먼저 모든 필요한 락을 획득 (사용자, 상품들, 쿠폰)
-        val orderKey = "order-user:${criteria.userId}"
+        val orderKey = LockKeyGenerator.Order.userLock(criteria.userId)
         
         // 상품 ID들 추출
         val productIds = criteria.items.map { it.productId }
-        val productKeys = productIds.map { "product-stock:$it" }
+        val productKeys = productIds.map { LockKeyGenerator.Product.stockLock(it) }
         
         // 쿠폰 키 (있는 경우)
-        val couponKey = criteria.couponUserId?.let { "coupon-user:$it" }
+        val couponKey = criteria.couponUserId?.let { LockKeyGenerator.CouponUser.idLock(it) }
         
         // 모든 락 키를 하나의 리스트로 (사용자 -> 상품들 -> 쿠폰 순서로 획득)
         val allKeys = listOf(orderKey) + DistributedLockUtils.sortLockKeys(productKeys) + listOfNotNull(couponKey)
         
         // 각 락별 타임아웃 설정 (첫 번째 락은 30초, 나머지는 10초)
-        val timeouts = listOf(30L) + List(allKeys.size - 1) { 10L }
+        val timeouts = listOf(LockKeyConstants.EXTENDED_TIMEOUT) + 
+            List(allKeys.size - 1) { LockKeyConstants.DEFAULT_TIMEOUT }
         
         // 모든 락을 순서대로 획득
         return DistributedLockUtils.withOrderedLocks(

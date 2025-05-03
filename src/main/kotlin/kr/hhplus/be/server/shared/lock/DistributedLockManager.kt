@@ -23,4 +23,21 @@ interface DistributedLockManager {
         unit: TimeUnit = TimeUnit.SECONDS,
         supplier: () -> T
     ): T
+    
+    /**
+     * 지정된 키에 대한 분산 락을 획득합니다.
+     *
+     * @param key 락을 획득할 리소스 키
+     * @param timeout 락 획득 대기 시간
+     * @param unit 시간 단위
+     * @return 락 획득 성공 여부
+     */
+    fun tryLock(key: String, timeout: Long = 10, unit: TimeUnit = TimeUnit.SECONDS): Boolean
+    
+    /**
+     * 지정된 키에 대한 분산 락을 해제합니다.
+     *
+     * @param key 해제할 락의 리소스 키
+     */
+    fun unlock(key: String)
 } 
