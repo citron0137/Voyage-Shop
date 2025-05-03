@@ -12,7 +12,7 @@ datasources:
     secureJsonData:
       password: k6password
     user: k6
-    isDefault: true
+    isDefault: false
 
   - name: Loki
     type: loki
@@ -26,8 +26,8 @@ datasources:
     url: http://tempo:3200
     isDefault: false
     
-  - name: Mimir
+  - name: Prometheus
     type: prometheus
     access: proxy
-    url: http://mimir:9009/prometheus
-    isDefault: false 
+    url: http://prometheus:9090
+    isDefault: true

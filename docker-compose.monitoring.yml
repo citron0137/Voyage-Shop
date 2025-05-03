@@ -25,7 +25,7 @@ services:
       - influxdb
       - loki
       - tempo
-      - mimir
+      - prometheus
     networks:
       - monitoring
 
@@ -53,13 +53,14 @@ services:
     networks:
       - monitoring
       
-  mimir:
-    image: grafana/mimir:latest
+  prometheus:
+    # Mimir 대신 Prometheus 사용
+    image: prom/prometheus:latest
     ports:
-      - "9009:9009"
-    command: -config.file=/etc/mimir/mimir-local.yaml
+      - "9009:9090"
     volumes:
-      - ./monitoring/mimir:/etc/mimir
+      - ./monitoring/prometheus:/etc/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml
     networks:
       - monitoring
       
