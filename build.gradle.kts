@@ -51,10 +51,11 @@ dependencies {
 
     // Monitoring & Metrics
     implementation("io.micrometer:micrometer-registry-prometheus")
-    implementation("io.opentelemetry:opentelemetry-api")
-    implementation("io.opentelemetry:opentelemetry-sdk")
+    
+    // 간소화된 트레이스 설정
+    implementation("io.micrometer:micrometer-observation")
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.32.1")
 
     // Redis & Distributed Lock
     implementation("org.springframework.boot:spring-boot-starter-data-redis")

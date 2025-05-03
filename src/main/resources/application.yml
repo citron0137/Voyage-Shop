@@ -48,18 +48,16 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
+    tags:
+      application: ${spring.application.name}
   tracing:
+    enabled: true
     sampling:
       probability: 1.0
-    propagation:
-      type: w3c
+  # 단순화된 OTLP 설정
   otlp:
-    metrics:
-      export:
-        url: ${MANAGEMENT_OTLP_METRICS_EXPORT_URL:http://localhost:4317}
-        step: ${MANAGEMENT_OTLP_METRICS_EXPORT_STEP:10s}
     tracing:
-      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://localhost:4317}
+      endpoint: http://tempo:4318/v1/traces
 
 # Redisson 설정
 redisson:
@@ -105,6 +103,5 @@ spring.data.redis.port: ${SPRING_REDIS_PORT:6379}
 spring.data.redis.timeout: ${SPRING_REDIS_TIMEOUT:3000}
 spring.data.redis.connect-timeout: ${SPRING_REDIS_CONNECT_TIMEOUT:3000}
 
-management.otlp.metrics.export.url: ${MANAGEMENT_OTLP_METRICS_EXPORT_URL:http://tempo:4317}
-management.otlp.metrics.export.step: ${MANAGEMENT_OTLP_METRICS_EXPORT_STEP:10s}
-management.otlp.tracing.endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://tempo:4317}
+# 트레이싱 설정 단순화
+management.otlp.tracing.endpoint: http://tempo:4318/v1/traces

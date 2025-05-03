@@ -50,6 +50,8 @@ services:
     command: -config.file=/etc/tempo/tempo-local.yaml
     volumes:
       - ./monitoring/tempo:/etc/tempo
+      - tempo-data:/var/tempo
+    user: "0"
     networks:
       - monitoring
       
@@ -77,6 +79,7 @@ services:
 
 volumes:
   loki-data:
+  tempo-data:
 
 networks:
   monitoring:
