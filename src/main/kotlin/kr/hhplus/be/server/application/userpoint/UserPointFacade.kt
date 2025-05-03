@@ -8,9 +8,12 @@ import kr.hhplus.be.server.domain.userpoint.UserPointException
 import kr.hhplus.be.server.domain.userpoint.UserPointQuery
 import kr.hhplus.be.server.domain.userpoint.UserPointService
 import kr.hhplus.be.server.shared.lock.DistributedLock
+import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 
 /**
  * 사용자 포인트 파사드
@@ -19,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class UserPointFacade(
     private val userPointService: UserPointService,
-    private val userService: UserService
+    private val transactionHelper: TransactionHelper,
 ) {
     /**
      * 사용자 ID로 포인트 정보를 조회합니다.
@@ -30,11 +33,12 @@ class UserPointFacade(
      * @throws UserException.NotFound 사용자를 찾을 수 없는 경우
      * @throws UserPointException.NotFound 사용자 포인트를 찾을 수 없는 경우
      */
-    @Transactional(readOnly = true)
     fun getUserPoint(criteria: UserPointCriteria.GetByUserId): UserPointResult.Single {
-        // 사용자 포인트 조회
-        val userPoint = userPointService.getByUserId(criteria.toQuery())
-        return UserPointResult.Single.from(userPoint)
+        return transactionHelper.executeInReadOnlyTransaction {
+            // 사용자 포인트 조회
+            val userPoint = userPointService.getByUserId(criteria.toQuery())
+            UserPointResult.Single.from(userPoint)
+        }
     }
     
     /**
@@ -50,9 +54,11 @@ class UserPointFacade(
      */
     @DistributedLock(key = "user-point", parameterName = "criteria.userId")
     fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Single {
-        // 포인트 충전
-        val userPoint = userPointService.charge(criteria.toCommand())
-        return UserPointResult.Single.from(userPoint)
+        return transactionHelper.executeInTransaction {
+            // 포인트 충전
+            val userPoint = userPointService.charge(criteria.toCommand())
+            UserPointResult.Single.from(userPoint)
+        }
     }
     
     /**
@@ -69,8 +75,10 @@ class UserPointFacade(
      */
     @DistributedLock(key = "user-point", parameterName = "criteria.userId")
     fun usePoint(criteria: UserPointCriteria.Use): UserPointResult.Single {
-        // 포인트 사용
-        val userPoint = userPointService.use(criteria.toCommand())
-        return UserPointResult.Single.from(userPoint)
+        return transactionHelper.executeInTransaction {
+            // 포인트 사용
+            val userPoint = userPointService.use(criteria.toCommand())
+            UserPointResult.Single.from(userPoint)
+        }
     }
 } 

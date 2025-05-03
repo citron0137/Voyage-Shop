@@ -6,6 +6,7 @@ import kr.hhplus.be.server.domain.user.UserService
 import kr.hhplus.be.server.domain.userpoint.UserPointCommand
 import kr.hhplus.be.server.domain.userpoint.UserPointException
 import kr.hhplus.be.server.domain.userpoint.UserPointService
+import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class UserFacade(
     private val userService: UserService,
-    private val userPointService: UserPointService
+    private val userPointService: UserPointService,
+    private val transactionHelper: TransactionHelper
 ) {
     /**
      * 새로운 사용자를 생성합니다.
@@ -26,16 +28,17 @@ class UserFacade(
      * @throws UserPointException.UserIdShouldNotBlank 사용자 ID가 빈 값인 경우
      * @throws RuntimeException 사용자 생성 또는 포인트 생성 과정에서 예기치 않은 오류가 발생한 경우
      */
-    @Transactional
     fun createUser(criteria: UserCriteria.Create = UserCriteria.Create()): UserResult.Single {
-        // 사용자 생성
-        val createdUser = userService.createUser(criteria.toCommand())
-        
-        // 사용자 포인트 생성
-        val createPointCommand = UserPointCommand.Create(userId = createdUser.userId)
-        userPointService.create(createPointCommand)
-        
-        return UserResult.Single.from(createdUser)
+        return transactionHelper.executeInTransaction {
+            // 사용자 생성
+            val createdUser = userService.createUser(criteria.toCommand())
+            
+            // 사용자 포인트 생성
+            val createPointCommand = UserPointCommand.Create(userId = createdUser.userId)
+            userPointService.create(createPointCommand)
+            
+            UserResult.Single.from(createdUser)
+        }
     }
 
     /**
@@ -52,13 +55,11 @@ class UserFacade(
     }
 
     /**
-     * 모든 사용자 목록을 조회합니다.
+     * 모든 사용자를 조회합니다.
      *
-     * @param criteria 사용자 목록 조회 요청 기준
-     * @return 사용자 목록
-     * @throws RuntimeException 사용자 목록 조회 과정에서 예기치 않은 오류가 발생한 경우
+     * @return 모든 사용자 목록
      */
-    fun getAllUsers(criteria: UserCriteria.GetAll = UserCriteria.GetAll()): UserResult.List {
+    fun getAllUsers(): UserResult.List {
         val users = userService.getAllUsers()
         return UserResult.List.from(users)
     }
