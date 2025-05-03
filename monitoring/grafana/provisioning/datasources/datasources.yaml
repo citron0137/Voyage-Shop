@@ -31,3 +31,10 @@ datasources:
     access: proxy
     url: http://mimir:9009/prometheus
     isDefault: false 
+    
+  - name: AppMetrics
+    type: prometheus
+    access: proxy
+    url: http://app:8080/actuator/prometheus
+    isDefault: false
+    editable: true 

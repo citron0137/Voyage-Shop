@@ -57,4 +57,7 @@ ruler_storage:
 
 alertmanager:
   data_dir: /tmp/mimir/alertmanager
-  fallback_config_file: /etc/mimir/alertmanager-fallback-config.yaml 
+  fallback_config_file: /etc/mimir/alertmanager-fallback-config.yaml
+
+prometheus:
+  config_file: /etc/mimir/prometheus.yml 
