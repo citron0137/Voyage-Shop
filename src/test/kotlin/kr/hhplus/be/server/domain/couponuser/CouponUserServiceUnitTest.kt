@@ -69,7 +69,7 @@ class CouponUserServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponUserRepository.findByIdWithLock(couponUserId)).thenReturn(couponUser)
+        `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
         `when`(couponUserRepository.update(argThat { this.couponUserId == couponUserId && this.usedAt != null }))
             .thenReturn(couponUser.use())
 
@@ -98,7 +98,7 @@ class CouponUserServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponUserRepository.findByIdWithLock(couponUserId)).thenReturn(couponUser)
+        `when`(couponUserRepository.findById(couponUserId)).thenReturn(couponUser)
 
         // when & then
         assertThrows<CouponUserException.AlreadyUsed> {
@@ -112,7 +112,7 @@ class CouponUserServiceUnitTest {
         // given
         val couponUserId = UUID.randomUUID().toString()
         val command = CouponUserCommand.Use(couponUserId = couponUserId)
-        `when`(couponUserRepository.findByIdWithLock(couponUserId)).thenReturn(null)
+        `when`(couponUserRepository.findById(couponUserId)).thenReturn(null)
 
         // when & then
         assertThrows<CouponUserException.NotFound> {

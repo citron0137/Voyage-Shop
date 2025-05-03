@@ -65,7 +65,7 @@ class CouponUserService(
      * @throws CouponUserExcpetion.AlreadyUsed 이미 사용된 쿠폰인 경우
      */
     fun useCoupon(command: CouponUserCommand.Use): CouponUser {
-        val couponUser = repository.findByIdWithLock(command.couponUserId)
+        val couponUser = repository.findById(command.couponUserId)
             ?: throw CouponUserException.NotFound("Coupon with id: ${command.couponUserId}")
             
         val usedCouponUser = couponUser.use()
