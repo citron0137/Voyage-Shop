@@ -20,6 +20,9 @@ spring:
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
+  web:
+    resources:
+      add-mappings: false
   flyway:
     enabled: true
     baseline-on-migrate: true
