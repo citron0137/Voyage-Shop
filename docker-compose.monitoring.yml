@@ -18,6 +18,35 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
-      - influxdb 
+      - influxdb
+      - loki
+      - tempo
+      - mimir
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./monitoring/loki:/etc/loki
+    
+  tempo:
+    image: grafana/tempo:latest
+    ports:
+      - "3200:3200"
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+    command: -config.file=/etc/tempo/tempo-local.yaml
+    volumes:
+      - ./monitoring/tempo:/etc/tempo
+      
+  mimir:
+    image: grafana/mimir:latest
+    ports:
+      - "9009:9009"
+    command: -config.file=/etc/mimir/mimir-local.yaml
+    volumes:
+      - ./monitoring/mimir:/etc/mimir 
