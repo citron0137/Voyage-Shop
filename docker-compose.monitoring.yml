@@ -7,6 +7,8 @@ services:
       - INFLUXDB_DB=k6
       - INFLUXDB_USER=k6
       - INFLUXDB_USER_PASSWORD=k6password
+    networks:
+      - monitoring
 
   grafana:
     image: grafana/grafana:latest
@@ -24,14 +26,20 @@ services:
       - loki
       - tempo
       - mimir
+    networks:
+      - monitoring
 
   loki:
     image: grafana/loki:latest
     ports:
       - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml -validation.allow-structured-metadata=false
     volumes:
       - ./monitoring/loki:/etc/loki
+      - loki-data:/loki
+    user: "10001:10001"  # loki 사용자 ID
+    networks:
+      - monitoring
     
   tempo:
     image: grafana/tempo:latest
@@ -42,6 +50,8 @@ services:
     command: -config.file=/etc/tempo/tempo-local.yaml
     volumes:
       - ./monitoring/tempo:/etc/tempo
+    networks:
+      - monitoring
       
   mimir:
     image: grafana/mimir:latest
@@ -49,4 +59,24 @@ services:
       - "9009:9009"
     command: -config.file=/etc/mimir/mimir-local.yaml
     volumes:
-      - ./monitoring/mimir:/etc/mimir 
+      - ./monitoring/mimir:/etc/mimir
+    networks:
+      - monitoring
+      
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./logs:/var/log
+      - ./monitoring/promtail:/etc/promtail
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring
+
+volumes:
+  loki-data:
+
+networks:
+  monitoring:
+    driver: bridge 

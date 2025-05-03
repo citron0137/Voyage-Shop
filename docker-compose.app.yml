@@ -13,5 +13,7 @@ services:
       - SPRING_REDIS_PORT=6379
       - SPRING_REDIS_TIMEOUT=3000
       - SPRING_REDIS_CONNECT_TIMEOUT=3000
+    volumes:
+      - ./logs:/var/log
     depends_on:
       - mysql 

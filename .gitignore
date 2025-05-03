@@ -40,3 +40,6 @@ data
 
 # Helm charts
 helm-charts/*/charts/
+
+# logs
+logs/*

@@ -41,6 +41,16 @@ redisson:
   netty-threads: 32
   transport-mode: NIO
 
+# 로깅 설정
+logging:
+  file:
+    name: /var/log/application.log
+  level:
+    root: INFO
+    com.voyageshop: DEBUG
+    org.springframework: INFO
+    org.hibernate: WARN
+
 ---
 spring.config.activate.on-profile: local, test
 

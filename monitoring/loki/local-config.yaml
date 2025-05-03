@@ -3,16 +3,29 @@ auth_enabled: false
 server:
   http_listen_port: 3100
 
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+    replication_factor: 1
+
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+
 ingester:
   lifecycler:
-    address: 127.0.0.1
     ring:
       kvstore:
         store: inmemory
       replication_factor: 1
-    final_sleep: 0s
-  chunk_idle_period: 5m
-  chunk_retain_period: 30s
 
 schema_config:
   configs:
@@ -26,18 +39,13 @@ schema_config:
 
 storage_config:
   boltdb_shipper:
-    active_index_directory: /tmp/loki/boltdb-shipper-active
-    cache_location: /tmp/loki/boltdb-shipper-cache
+    active_index_directory: /loki/boltdb-shipper-active
+    cache_location: /loki/boltdb-shipper-cache
     cache_ttl: 24h
-    shared_store: filesystem
   filesystem:
-    directory: /tmp/loki/chunks
+    directory: /loki/chunks
 
 limits_config:
-  enforce_metric_name: false
   reject_old_samples: true
   reject_old_samples_max_age: 168h
-
-compactor:
-  working_directory: /tmp/loki/compactor
-  shared_store: filesystem 
+  allow_structured_metadata: false 
