@@ -1,7 +1,7 @@
 apiVersion: 1
 
 datasources:
-  - id: P951FEA4DE68E13C5
+  - uid: influxdb0001
     name: InfluxDB-k6
     type: influxdb
     access: proxy
@@ -14,19 +14,22 @@ datasources:
     user: k6
     isDefault: false
 
-  - name: Loki
+  - uid: loki000000001
+    name: Loki
     type: loki
     access: proxy
     url: http://loki:3100
     isDefault: false
     
-  - name: Tempo
+  - uid: tempo00000001
+    name: Tempo
     type: tempo
     access: proxy
     url: http://tempo:3200
     isDefault: false
     
-  - name: Prometheus
+  - uid: prom000000001
+    name: Prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090

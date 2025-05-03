@@ -10,6 +10,7 @@ services:
       - K6_INFLUXDB_PASSWORD=k6password
       - K6_INFLUXDB_INSECURE=true
       - API_HOST=app:8080
+      - RUN_TEST=true
     depends_on:
       - influxdb
       - app
@@ -17,4 +18,15 @@ services:
     command: >
       --out influxdb=${K6_INFLUXDB_ADDR:-http://influxdb:8086}/${K6_INFLUXDB_DB:-k6}
       /tests/${K6_SCRIPT:-load-test.js}
+    networks:
+      - default
+      - monitoring
+
+networks:
+  default:
+    name: voyage-shop_default
+    external: false
+  monitoring:
+    name: voyage-shop_monitoring
+    external: false
     
