@@ -57,7 +57,7 @@ class CouponEventService(
      */
     @Transactional
     fun decreaseStock(command: CouponEventCommand.Issue): CouponEvent {
-        val couponEvent = repository.findByIdWithLock(command.id)
+        val couponEvent = repository.findById(command.id)
             ?: throw CouponEventException.NotFound(command.id)
         // 엔티티 내부에서 검증 후 새 객체 생성
         val updatedCouponEvent = couponEvent.decreaseLeftIssueAmount()

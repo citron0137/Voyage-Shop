@@ -42,7 +42,7 @@ class OrderApiTest {
     fun setUp() {
         // 테스트용 사용자 생성
         val createUserResponse = mockMvc.perform(
-            post("/users")
+            post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andReturn()
         

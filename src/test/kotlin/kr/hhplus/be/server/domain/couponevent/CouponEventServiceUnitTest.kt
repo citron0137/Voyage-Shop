@@ -152,7 +152,7 @@ class CouponEventServiceUnitTest {
             updatedAt = LocalDateTime.now()
         )
         
-        `when`(couponEventRepository.findByIdWithLock(id)).thenReturn(initialCouponEvent)
+        `when`(couponEventRepository.findById(id)).thenReturn(initialCouponEvent)
         `when`(couponEventRepository.save(any())).thenReturn(expectedUpdatedCouponEvent)
 
         // when
@@ -177,7 +177,7 @@ class CouponEventServiceUnitTest {
             createdAt = LocalDateTime.now(),
             updatedAt = LocalDateTime.now()
         )
-        `when`(couponEventRepository.findByIdWithLock(id)).thenReturn(emptyStockCouponEvent)
+        `when`(couponEventRepository.findById(id)).thenReturn(emptyStockCouponEvent)
 
         // when & then
         assertThrows<CouponEventException.OutOfStock> {

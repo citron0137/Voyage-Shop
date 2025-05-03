@@ -1,0 +1,86 @@
+services:
+  influxdb:
+    image: influxdb:1.8
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_USER=k6
+      - INFLUXDB_USER_PASSWORD=k6password
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - influxdb
+      - loki
+      - tempo
+      - prometheus
+    networks:
+      - monitoring
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml -validation.allow-structured-metadata=false
+    volumes:
+      - ./monitoring/loki:/etc/loki
+      - loki-data:/loki
+    user: "10001:10001"  # loki 사용자 ID
+    networks:
+      - monitoring
+    
+  tempo:
+    image: grafana/tempo:latest
+    ports:
+      - "3200:3200"
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+    command: -config.file=/etc/tempo/tempo-local.yaml
+    volumes:
+      - ./monitoring/tempo:/etc/tempo
+      - tempo-data:/var/tempo
+    user: "0"
+    networks:
+      - monitoring
+      
+  prometheus:
+    # Mimir 대신 Prometheus 사용
+    image: prom/prometheus:latest
+    ports:
+      - "9009:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+      
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./logs:/var/log
+      - ./monitoring/promtail:/etc/promtail
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring
+
+volumes:
+  loki-data:
+  tempo-data:
+
+networks:
+  monitoring:
+    driver: bridge 

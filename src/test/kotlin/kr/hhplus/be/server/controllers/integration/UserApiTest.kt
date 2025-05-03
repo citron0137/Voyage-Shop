@@ -49,7 +49,7 @@ class UserApiTest {
         fun request_createsNewUser() {
             // when
             val result = mockMvc.perform(
-                post("/users")
+                post("/api/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
             )
             
@@ -73,7 +73,7 @@ class UserApiTest {
         fun withExistingId_returnsUser() {
             // given: 사용자 생성
             val createResponse = mockMvc.perform(
-                post("/users")
+                post("/api/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
             ).andReturn()
             
@@ -84,7 +84,7 @@ class UserApiTest {
             
             // when: 생성된 사용자 조회
             val result = mockMvc.perform(
-                get("/users/{userId}", userId)
+                get("/api/v1/users/{userId}", userId)
                     .contentType(MediaType.APPLICATION_JSON)
             )
             
@@ -101,7 +101,7 @@ class UserApiTest {
         fun withNonExistentId_returnsError() {
             // when
             val result = mockMvc.perform(
-                get("/users/{userId}", "non-existent-id")
+                get("/api/v1/users/{userId}", "non-existent-id")
                     .contentType(MediaType.APPLICATION_JSON)
             )
             
@@ -124,14 +124,14 @@ class UserApiTest {
             // given: 사용자 여러 명 생성
             for (i in 1..3) {
                 mockMvc.perform(
-                    post("/users")
+                    post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                 )
             }
             
             // when: 사용자 목록 조회
             val result = mockMvc.perform(
-                get("/users")
+                get("/api/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
             )
             
@@ -154,7 +154,7 @@ class UserApiTest {
         fun createAndRetrieveUser_succeedsEndToEnd() {
             // 1. 사용자 생성
             val createResponse = mockMvc.perform(
-                post("/users")
+                post("/api/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
             )
                 .andExpect(status().isOk)
@@ -168,7 +168,7 @@ class UserApiTest {
             
             // 2. 생성된 사용자 조회
             mockMvc.perform(
-                get("/users/{userId}", userId)
+                get("/api/v1/users/{userId}", userId)
                     .contentType(MediaType.APPLICATION_JSON)
             )
                 .andExpect(status().isOk)
@@ -177,7 +177,7 @@ class UserApiTest {
             
             // 3. 사용자 목록 조회
             mockMvc.perform(
-                get("/users")
+                get("/api/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
             )
                 .andExpect(status().isOk)

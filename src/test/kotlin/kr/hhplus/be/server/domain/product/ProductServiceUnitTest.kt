@@ -137,14 +137,14 @@ class ProductServiceUnitTest {
             updatedAt = LocalDateTime.now()
         )
 
-        every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.findById(productId) } returns existingProduct
         every { productRepository.update(any()) } returns updatedProduct
 
         // when
         val actualProduct = productService.updateProductStock(command)
 
         // then
-        verify { productRepository.findByIdWithLock(productId) }
+        verify { productRepository.findById(productId) }
         verify { productRepository.update(any()) }
         assertEquals(newStock, actualProduct.stock)
     }
@@ -174,14 +174,14 @@ class ProductServiceUnitTest {
             updatedAt = LocalDateTime.now()
         )
 
-        every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.findById(productId) } returns existingProduct
         every { productRepository.update(any()) } returns updatedProduct
 
         // when
         val actualProduct = productService.decreaseProductStock(command)
 
         // then
-        verify { productRepository.findByIdWithLock(productId) }
+        verify { productRepository.findById(productId) }
         verify { productRepository.update(any()) }
         assertEquals(finalStock, actualProduct.stock)
     }
@@ -211,14 +211,14 @@ class ProductServiceUnitTest {
             updatedAt = LocalDateTime.now()
         )
         
-        every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.findById(productId) } returns existingProduct
         every { productRepository.update(any()) } returns updatedProduct
         
         // when
         val actualProduct = productService.increaseProductStock(command)
         
         // then
-        verify { productRepository.findByIdWithLock(productId) }
+        verify { productRepository.findById(productId) }
         verify { productRepository.update(any()) }
         assertEquals(finalStock, actualProduct.stock)
     }
@@ -248,7 +248,7 @@ class ProductServiceUnitTest {
             updatedAt = LocalDateTime.now()
         )
         
-        every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.findById(productId) } returns existingProduct
         every { productRepository.update(any()) } returns updatedProduct
 
         // when & then
@@ -279,7 +279,7 @@ class ProductServiceUnitTest {
             stock = initialStock
         )
         
-        every { productRepository.findByIdWithLock(productId) } returns existingProduct
+        every { productRepository.findById(productId) } returns existingProduct
 
         // when & then
         assertThrows<ProductException.StockAmountOverflow> {

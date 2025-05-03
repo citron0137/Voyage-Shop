@@ -56,7 +56,7 @@ class ProductService (
      */
     @Transactional
     fun updateProductStock(command: ProductCommand.UpdateStock): Product {
-        val product = repository.findByIdWithLock(command.productId)
+        val product = repository.findById(command.productId)
             ?: throw ProductException.NotFound("Product with id: ${command.productId} not found")
         
         val updatedProduct = product.updateStock(command.amount)
@@ -74,7 +74,7 @@ class ProductService (
      */
     @Transactional
     fun decreaseProductStock(command: ProductCommand.DecreaseStock): Product {
-        val product = repository.findByIdWithLock(command.productId)
+        val product = repository.findById(command.productId)
             ?: throw ProductException.NotFound("Product with id: ${command.productId} not found")
         
         val updatedProduct = product.decreaseStock(command.amount)
@@ -92,7 +92,7 @@ class ProductService (
      */
     @Transactional
     fun increaseProductStock(command: ProductCommand.IncreaseStock): Product {
-        val product = repository.findByIdWithLock(command.productId)
+        val product = repository.findById(command.productId)
             ?: throw ProductException.NotFound("Product with id: ${command.productId} not found")
         
         val updatedProduct = product.increaseStock(command.amount)

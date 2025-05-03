@@ -38,7 +38,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -125,7 +125,7 @@
           "alias": "Active VUs",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -170,7 +170,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -257,7 +257,7 @@
           "alias": "Requests per Second",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -302,7 +302,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -405,7 +405,7 @@
           "alias": "Num Errors",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -450,7 +450,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -553,7 +553,7 @@
           "alias": "$tag_check",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -618,7 +618,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -680,7 +680,7 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -726,7 +726,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -788,7 +788,7 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -834,7 +834,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -896,7 +896,7 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -942,7 +942,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -1004,7 +1004,7 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -1050,7 +1050,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -1112,7 +1112,7 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -1158,7 +1158,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -1220,7 +1220,7 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -1266,7 +1266,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "description": "Grouped by 1 sec intervals",
       "fieldConfig": {
@@ -1352,7 +1352,7 @@
           "alias": "max",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -1396,7 +1396,7 @@
           "alias": "p95",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -1442,7 +1442,7 @@
           "alias": "p90",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -1488,7 +1488,7 @@
           "alias": "min",
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
@@ -1535,7 +1535,7 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "influxdb0001"
       },
       "fieldConfig": {
         "defaults": {
@@ -1611,7 +1611,7 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "influxdb0001"
           },
           "dsType": "influxdb",
           "groupBy": [
