@@ -239,125 +239,37 @@ class UserPointService(private val userPointRepository: UserPointRepository) {
 }
 ```
 
-**TO-BE (분산 락) - 책임 분리 패턴:**
+**TO-BE (분산 락)**
 
-1. **전용 락 관리자 패턴:**
+현재 프로젝트에서는 다음과 같은 분산 락 패턴을 적용하고 있습니다:
+
+1. **AOP 어노테이션 기반 분산 락**:
 
 ```kotlin
-// 1. 기본 락 매니저 인터페이스
-interface DistributedLockManager {
-    fun <T> executeWithLock(
-        key: String, 
-        timeout: Long = 10, 
-        unit: TimeUnit = TimeUnit.SECONDS, 
-        supplier: () -> T
-    ): T
-}
-
-// 2. Redis 기반 락 매니저 구현체
+// 1. 파사드 레이어에서 @DistributedLock 어노테이션 사용
 @Component
-class RedisDistributedLockManager(private val redissonClient: RedissonClient) : DistributedLockManager {
-    override fun <T> executeWithLock(key: String, timeout: Long, unit: TimeUnit, supplier: () -> T): T =
-        redissonClient.getLock("lock:$key").run {
-            if (!tryLock(timeout, unit)) {
-                throw LockAcquisitionException("락 획득 실패: $key")
-            }
-            
-            try {
-                supplier()
-            } finally {
-                if (isHeldByCurrentThread) unlock()
-            }
-        }
-}
-
-// 3. 도메인별 전용 락 관리자
-@Component
-class UserLockManager(private val lockManager: DistributedLockManager) {
-    fun <T> withUserPointLock(userId: String, action: () -> T): T =
-        lockManager.executeWithLock(key = "user-point:$userId", supplier = action)
-}
-
-// 4. 비즈니스 로직에서 락 관리자 사용
-interface UserPointRepository {
-    fun findByUserId(userId: String): UserPointJpaEntity?
-}
-
-@Service
-class UserPointService(
-    private val userPointRepository: UserPointRepository,
-    private val userLockManager: UserLockManager
+class UserPointFacade(
+    private val userPointService: UserPointService,
+    private val transactionHelper: TransactionHelper
 ) {
-    @Transactional
-    fun charge(command: UserPointCommand.Charge): UserPoint {
-        return userLockManager.withUserPointLock(command.userId) {
-            val userPoint = userPointRepository.findByUserId(userId = command.userId)
-                ?: throw UserPointException.NotFound()
-            
-            val chargedPoint = userPoint.charge(command.amount)
-            userPointRepository.save(chargedPoint)
+    @DistributedLock(
+        domain = LockKeyConstants.USER_POINT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_USER,
+        resourceIdExpression = "criteria.userId"
+    )
+    fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Single {
+        return transactionHelper.executeInTransaction {
+            // 포인트 충전
+            val userPoint = userPointService.charge(criteria.toCommand())
+            UserPointResult.Single.from(userPoint)
         }
     }
 }
-```
 
-2. **AOP 기반 분리 패턴:**
-
-```kotlin
-// 1. 락 관련 어노테이션 정의
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class DistributedLock(
-    val key: String,
-    val parameterName: String = "",
-    val timeout: Long = 10,
-    val timeUnit: TimeUnit = TimeUnit.SECONDS
-)
-
-// 2. AOP 어스펙트 구현
-@Aspect
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
-class DistributedLockAspect(private val lockManager: RedissonLockManager) {
-    
-    @Around("@annotation(distributedLock)")
-    fun executeWithLock(joinPoint: ProceedingJoinPoint, distributedLock: DistributedLock): Any {
-        val actualKey = resolveKey(distributedLock.key, distributedLock.parameterName, joinPoint)
-        return lockManager.executeWithLock(
-            key = actualKey,
-            timeout = distributedLock.timeout,
-            unit = distributedLock.timeUnit
-        ) {
-            joinPoint.proceed()
-        }
-    }
-    
-    private fun resolveKey(keyPrefix: String, parameterName: String, joinPoint: ProceedingJoinPoint): String {
-        if (parameterName.isBlank()) return keyPrefix
-        
-        val method = (joinPoint.signature as MethodSignature).method
-        val parameterNameToIndex = method.parameters.mapIndexed { index, parameter -> 
-            parameter.name to index 
-        }.toMap()
-        
-        val parameterIndex = parameterNameToIndex[parameterName] 
-            ?: throw IllegalArgumentException("파라미터 이름 '$parameterName'을 찾을 수 없습니다")
-            
-        val parameterValue = joinPoint.args[parameterIndex]
-        return "$keyPrefix:$parameterValue"
-    }
-}
-
-// 3. 비즈니스 로직에서 어노테이션 사용
-interface UserPointRepository {
-    fun findByUserId(userId: String): UserPointJpaEntity?
-}
-
+// 2. 서비스 레이어는 순수한 비즈니스 로직만 포함
 @Service
 class UserPointService(private val userPointRepository: UserPointRepository) {
-    
-    @Transactional
-    @DistributedLock(key = "user-point", parameterName = "command.userId")
+    // 락 없이 순수 비즈니스 로직만 포함
     fun charge(command: UserPointCommand.Charge): UserPoint {
         val userPoint = userPointRepository.findByUserId(userId = command.userId)
             ?: throw UserPointException.NotFound()
@@ -368,42 +280,53 @@ class UserPointService(private val userPointRepository: UserPointRepository) {
 }
 ```
 
-3. **파사드에서의 락 관리 패턴:**
+2. **명시적 락 관리가 필요한 복잡한 케이스**:
 
 ```kotlin
-// 1. 서비스 계층은 순수 비즈니스 로직에만 집중
-@Service
-@Transactional
-class UserPointService(private val userPointRepository: UserPointRepository) {
-    fun charge(userId: String, amount: Long): UserPoint {
-        val userPoint = userPointRepository.findByUserId(userId)
-            ?: throw UserPointException.NotFound()
+// 여러 리소스에 락이 필요한 복잡한 시나리오
+@Component
+class OrderFacade(
+    private val orderService: OrderService,
+    private val productService: ProductService,
+    private val couponUserService: CouponUserService,
+    private val lockManager: DistributedLockManager,
+    private val transactionManager: PlatformTransactionManager
+) {
+    fun createOrder(criteria: OrderCriteria.Create): OrderResult.Single {
+        // 1. 락 키 생성
+        val orderKey = LockKeyGenerator.Order.userLock(criteria.userId)
         
-        val chargedPoint = userPoint.charge(amount)
-        return userPointRepository.save(chargedPoint)
+        // 상품 락 키 생성
+        val productIds = criteria.items.map { it.productId }
+        val productKeys = productIds.map { LockKeyGenerator.Product.stockLock(it) }
+        
+        // 쿠폰 락 키 생성
+        val couponKey = criteria.couponUserId?.let { LockKeyGenerator.CouponUser.idLock(it) }
+        
+        // 2. 락 획득 순서 정의 (사용자 -> 상품들 -> 쿠폰)
+        val allKeys = listOf(orderKey) + DistributedLockUtils.sortLockKeys(productKeys) + listOfNotNull(couponKey)
+        
+        // 3. 타임아웃 설정
+        val timeouts = listOf(LockKeyConstants.EXTENDED_TIMEOUT) + 
+            List(allKeys.size - 1) { LockKeyConstants.DEFAULT_TIMEOUT }
+        
+        // 4. 모든 락을 순서대로 획득하고 액션 실행
+        return DistributedLockUtils.withOrderedLocks(
+            lockManager = lockManager,
+            keys = allKeys,
+            timeouts = timeouts,
+            action = {
+                // 모든 락을 획득한 후에 트랜잭션 시작
+                val transactionTemplate = TransactionTemplate(transactionManager)
+                transactionTemplate.execute {
+                    // 비즈니스 로직
+                    // ...
+                }
+            }
+        )
     }
 }
-
-// 2. 파사드에서 락 관리 로직 적용
-@Component
-class UserPointFacade(
-    private val userPointService: UserPointService,
-    private val lockManager: DistributedLockManager
-) {
-    fun chargePoint(command: UserPointCommand.Charge): UserPoint =
-        lockManager.executeWithLock(key = "user-point:${command.userId}") {
-            userPointService.charge(command.userId, command.amount)
-        }
-}
 ```
-
-각 패턴은 책임 분리와 관심사 분리라는 동일한 목적을 가지지만 서로 다른 접근 방식을 제공합니다:
-
-1. **전용 락 관리자 패턴**은 도메인별 락 관리 로직을 도메인별로 모아 관리 가능
-2. **AOP 기반 패턴**은 비즈니스 로직과 락 관리를 완전히 분리하여 선언적 방식으로 락을 적용합니다.
-3. **파사드 패턴**은 서비스 계층은 순수하게 유지하면서 파사드 계층에서 트랜잭션 관리와 락 관리를 담당합니다.
-
-이 중에서 프로젝트의 특성과 팀의 기술 스택에 가장 적합한 패턴을 선택하여 적용할 수 있습니다.
 
 ### 4. 분산 락 패턴 비교 및 선호도
 
@@ -429,57 +352,17 @@ class UserPointFacade(
 - **디버깅 어려움**: 프록시 기반 호출로 인해 디버깅이 어려울 수 있음
 - **런타임 오류 가능성**: 어노테이션 설정 오류가 런타임에 발견됨
 
-**적합한 상황:**
-- 대규모 프로젝트, 여러 개발자가 참여하는 환경
-- 일관성 있는 락 정책 적용이 중요한 경우
-- Spring AOP에 익숙한 팀
+#### Voyage-Shop 프로젝트의 분산 락 구현
 
-#### 전용 락 관리자 패턴
+현재 Voyage-Shop 프로젝트에서는 두 가지 분산 락 패턴을 함께 사용하고 있습니다:
 
-**장점:**
-- **도메인별 그룹화**: 관련된 락 로직을 도메인별로 모아 관리 가능
-- **명시적 호출**: 락 사용이 코드에 명시적으로 드러나 의도가 분명함
-- **세밀한 제어**: 복잡한 락 로직(다중 리소스 락, 조건부 락)을 구현하기 용이
-- **테스트 용이성**: AOP보다 단위 테스트가 쉬움
+1. **간단한 단일 리소스 락**: `@DistributedLock` 어노테이션 사용 (AOP 기반)
+2. **복잡한 다중 리소스 락**: 명시적 락 관리 코드 사용 (OrderFacade.createOrder와 같은 복잡한 시나리오)
 
-**단점:**
-- **비즈니스 로직과 혼합**: 서비스 코드에서 락 관리자를 직접 호출하므로 완전한 분리는 어려움
-- **중복 코드 가능성**: 유사한 락 로직이 여러 도메인에 중복될 수 있음
-- **일관성 유지 어려움**: 개발자가 락 관리자 사용을 빼먹을 수 있음
-
-**적합한 상황:**
-- 복잡한 락 로직이 필요한 경우
-- AOP 적용이 어려운 환경
-- 도메인별로 다른 락 정책이 필요한 경우
-
-#### 파사드에서의 락 관리 패턴
-
-**장점:**
-- **서비스 순수성**: 도메인 서비스는 순수 비즈니스 로직만 포함하여 단순함
-- **통합 지점**: 여러 서비스를 조합하는 로직과 락 관리를 한 곳에서 처리
-- **비즈니스 트랜잭션 보호**: 여러 서비스 호출을 하나의 락으로 보호 가능
-
-**단점:**
-- **책임 과중**: 파사드 계층에 너무 많은 책임이 집중됨
-- **락 범위 과대화**: 필요 이상으로 넓은 범위에 락이 적용될 수 있음
-- **복잡성 증가**: 비즈니스 흐름이 복잡해질수록 파사드도 복잡해짐
-
-**적합한 상황:**
-- 소규모 프로젝트, MVP 단계
-- 단순한 비즈니스 흐름
-- 여러 서비스를 조합하는 기능에 락 적용이 필요한 경우
-
-#### 상황별 추천 패턴
-
-| 상황 | 추천 패턴 | 이유 |
-|------|---------|------|
-| **대규모 엔터프라이즈 애플리케이션** | AOP 기반 패턴 | 일관성, 관심사 분리, 확장성 |
-| **복잡한 락 로직 필요** | 전용 락 관리자 패턴 | 세밀한 제어, 명확한 의도 표현 |
-| **소규모 프로젝트, MVP** | 파사드 패턴 | 빠른 구현과 격리된 영향 범위 |
-| **마이크로서비스 환경** | AOP 또는 전용 락 관리자 | 서비스 독립성 유지에 적합 |
-| **한시적 기능, 프로토타입** | 파사드 패턴 | 빠른 구현과 격리된 영향 범위 |
-
-결론적으로, 대부분의 경우 AOP 기반 패턴이 최선의 선택이지만, 프로젝트의 특성과 팀의 기술적 배경에 따라 다른 패턴도 고려해볼 수 있습니다. 중요한 것은 비즈니스 로직과 락 관리 로직의 명확한 분리와 일관된 적용입니다.
+이러한 하이브리드 접근 방식은 다음과 같은 이점을 제공합니다:
+- 간단한 경우 코드 간결성 유지 (어노테이션 방식)
+- 복잡한 경우 세밀한 제어 가능 (명시적 코드 방식)
+- 요구사항에 맞는 유연한 락 관리 전략 적용
 
 #### 아키텍처 계층별 락 적용 규칙
 
@@ -487,7 +370,7 @@ class UserPointFacade(
 
 **1. 파사드 레이어 (Application Layer)**
 - **락 어노테이션 사용**: 파사드 레이어에서는 `@DistributedLock` 어노테이션 사용 허용
-- **트랜잭션 관리**: 트랜잭션 제어가 필요한 경우 `TransactionManager`를 명시적으로 사용
+- **트랜잭션 관리**: TransactionHelper 또는 TransactionTemplate을 명시적으로 사용
 - **적용 이유**:
   - 파사드 레이어는 여러 도메인 서비스를 조합하는 책임이 있어 락의 경계를 명확히 표현할 필요가 있음
   - 선언적 락 적용으로 코드의 의도가 명확하게 드러남
@@ -497,13 +380,18 @@ class UserPointFacade(
 @Component
 class UserPointFacade(
     private val userPointService: UserPointService,
-    private val transactionManager: PlatformTransactionManager
+    private val transactionHelper: TransactionHelper
 ) {
-    @DistributedLock(key = "user-point", parameterName = "command.userId")
-    fun chargePoint(command: UserPointCommand.Charge): UserPoint {
-        val transactionTemplate = TransactionTemplate(transactionManager)
-        return transactionTemplate.execute {
-            userPointService.charge(command.userId, command.amount)
+    @DistributedLock(
+        domain = LockKeyConstants.USER_POINT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_USER,
+        resourceIdExpression = "criteria.userId"
+    )
+    fun chargePoint(criteria: UserPointCriteria.Charge): UserPointResult.Single {
+        return transactionHelper.executeInTransaction {
+            // 포인트 충전
+            val userPoint = userPointService.charge(criteria.toCommand())
+            UserPointResult.Single.from(userPoint)
         }
     }
 }
@@ -511,7 +399,7 @@ class UserPointFacade(
 
 **2. 도메인 서비스 레이어 (Domain Layer)**
 - **락 어노테이션 불허**: 도메인 서비스에서는 `@DistributedLock` 어노테이션 사용 금지
-- **트랜잭션 관리**: `@Transactional` 어노테이션 또는 `TransactionManager` 중 선택하여 사용 가능
+- **트랜잭션 관리**: 트랜잭션은 파사드 레이어에서 관리하거나 필요 시 명시적으로 사용
 - **적용 이유**:
   - 도메인 서비스는 순수 비즈니스 로직에 집중해야 함
   - 락 관리는 애플리케이션 계층의 책임으로 분리
@@ -519,37 +407,17 @@ class UserPointFacade(
 
 ```kotlin
 @Service
-class UserPointService(
-    private val userPointRepository: UserPointRepository
-) {
-    @Transactional // 어노테이션 방식 허용
-    fun charge(userId: String, amount: Long): UserPoint {
-        val userPoint = userPointRepository.findByUserId(userId)
+class UserPointService(private val userPointRepository: UserPointRepository) {
+    // 락 없이 순수 비즈니스 로직만 포함
+    fun charge(command: UserPointCommand.Charge): UserPoint {
+        val userPoint = userPointRepository.findByUserId(userId = command.userId)
             ?: throw UserPointException.NotFound()
         
-        val chargedPoint = userPoint.charge(amount)
+        val chargedPoint = userPoint.charge(command.amount)
         return userPointRepository.save(chargedPoint)
-    }
-    
-    // 또는 명시적 트랜잭션 관리 방식 허용
-    fun useWithTransactionManager(userId: String, amount: Long, transactionManager: PlatformTransactionManager): UserPoint {
-        val transactionTemplate = TransactionTemplate(transactionManager)
-        return transactionTemplate.execute {
-            val userPoint = userPointRepository.findByUserId(userId)
-                ?: throw UserPointException.NotFound()
-            
-            val usedPoint = userPoint.use(amount)
-            userPointRepository.save(usedPoint)
-        }
     }
 }
 ```
-
-이러한 규칙을 적용함으로써 다음과 같은 이점을 얻을 수 있습니다:
-- **관심사의 명확한 분리**: 비즈니스 로직과 인프라 관심사(락, 트랜잭션)의 명확한 분리
-- **일관된 코드 스타일**: 팀 전체가 일관된 방식으로 락과 트랜잭션을 적용
-- **책임 경계 명확화**: 각 계층의 책임이 명확하게 구분되어 유지보수성 향상
-- **테스트 용이성**: 도메인 로직을 락과 분리하여 단위 테스트 작성 용이
 
 ### 5. 결론 및 추가 개선 방향
 
