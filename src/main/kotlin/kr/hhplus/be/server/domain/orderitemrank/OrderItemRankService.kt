@@ -38,6 +38,7 @@ class OrderItemRankService(
      * 캐시된 베스트셀러 데이터를 무효화합니다.
      * 주문 패턴이 변경되어 캐시 갱신이 필요할 때 호출합니다.
      */
+    @Transactional
     fun invalidateRankCache() {
         orderItemRankRepository.invalidateCache()
     }

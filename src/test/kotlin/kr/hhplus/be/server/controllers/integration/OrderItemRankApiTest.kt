@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.controller.order.OrderRequest
 import kr.hhplus.be.server.controller.shared.BaseResponse
+import kr.hhplus.be.server.domain.orderitemrank.OrderItemRankService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -30,7 +31,8 @@ class OrderItemRankApiTest {
     
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    
+
+
     private var testUserIds = mutableListOf<String>()
     private var testProductIds = mutableListOf<String>()
     
@@ -77,6 +79,14 @@ class OrderItemRankApiTest {
         @Test
         @DisplayName("주문이 없는 경우 빈 배열이 반환되어야 한다")
         fun withNoOrders_returnsEmptyArray() {
+
+            // 캐시 초기화
+            mockMvc.perform(
+                delete("/api/v1/order-item-rank")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(MockMvcResultHandlers.print())
+
             // when
             val result = mockMvc.perform(
                 get("/api/v1/order-item-rank")
@@ -99,6 +109,13 @@ class OrderItemRankApiTest {
             // 상품별 주문 횟수를 다르게 설정하여 순위가 생기도록 함
             // 상품1: 3번 주문, 상품2: 2번 주문, 상품3: 1번 주문, 상품4와 5: 주문 없음
             
+            // 먼저 캐시 초기화
+            mockMvc.perform(
+                delete("/api/v1/order-item-rank")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(MockMvcResultHandlers.print())
+                
             // 첫 번째 사용자: 상품1, 상품2 주문
             createOrder(testUserIds[0], mapOf(
                 testProductIds[0] to 1L,
@@ -116,7 +133,14 @@ class OrderItemRankApiTest {
                 testProductIds[0] to 1L,
                 testProductIds[1] to 1L
             ))
-            
+
+            // 먼저 캐시 초기화
+            mockMvc.perform(
+                delete("/api/v1/order-item-rank")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(MockMvcResultHandlers.print())
+
             // when
             val result = mockMvc.perform(
                 get("/api/v1/order-item-rank")
@@ -146,6 +170,13 @@ class OrderItemRankApiTest {
             // 상품2: 2번 주문 (각 수량 2개씩, 총 4개)
             // 상품3: 3번 주문 (각 수량 1개씩, 총 3개)
             
+            // 먼저 캐시 초기화
+            mockMvc.perform(
+                delete("/api/v1/order-item-rank")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(MockMvcResultHandlers.print())
+                
             // 첫 번째 사용자: 상품1 5개 주문
             createOrder(testUserIds[0], mapOf(
                 testProductIds[0] to 5L
@@ -162,7 +193,14 @@ class OrderItemRankApiTest {
                 testProductIds[1] to 2L,
                 testProductIds[2] to 2L
             ))
-            
+
+            // 먼저 캐시 초기화
+            mockMvc.perform(
+                delete("/api/v1/order-item-rank")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(MockMvcResultHandlers.print())
+
             // when
             val result = mockMvc.perform(
                 get("/api/v1/order-item-rank")
@@ -188,14 +226,28 @@ class OrderItemRankApiTest {
         @DisplayName("5개 이상의 상품에 주문이 있더라도 상위 5개만 반환되어야 한다")
         fun withMoreThan5Products_returnsTop5Only() {
             // given
-            // 모든 상품에 주문을 생성하되, 순서를 뒤바꿔 인덱스가 높은 상품이 더 많이 주문되도록 함
+            // 먼저 캐시 초기화
+            mockMvc.perform(
+                delete("/api/v1/order-item-rank")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(MockMvcResultHandlers.print())
+                
+            // 모든 상품에 주문을 생성하되, 주문량을 명확하게 설정
             for (i in 0 until testProductIds.size) {
                 val orderQuantity = testProductIds.size - i // 5, 4, 3, 2, 1 순으로 주문량 설정
                 createOrder(testUserIds[0], mapOf(
                     testProductIds[i] to orderQuantity.toLong()
                 ))
             }
-            
+
+            // 먼저 캐시 초기화
+            mockMvc.perform(
+                delete("/api/v1/order-item-rank")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andDo(MockMvcResultHandlers.print())
+
             // when
             val result = mockMvc.perform(
                 get("/api/v1/order-item-rank")

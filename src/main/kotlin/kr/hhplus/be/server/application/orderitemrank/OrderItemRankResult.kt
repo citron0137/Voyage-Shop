@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.application.orderitemrank
 
+import kr.hhplus.be.server.domain.orderitemrank.OrderItemRank
+
 /**
  * 주문 아이템 순위 관련 응답 클래스
  */
@@ -36,4 +38,20 @@ class OrderItemRankResult {
             }
         }
     }
-} 
+
+    data class Rank(
+        val ranks: kotlin.collections.List<Single>,
+        val period: Int,
+        val limit: Int,
+    ){
+        companion object {
+            fun from(rank: OrderItemRank): Rank {
+                return Rank(
+                    ranks = rank.items.map { Single.from(productId = it.productId, orderCount = it.orderCount) },
+                    period = rank.periodInDays,
+                    limit = rank.limit
+                )
+            }
+        }
+    }
+}

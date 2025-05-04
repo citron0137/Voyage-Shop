@@ -21,7 +21,7 @@ interface OrderItemRankRepository {
      * @param limit 몇 개의 상품을 조회할지
      * @return 상위 랭킹 상품 컬렉션, 캐시에 없으면 빈 컬렉션 반환
      */
-    fun getRank(days: Int, limit: Int): OrderItemRank
+    fun getRank(days: Int, limit: Int): OrderItemRank?
     
     /**
      * 저장된 모든 랭킹 데이터를 무효화합니다.
