@@ -41,8 +41,8 @@ object RedisTemplateFactory {
             .registerKotlinModule()
             .registerModule(JavaTimeModule())
             .activateDefaultTyping(
-                ptv,
-                ObjectMapper.DefaultTyping.NON_FINAL,
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.EVERYTHING,
                 JsonTypeInfo.As.PROPERTY
             )
 
