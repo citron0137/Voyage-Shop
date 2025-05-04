@@ -9,14 +9,11 @@ import kr.hhplus.be.server.domain.product.ProductQuery
 import kr.hhplus.be.server.domain.product.ProductService
 import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.shared.lock.DistributedLockManager
-import kr.hhplus.be.server.shared.lock.DistributedLockUtils
 import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import kr.hhplus.be.server.shared.lock.LockKeyGenerator
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
-import java.util.concurrent.TimeUnit
 
 /**
  * 주문 파사드
@@ -156,15 +153,14 @@ class OrderFacade(
         val couponKey = criteria.couponUserId?.let { LockKeyGenerator.CouponUser.idLock(it) }
         
         // 모든 락 키를 하나의 리스트로 (사용자 -> 상품들 -> 쿠폰 순서로 획득)
-        val allKeys = listOf(orderKey) + DistributedLockUtils.sortLockKeys(productKeys) + listOfNotNull(couponKey)
+        val allKeys = listOf(orderKey) + lockManager.sortLockKeys(productKeys) + listOfNotNull(couponKey)
         
         // 각 락별 타임아웃 설정 (첫 번째 락은 30초, 나머지는 10초)
         val timeouts = listOf(LockKeyConstants.EXTENDED_TIMEOUT) + 
             List(allKeys.size - 1) { LockKeyConstants.DEFAULT_TIMEOUT }
         
         // 모든 락을 순서대로 획득
-        return DistributedLockUtils.withOrderedLocks(
-            lockManager = lockManager,
+        return lockManager.withOrderedLocks(
             keys = allKeys,
             timeouts = timeouts,
             action = {
@@ -215,6 +211,6 @@ class OrderFacade(
                     OrderResult.Single.from(order, orderItems, orderDiscounts)
                 }!!
             }
-        )!!
+        )
     }
 }
