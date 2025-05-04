@@ -1,8 +1,8 @@
 services:
   k6:
-    image: grafana/k6
+    image: grafana/k6:latest
     volumes:
-      - ./k6-tests:/tests
+      - ./load-tests:/tests
     environment:
       - K6_INFLUXDB_USERNAME=k6
       - K6_INFLUXDB_DB=k6
@@ -11,9 +11,15 @@ services:
       - K6_INFLUXDB_INSECURE=true
       - API_HOST=app:8080
       - RUN_TEST=true
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=hhplus
+      - DB_USER=application
+      - DB_PASSWORD=application
     depends_on:
       - influxdb
       - app
+      - mysql
     entrypoint: ["k6", "run"]
     command: >
       --out influxdb=${K6_INFLUXDB_ADDR:-http://influxdb:8086}/${K6_INFLUXDB_DB:-k6}

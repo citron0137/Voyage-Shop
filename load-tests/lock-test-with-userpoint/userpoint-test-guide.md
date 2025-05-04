@@ -40,6 +40,7 @@
 docker-compose \
     -f docker-compose.yml \
     -f docker-compose.app.yml \
+    -f docker-compose.monitoring.yml \
     up -d 
 
 # 테스트 대상 서버가 완전히 시작될 때까지 대기
@@ -52,7 +53,7 @@ sleep 10
 
 ```bash
 # 테스트 1: 비관적 락만 적용 테스트
-$env:K6_SCRIPT="userpoint-concurrency-test.js";`
+$env:K6_SCRIPT="lock-test-with-userpoint/userpoint-concurrency-test.js";`
   docker-compose -f docker-compose.yml `
   -f docker-compose.app.yml `
   -f docker-compose.loadtest.yml `
@@ -68,7 +69,7 @@ $env:K6_SCRIPT="userpoint-concurrency-test.js";`
 #   up k6 --no-deps
 
 # 테스트 2: 비관적 락 + 분산 락 테스트
-$env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
+$env:K6_SCRIPT="lock-test-with-userpoint/userpoint-distributed-lock-test.js";`
   docker-compose -f docker-compose.yml `
   -f docker-compose.app.yml `
   -f docker-compose.loadtest.yml `
@@ -76,7 +77,7 @@ $env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
   up k6 --no-deps
 
 # Linux에서는:
-# K6_SCRIPT=userpoint-distributed-lock-test.js \
+# K6_SCRIPT=lock-test-with-userpoint/userpoint-distributed-lock-test.js \
 #   docker-compose -f docker-compose.yml \
 #   -f docker-compose.app.yml \
 #   -f docker-compose.loadtest.yml \
@@ -84,7 +85,7 @@ $env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
 #   up k6 --no-deps
 
 # 단일 사용자 집중 테스트만 실행 (비관적 락 + 분산 락)
-$env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
+$env:K6_SCRIPT="lock-test-with-userpoint/userpoint-distributed-lock-test.js";`
   $env:K6_ONLY_SCENARIO="single_user_spike";`
   docker-compose -f docker-compose.yml `
   -f docker-compose.app.yml `
@@ -93,7 +94,7 @@ $env:K6_SCRIPT="userpoint-distributed-lock-test.js";`
   up k6 --no-deps
 
 # Linux에서는:
-# K6_SCRIPT=userpoint-distributed-lock-test.js \
+# K6_SCRIPT=lock-test-with-userpoint/userpoint-distributed-lock-test.js \
 #   K6_ONLY_SCENARIO=single_user_spike \
 #   docker-compose -f docker-compose.yml \
 #   -f docker-compose.app.yml \
@@ -114,19 +115,12 @@ Grafana 대시보드를 통해 테스트 결과를 확인할 수 있습니다:
 
 ```bash
 # 부하 테스트 환경 중지
-docker-compose -f docker-compose.yml -f docker-compose.app.yml -f docker-compose.loadtest.yml -f docker-compose.monitoring.yml down
-```
-
-### 로컬 환경에서 직접 실행 (선택사항)
-
-k6를 로컬에 설치한 경우 다음과 같이 직접 실행할 수도 있습니다:
-
-```bash
-# 테스트 1: 비관적 락만 적용된 테스트
-k6 run --env API_HOST=localhost:8080 k6-tests/userpoint-concurrency-test.js
-
-# 테스트 2: 비관적 락 + 분산 락 적용된 테스트
-k6 run --env API_HOST=localhost:8080 k6-tests/userpoint-distributed-lock-test.js
+docker-compose \
+   -f docker-compose.yml \
+   -f docker-compose.app.yml \ 
+   -f docker-compose.loadtest.yml \
+   -f docker-compose.monitoring.yml \
+   down
 ```
 
 ## 테스트 메트릭 설명
