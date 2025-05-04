@@ -239,66 +239,12 @@ Redis의 경우 다음과 같은 Eviction 정책을 권장합니다:
 1. **Probabilistic Early Expiration (확률적 조기 만료)**:
    - TTL의 마지막 일정 기간(예: 남은 시간의 10%)에 확률적으로 캐시 갱신
    - 모든 요청이 동시에 DB를 조회하는 상황 방지
-
-   ```kotlin
-   fun getValue(key: String): Value {
-       val cachedValue = cache.get(key)
-       
-       // 캐시 히트인 경우
-       if (cachedValue != null) {
-           val remainingTtl = cache.getRemainingTtl(key)
-           val totalTtl = cache.getTotalTtl(key)
-           
-           // 만료 시간의 90% 이상 경과 & 10% 확률로 갱신
-           if (remainingTtl < totalTtl * 0.1 && Math.random() < 0.1) {
-               // 비동기로 캐시 갱신
-               CompletableFuture.runAsync {
-                   val freshValue = fetchFromDatabase(key)
-                   cache.put(key, freshValue, totalTtl)
-               }
-           }
-           
-           return cachedValue
-       }
-       
-       // 캐시 미스인 경우
-       return fetchAndCacheValue(key)
-   }
-   ```
+   - 구현 방식: 캐시 히트 시 남은 TTL을 확인하고, 특정 기준(예: 10% 이하) 및 확률(예: 10%)에 따라 백그라운드에서 갱신
 
 2. **Mutex/Lock 활용**:
    - 캐시 미스 시 첫 번째 요청만 DB에서 조회하도록 락 사용
    - 나머지 요청은 짧은 시간 대기 후 캐시 재확인
-
-   ```kotlin
-   fun getValue(key: String): Value {
-       // 캐시 확인
-       val cachedValue = cache.get(key)
-       if (cachedValue != null) {
-           return cachedValue
-       }
-       
-       // 캐시 미스: 락 획득 시도
-       val lockKey = "lock:$key"
-       val lockAcquired = cache.setIfNotExists(lockKey, "1", "EX", 5)
-       
-       if (lockAcquired) {
-           try {
-               // 락 획득 성공: DB에서 값 조회
-               val value = fetchFromDatabase(key)
-               cache.put(key, value, TTL)
-               return value
-           } finally {
-               // 락 해제
-               cache.delete(lockKey)
-           }
-       } else {
-           // 락 획득 실패: 짧게 대기 후 재시도
-           Thread.sleep(50)
-           return getValue(key) // 재귀 호출 (최대 재시도 횟수 제한 필요)
-       }
-   }
-   ```
+   - 구현 방식: 캐시 미스 시 특정 키로 락을 획득하고, 락 획득에 성공한 요청만 DB 조회 및 캐시 갱신 수행
 
 3. **Bulk Loading**:
    - 캐시 초기화 시 대량의 데이터를 미리 로드
@@ -336,145 +282,60 @@ Redis의 경우 다음과 같은 Eviction 정책을 권장합니다:
 
 #### 단계별 구현 로드맵
 
-1. **기초 인프라 구축 (1주차)**
+1. **기초 인프라 구축**
    - Redis 서버 설정 및 클러스터 구성
    - 스프링 캐시 추상화 계층 구현
    - 로컬 캐시 설정 (Caffeine)
 
-2. **핵심 기능 캐싱 (2주차)**
+2. **핵심 기능 캐싱**
    - 상품 정보 조회 캐싱 구현
    - 카테고리 및 메뉴 캐싱 구현
    - Cache-Aside 패턴 적용
 
-3. **고급 기능 구현 (3주차)**
+3. **고급 기능 구현**
    - 캐시 무효화 메커니즘 구현
    - Refresh-Ahead 패턴 적용
    - Cache Stampede 방지 로직 구현
 
-4. **최적화 및 모니터링 (4주차)**
+4. **최적화 및 모니터링**
    - 캐시 성능 측정 및 튜닝
    - 모니터링 대시보드 구축
    - 문서화 및 지침 작성
 
-#### Redis 캐시 구현 예시
+#### Redis 캐시 구현 방법
 
 Spring Cache 추상화와 Redis를 활용한 기본 캐싱 구현:
 
-```kotlin
-// 1. Redis 캐시 설정
-@Configuration
-@EnableCaching
-class CacheConfig {
-    @Bean
-    fun cacheManager(redisConnectionFactory: RedisConnectionFactory): RedisCacheManager {
-        val defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(30))
-            .serializeKeysWith(
-                RedisSerializationContext.SerializationPair.fromSerializer(StringRedisSerializer())
-            )
-            .serializeValuesWith(
-                RedisSerializationContext.SerializationPair.fromSerializer(
-                    GenericJackson2JsonRedisSerializer()
-                )
-            )
-        
-        // 캐시별 TTL 설정
-        val cacheConfigurations = mapOf(
-            "products" to defaultCacheConfig.entryTtl(Duration.ofMinutes(60)),
-            "categories" to defaultCacheConfig.entryTtl(Duration.ofHours(12)),
-            "bestSellers" to defaultCacheConfig.entryTtl(Duration.ofMinutes(15))
-        )
-        
-        return RedisCacheManager.builder(redisConnectionFactory)
-            .cacheDefaults(defaultCacheConfig)
-            .withInitialCacheConfigurations(cacheConfigurations)
-            .build()
-    }
-}
+1. **Redis 캐시 설정**:
+   - Spring의 `@EnableCaching` 어노테이션을 사용하여 캐싱 활성화
+   - `RedisCacheManager`를 Bean으로 등록하고 기본 설정 구성
+   - 캐시별 TTL 설정 (products: 60분, categories: 12시간, bestSellers: 15분)
+   - 직렬화/역직렬화 방식 설정 (키: String, 값: JSON)
 
-// 2. 서비스 계층 캐싱 적용
-@Service
-class ProductService(private val productRepository: ProductRepository) {
-    
-    @Cacheable(value = ["products"], key = "#productId")
-    fun getProductById(productId: String): Product {
-        // 로깅 또는 메트릭 수집 (캐시 미스 추적)
-        log.info("Cache miss for product: $productId")
-        return productRepository.findById(productId)
-            .orElseThrow { ProductNotFoundException(productId) }
-    }
-    
-    @CacheEvict(value = ["products"], key = "#product.id")
-    fun updateProduct(product: Product): Product {
-        return productRepository.save(product)
-    }
-    
-    @CachePut(value = ["products"], key = "#result.id")
-    fun createProduct(product: Product): Product {
-        return productRepository.save(product)
-    }
-    
-    @Cacheable(value = ["bestSellers"], key = "'top' + #limit")
-    fun getBestSellers(limit: Int): List<Product> {
-        log.info("Generating best sellers list, limit: $limit")
-        return productRepository.findTopByOrderBySalesCountDesc(limit)
-    }
-}
-```
+2. **서비스 계층 캐싱 적용**:
+   - `@Cacheable` 어노테이션으로 조회 메서드 캐싱 (products, bestSellers 등)
+   - `@CacheEvict` 어노테이션으로 업데이트 시 캐시 무효화
+   - `@CachePut` 어노테이션으로 새 데이터 생성 시 캐시 갱신
+   - 캐시 미스 로깅 및 메트릭 수집 추가
 
 #### Cache Stampede 방지를 위한 고급 구현
 
 Caffeine 캐시와 비동기 로딩을 활용한 Cache Stampede 방지:
 
-```kotlin
-@Configuration
-class CaffeineConfig {
-    @Bean
-    fun productCacheLoader(productRepository: ProductRepository): AsyncCacheLoader<String, Product> {
-        return AsyncCacheLoader<String, Product> { key, executor ->
-            CompletableFuture.supplyAsync({
-                log.info("Async loading product: $key")
-                productRepository.findById(key).orElseThrow()
-            }, executor)
-        }
-    }
-    
-    @Bean
-    fun productCache(productCacheLoader: AsyncCacheLoader<String, Product>): AsyncLoadingCache<String, Product> {
-        return Caffeine.newBuilder()
-            .expireAfterWrite(30, TimeUnit.MINUTES)
-            .refreshAfterWrite(25, TimeUnit.MINUTES) // 만료 직전에 리프레시
-            .maximumSize(10_000)
-            .recordStats()
-            .buildAsync(productCacheLoader)
-    }
-}
+1. **Caffeine 캐시 설정**:
+   - 비동기 로딩을 지원하는 Caffeine 캐시 구성
+   - TTL 설정 (expireAfterWrite: 30분)
+   - 만료 직전 리프레시 설정 (refreshAfterWrite: 25분)
+   - 최대 캐시 크기 및 통계 기록 설정
 
-@Service
-class ProductCacheService(
-    private val productCache: AsyncLoadingCache<String, Product>,
-    private val metricsService: MetricsService
-) {
-    suspend fun getProduct(id: String): Product {
-        val startTime = System.nanoTime()
-        
-        try {
-            return productCache.get(id).await()
-        } finally {
-            val duration = System.nanoTime() - startTime
-            metricsService.recordCacheAccess("product", duration)
-        }
-    }
-    
-    fun invalidateProduct(id: String) {
-        productCache.synchronous().invalidate(id)
-    }
-    
-    fun getCacheStats(): CacheStats {
-        return productCache.synchronous().stats()
-    }
-}
-```
+2. **비동기 로드 구현**:
+   - `AsyncCacheLoader` 인터페이스 구현으로 비동기 데이터 로딩 처리
+   - 백그라운드에서 자동으로 데이터 갱신하여 사용자 요청 지연 방지
+
+3. **캐시 서비스 레이어**:
+   - 비동기 로딩 캐시를 감싸는 서비스 계층 구현
+   - 성능 메트릭 수집 및 모니터링 통합
+   - 수동 캐시 무효화 및 통계 조회 기능 제공
 
 ### 6. 결론 및 기대 효과
 
@@ -573,3 +434,62 @@ class ProductCacheService(
 캐시 효율성 테스트 결과, 현재 구현된 캐싱 전략은 다양한 데이터셋 규모에서 매우 효과적으로 작동하며 시스템 성능을 극대화합니다. 특히 데이터 규모가 증가할수록 캐싱의 중요성이 더욱 커지며, 적절한 인덱스 최적화와 결합 시 안정적인 성능을 제공합니다.
 
 99.97%의 높은 캐시 히트율과 평균 2.5~3.5ms의 빠른 응답 시간은 대규모 트래픽 환경에서도 안정적인 서비스 제공이 가능함을 보여줍니다. 지속적인 모니터링과 최적화를 통해 캐싱 전략의 효율성을 유지하고 향상시켜 나가는 것이 중요합니다. 
+
+## 8. 문서와 실제 구현 간 차이점
+
+본 문서는 이상적인 캐싱 전략과 구현 방향을 포괄적으로 설명하고 있습니다. 다만 현재 실제 구현된 코드와 이 문서에서 제시하는 방향 사이에는 다음과 같은 차이점이 있습니다.
+
+### 구현 완료된 부분
+
+1. **Redis 기반 분산 캐시 (L2)**
+   - 문서에서 설명한 분산 캐시(L2) 계층은 Redis를 통해 구현 완료됨
+   - `CacheConfig` 클래스를 통한 기본적인 Spring Cache 설정 구현
+   - 주문 아이템 순위(OrderItemRank) 데이터에 대한 캐싱 기능 구현
+
+2. **Cache-Aside 패턴**
+   - 주문 아이템 순위 조회 시 Cache-Aside 패턴 적용
+   - `OrderItemRankFacade`에서 캐시 먼저 확인 후 없을 경우 계산하여 저장하는 방식 구현
+
+3. **Cache Stampede 방지 기본 전략**
+   - 문서에서 설명한 Mutex/Lock 기반 전략의 일부 구현
+   - `DistributedLockManager`를 사용하여 분산 락으로 Cache Stampede 방지
+   - 다수의 동시 요청이 동일한 데이터 계산을 중복으로 수행하는 문제 해결
+
+4. **주기적 캐시 갱신**
+   - `@Scheduled` 어노테이션을 통한 주기적 캐시 갱신 구현
+   - 베스트셀러 캐시에 대한 10분 주기 갱신 기능 적용
+
+### 향후 구현 예정 사항
+
+1. **로컬 인메모리 캐시 (L1)**
+   - 문서에서 제안한 Caffeine, Guava Cache 등을 사용한 로컬 캐시 계층은 아직 구현되지 않음
+   - 문서의 `CaffeineConfig`, `AsyncCacheLoader`, `ProductCacheService` 클래스는 예시 코드
+   - L1 + L2 다층 캐싱 전략의 구현은 향후 성능 요구사항에 따라 추가 검토
+
+2. **Spring Cache 어노테이션 확대 적용**
+   - 현재 `@EnableCaching`은 설정되어 있으나 `@Cacheable`, `@CacheEvict`, `@CachePut` 어노테이션의 활용은 제한적
+   - 문서에서 제시한 다양한 엔티티(상품, 카테고리 등)에 대한 어노테이션 기반 캐싱은 향후 구현 예정
+
+3. **고급 캐시 관리 전략**
+   - 문서에서 설명한 동적 TTL, 차등적 Eviction 정책 등은 아직 구현되지 않음
+   - Probabilistic Early Expiration(확률적 조기 만료) 전략의 구현은 향후 고려사항
+
+4. **캐시 모니터링 강화**
+   - 캐시 효율성에 대한 실시간 모니터링 메트릭 수집 및 대시보드 구현 필요
+   - 캐시 히트율, 응답 시간 등의 지표를 자동으로 수집하는 시스템 구축 예정
+
+5. **캐시 예열 메커니즘**
+   - 시스템 재시작이나 캐시 초기화 후 자동으로 주요 데이터를 미리 로드하는 기능 구현 필요
+   - 인기 상품, 핵심 카테고리 등의 선제적 캐싱 전략 미구현
+
+### 현 아키텍처 적용 계획
+
+위 차이점들을 고려할 때, 현재 구현은 기본적인 Redis 캐싱 기능에 집중되어 있으며, 문서에서 설명한 고급 전략들은 단계적으로 구현해 나갈 계획입니다. 구현 우선순위는 다음과 같이 결정할 수 있습니다:
+
+1. **1단계**: 기본 Redis 캐싱 및 Cache-Aside 패턴, 분산 락 기반 Cache Stampede 방지
+2. **2단계**: Spring Cache 어노테이션 확대 적용 및 추가 엔티티 캐싱
+3. **3단계**: 캐시 모니터링 시스템 구축 및 예열 메커니즘 구현
+4. **4단계**: 로컬 캐시(L1) 추가 및 다층 캐싱 전략 구현
+5. **5단계**: 고급 캐시 관리 전략 및 최적화 기법 적용
+
+이러한 단계적 접근을 통해 현재의 캐싱 전략을 지속적으로 개선하고, 문서에서 제시한 이상적인 아키텍처에 점진적으로 근접해 나갈 예정입니다. 
