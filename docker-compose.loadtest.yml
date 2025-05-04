@@ -1,6 +1,8 @@
 services:
   k6:
-    image: grafana/k6:latest
+    build:
+      context: ./load-tests
+      dockerfile: Dockerfile
     volumes:
       - ./load-tests:/tests
     environment:
