@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS payments (
     total_payment_amount BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
-);
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 인덱스 생성
 CREATE INDEX idx_payments_user_id ON payments(user_id); 

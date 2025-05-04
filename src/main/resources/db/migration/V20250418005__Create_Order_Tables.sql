@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS orders (
     final_amount BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
-);
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 주문 항목 테이블 생성
 CREATE TABLE IF NOT EXISTS order_items (
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     total_price BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
-);
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 주문 할인 테이블 생성
 CREATE TABLE IF NOT EXISTS order_discounts (
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS order_discounts (
     discount_amount BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
-);
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 인덱스 생성
 CREATE INDEX idx_orders_user_id ON orders(user_id);
