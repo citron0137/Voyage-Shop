@@ -2,6 +2,7 @@ package kr.hhplus.be.server.infrastructure.config
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -29,18 +30,22 @@ object RedisTemplateFactory {
         
         // 키는 문자열로 직렬화
         template.keySerializer = StringRedisSerializer()
+
+        val ptv = BasicPolymorphicTypeValidator.builder()
+            .allowIfSubType("kr.hhplus.be.server.infrastructure") // 허용할 패키지 지정
+            .build()
+
         
         // 값은 JSON으로 직렬화 (LocalDateTime 등 Java 8 시간 타입 지원)
         val objectMapper = ObjectMapper()
             .registerKotlinModule()
-            .apply {
-            registerModule(JavaTimeModule())
-            activateDefaultTyping(
-                LaissezFaireSubTypeValidator.instance,
-                ObjectMapper.DefaultTyping.EVERYTHING,
+            .registerModule(JavaTimeModule())
+            .activateDefaultTyping(
+                ptv,
+                ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
             )
-        }
+
         val jsonSerializer = GenericJackson2JsonRedisSerializer(objectMapper)
         
         template.valueSerializer = jsonSerializer
