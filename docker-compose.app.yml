@@ -11,6 +11,7 @@ services:
       - ./logs:/var/log
     depends_on:
       - mysql 
+      - redis
     networks:
       - default
       - monitoring

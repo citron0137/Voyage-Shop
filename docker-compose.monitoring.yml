@@ -7,8 +7,6 @@ services:
       - INFLUXDB_DB=k6
       - INFLUXDB_USER=k6
       - INFLUXDB_USER_PASSWORD=k6password
-    networks:
-      - monitoring
 
   grafana:
     image: grafana/grafana:latest
@@ -26,8 +24,6 @@ services:
       - loki
       - tempo
       - prometheus
-    networks:
-      - monitoring
 
   loki:
     image: grafana/loki:latest
@@ -38,9 +34,7 @@ services:
       - ./monitoring/loki:/etc/loki
       - loki-data:/loki
     user: "10001:10001"  # loki 사용자 ID
-    networks:
-      - monitoring
-    
+
   tempo:
     image: grafana/tempo:latest
     ports:
@@ -52,8 +46,6 @@ services:
       - ./monitoring/tempo:/etc/tempo
       - tempo-data:/var/tempo
     user: "0"
-    networks:
-      - monitoring
       
   prometheus:
     # Mimir 대신 Prometheus 사용
@@ -63,8 +55,6 @@ services:
     volumes:
       - ./monitoring/prometheus:/etc/prometheus
     command: --config.file=/etc/prometheus/prometheus.yml
-    networks:
-      - monitoring
       
   promtail:
     image: grafana/promtail:latest
@@ -74,13 +64,7 @@ services:
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
-    networks:
-      - monitoring
 
 volumes:
   loki-data:
   tempo-data:
-
-networks:
-  monitoring:
-    driver: bridge 

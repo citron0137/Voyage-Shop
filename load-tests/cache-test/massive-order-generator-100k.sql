@@ -1,6 +1,10 @@
 -- massive-order-generator-100000.sql
 -- 100,000 orders data generation script
 
+-- 문자 인코딩 설정
+SET NAMES utf8mb4;
+SET SESSION collation_connection = 'utf8mb4_unicode_ci';
+
 -- Delete existing data
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE order_items;
@@ -546,7 +550,8 @@ BEGIN
             LEAVE batch_loop;
         END IF;
         
-        UPDATE orders SET total_amount = curr_total_amount WHERE order_id = curr_order_id;
+        UPDATE orders SET total_amount = curr_total_amount 
+        WHERE order_id = curr_order_id COLLATE utf8mb4_unicode_ci;
         
         IF MOD(ROW_COUNT(), 1000) = 0 THEN
             COMMIT;
@@ -588,7 +593,8 @@ BEGIN
             LEAVE batch_loop;
         END IF;
         
-        UPDATE orders SET total_discount_amount = curr_total_discount WHERE order_id = curr_order_id;
+        UPDATE orders SET total_discount_amount = curr_total_discount 
+        WHERE order_id = curr_order_id COLLATE utf8mb4_unicode_ci;
         
         IF MOD(ROW_COUNT(), 1000) = 0 THEN
             COMMIT;
@@ -624,7 +630,7 @@ BEGIN
         END IF;
         
         UPDATE orders SET final_amount = total_amount - total_discount_amount 
-        WHERE order_id = curr_order_id;
+        WHERE order_id = curr_order_id COLLATE utf8mb4_unicode_ci;
         
         IF MOD(ROW_COUNT(), 1000) = 0 THEN
             COMMIT;

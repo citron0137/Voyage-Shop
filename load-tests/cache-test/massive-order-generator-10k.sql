@@ -1,6 +1,10 @@
 -- massive-order-generator-10000.sql
 -- 10,000 orders data generation script
 
+-- 문자 인코딩 설정
+SET NAMES utf8mb4;
+SET SESSION collation_connection = 'utf8mb4_unicode_ci';
+
 -- Delete existing data
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE order_items;
@@ -572,7 +576,7 @@ GROUP BY order_id;
 
 -- Update order table
 UPDATE orders o
-JOIN temp_order_totals t ON o.order_id = t.order_id
+JOIN temp_order_totals t ON o.order_id = t.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_amount = t.total_amount;
 COMMIT;
 
@@ -586,7 +590,7 @@ GROUP BY order_id;
 
 -- Update order table with discounts
 UPDATE orders o
-JOIN temp_discount_totals t ON o.order_id = t.order_id
+JOIN temp_discount_totals t ON o.order_id = t.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_discount_amount = t.total_discount;
 COMMIT;
 

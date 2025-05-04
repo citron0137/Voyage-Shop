@@ -26,15 +26,3 @@ services:
     command: >
       --out influxdb=${K6_INFLUXDB_ADDR:-http://influxdb:8086}/${K6_INFLUXDB_DB:-k6}
       /tests/${K6_SCRIPT:-load-test.js}
-    networks:
-      - default
-      - monitoring
-
-networks:
-  default:
-    name: voyage-shop_default
-    external: false
-  monitoring:
-    name: voyage-shop_monitoring
-    external: false
-    

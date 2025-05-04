@@ -1,6 +1,10 @@
 -- massive-order-generator-1000.sql
 -- 1000개 단위의 대량 주문 데이터 생성 스크립트
 
+-- 문자 인코딩 설정
+SET NAMES utf8mb4;
+SET SESSION collation_connection = 'utf8mb4_unicode_ci';
+
 -- 기존 데이터 삭제
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE order_items;
@@ -298,7 +302,7 @@ JOIN (
     FROM order_items
     GROUP BY order_id
     LIMIT 1000
-) AS i ON o.order_id = i.order_id
+) AS i ON o.order_id = i.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_amount = i.total;
 
 COMMIT;
@@ -309,7 +313,7 @@ JOIN (
     FROM order_items
     GROUP BY order_id
     LIMIT 1000 OFFSET 1000
-) AS i ON o.order_id = i.order_id
+) AS i ON o.order_id = i.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_amount = i.total;
 
 COMMIT;
@@ -320,7 +324,7 @@ JOIN (
     FROM order_items
     GROUP BY order_id
     LIMIT 1000 OFFSET 2000
-) AS i ON o.order_id = i.order_id
+) AS i ON o.order_id = i.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_amount = i.total;
 
 COMMIT;
@@ -332,7 +336,7 @@ JOIN (
     FROM order_discounts
     GROUP BY order_id
     LIMIT 1000
-) AS d ON o.order_id = d.order_id
+) AS d ON o.order_id = d.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_discount_amount = d.total_discount;
 
 COMMIT;
@@ -343,7 +347,7 @@ JOIN (
     FROM order_discounts
     GROUP BY order_id
     LIMIT 1000 OFFSET 1000
-) AS d ON o.order_id = d.order_id
+) AS d ON o.order_id = d.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_discount_amount = d.total_discount;
 
 COMMIT;
@@ -354,7 +358,7 @@ JOIN (
     FROM order_discounts
     GROUP BY order_id
     LIMIT 1000 OFFSET 2000
-) AS d ON o.order_id = d.order_id
+) AS d ON o.order_id = d.order_id COLLATE utf8mb4_unicode_ci
 SET o.total_discount_amount = d.total_discount;
 
 COMMIT;
