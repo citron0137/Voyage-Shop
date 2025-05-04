@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 /**
  * OrderRepository 인터페이스의 JPA 구현체
@@ -34,5 +35,10 @@ class OrderRepositoryImpl(private val orderJpaRepository: OrderJpaRepository) : 
     @Transactional(readOnly = true)
     override fun findAll(): List<Order> {
         return orderJpaRepository.findAll().map { it.toDomain() }
+    }
+
+    @Transactional(readOnly = true)
+    override fun findByCreatedAtAfter(startDate: LocalDateTime): List<Order> {
+        return orderJpaRepository.findByCreatedAtAfter(startDate).map { it.toDomain() }
     }
 } 

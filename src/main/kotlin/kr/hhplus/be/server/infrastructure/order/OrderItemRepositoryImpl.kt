@@ -64,4 +64,15 @@ class OrderItemRepositoryImpl(
     override fun findByOrderId(orderId: String): List<OrderItem> {
         return orderItemJpaRepository.findByOrderId(orderId).map { it.toDomain() }
     }
+
+    /**
+     * 여러 주문 ID로 주문 항목을 조회합니다.
+     *
+     * @param orderIds 조회할 주문 ID 목록
+     * @return 해당 주문 ID의 주문 항목 목록
+     */
+    @Transactional(readOnly = true)
+    override fun findByOrderIdIn(orderIds: List<String>): List<OrderItem> {
+        return orderItemJpaRepository.findByOrderIdIn(orderIds).map { it.toDomain() }
+    }
 } 

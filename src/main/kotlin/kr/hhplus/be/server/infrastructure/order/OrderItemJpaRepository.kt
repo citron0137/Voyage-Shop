@@ -15,4 +15,5 @@ interface OrderItemJpaRepository : JpaRepository<OrderItemJpaEntity, String> {
      * @return 해당 주문의 주문 항목 목록
      */
     fun findByOrderId(orderId: String): List<OrderItemJpaEntity>
+    fun findByOrderIdIn(orderIds: List<String>): List<OrderItemJpaEntity>
 } 

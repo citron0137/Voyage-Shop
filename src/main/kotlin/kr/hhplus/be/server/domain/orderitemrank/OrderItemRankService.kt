@@ -19,8 +19,8 @@ class OrderItemRankService(
      * @return 상위 랭킹 상품 컬렉션
      */
     @Transactional(readOnly = true)
-    fun getTopOrderItemRank(query: OrderItemRankQuery.GetTopRank): OrderItemRank {
-        return orderItemRankRepository.getRank(query.daGetTopRankimit)
+    fun getTopOrderItemRank(query: OrderItemRankQuery.GetTopRank): OrderItemRank? {
+        return orderItemRankRepository.getRank(query.days, query.limit)
     }
     
     /**
