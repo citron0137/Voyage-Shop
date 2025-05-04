@@ -11,6 +11,7 @@
 - [프로젝트 문서](#프로젝트-문서)
 - [기술 스택](#기술-스택)
 - [시작하기](#시작하기)
+- [스크립트 사용 설명서](#스크립트-사용-설명서)
 - [프로젝트 구조](#프로젝트-구조)
 - [테스트](#테스트)
 - [모니터링](#모니터링)
@@ -117,6 +118,80 @@ docker compose up -d
 
 브라우저에서 `http://localhost:8080`으로 접속하여 API를 사용할 수 있습니다.
 Swagger UI는 `http://localhost:8080/swagger-ui/index.html#/`에서 확인할 수 있습니다.
+
+## 스크립트 사용 설명서
+
+Voyage Shop은 개발 및 테스트 프로세스를 간소화하기 위한 다양한 스크립트를 제공합니다.
+
+### 1. 도커 환경 관리 스크립트
+
+#### Windows 환경
+```powershell
+.\run-docker.ps1 [명령어]
+```
+
+#### Linux/Mac 환경
+```bash
+./run-docker.sh [명령어]
+```
+
+#### 주요 명령어
+- `up -d`: 모든 도커 컨테이너를 백그라운드에서 실행
+- `clean`: 모든 컨테이너와 볼륨 데이터 삭제
+- `clean -a`: 모든 컨테이너, 이미지, 볼륨, 네트워크 등 전체 시스템 정리
+
+### 2. SQL 실행 스크립트
+
+#### Windows 환경
+```powershell
+.\run-sql.ps1 [옵션] <SQL파일경로>
+```
+
+#### Linux/Mac 환경
+```bash
+./run-sql.sh [옵션] <SQL파일경로>
+```
+
+#### 주요 옵션
+- `-Service` / `-s, --service`: MySQL 서비스 이름 (기본값: mysql)
+- `-User` / `-u, --user`: MySQL 사용자 이름 (기본값: root)
+- `-Password` / `-p, --password`: MySQL 비밀번호 (기본값: root)
+- `-Database` / `-d, --database`: 데이터베이스 이름 (기본값: hhplus)
+- `-Charset` / `--charset`: 문자셋 (기본값: utf8mb4)
+- `-Help` / `-h, --help`: 도움말 표시
+
+### 3. 부하 테스트 스크립트
+
+#### Windows 환경
+```powershell
+.\run-loadtest.ps1 [명령어] [옵션]
+```
+
+#### Linux/Mac 환경
+```bash
+./run-loadtest.sh [명령어] [옵션]
+```
+
+#### 주요 명령어
+- `start`: 테스트 환경 시작 (애플리케이션, DB, Redis, 모니터링 도구)
+- `stop`: 테스트 환경 중지 및 삭제
+- `data-gen`: 테스트 데이터 생성
+  - `-js`: JS 스크립트로 데이터 생성
+  - `-pg`: PostgreSQL용 데이터 생성
+  - `-sql`: SQL 스크립트로 데이터 생성
+  - `-size=[숫자]`: SQL 스크립트 사용 시 데이터 크기 (1000, 10000, 100000)
+- `test`: 부하 테스트 실행
+  - `-basic`: 기본 성능 테스트 (기본값)
+  - `-cache`: 캐시 효율성 테스트
+  - `-spike`: 트래픽 스파이크 테스트
+- `help`: 도움말 표시
+
+#### 예시
+```
+.\run-loadtest.ps1 start       # 테스트 환경 시작
+.\run-loadtest.ps1 data-gen -sql -size=10000  # 10,000개 주문 SQL 데이터 생성
+.\run-loadtest.ps1 test -cache # 캐시 효율성 테스트 실행
+```
 
 ## 프로젝트 구조
 
