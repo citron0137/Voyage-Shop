@@ -3,19 +3,16 @@ package kr.hhplus.be.server.application.couponevent
 import kr.hhplus.be.server.domain.couponevent.*
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.shared.lock.DistributedLock
-import kr.hhplus.be.server.shared.lock.DistributedLockManager
 import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
-import java.util.concurrent.TimeUnit
 
 /**
- * 쿠폰 이벤트 관련 유스케이스를 조합하는 퍼사드 클래스
- * 쿠폰 이벤트 생성, 조회, 쿠폰 발급 등의 기능을 제공합니다.
+ * 쿠폰 이벤트 관련 애플리케이션 서비스 클래스
+ * 여러 도메인 서비스를 조합하여 쿠폰 이벤트 생성, 조회, 쿠폰 발급 등의 비즈니스 유스케이스를 구현합니다.
  */
 @Component
-class CouponEventFacade(
+class CouponEventApplication(
     private val couponEventService: CouponEventService,
     private val couponUserService: CouponUserService,
     private val transactionHelper: TransactionHelper

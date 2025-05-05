@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.integration.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
-import kr.hhplus.be.server.application.user.UserFacade
+import kr.hhplus.be.server.application.user.UserApplication
 import kr.hhplus.be.server.application.userpoint.UserPointCriteria
-import kr.hhplus.be.server.application.userpoint.UserPointFacade
+import kr.hhplus.be.server.application.userpoint.UserPointApplication
 import kr.hhplus.be.server.application.userpoint.UserPointResult
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
@@ -19,21 +19,21 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
-class UserPointFacadeConcurrencyTest {
+class UserPointApplicationConcurrencyTest {
 
     @Autowired
-    private lateinit var userPointFacade: UserPointFacade
+    private lateinit var userPointApplication: UserPointApplication
 
     @Autowired
-    private lateinit var userFacade: UserFacade
+    private lateinit var userApplication: UserApplication
 
     @Test
     @DisplayName("동시에 사용자 포인트를 충전해도 정확한 잔액이 유지된다")
     fun chargePointConcurrencyTest() {
         // given: 사용자 생성 및 초기 포인트 확인 (0이어야 함)
-        val user = userFacade.createUser()
+        val user = userApplication.createUser()
         val userId = user.userId
-        val initialPoint: UserPointResult.Single = userPointFacade.getUserPoint(UserPointCriteria.GetByUserId(userId))
+        val initialPoint: UserPointResult.Single = userPointApplication.getUserPoint(UserPointCriteria.GetByUserId(userId))
         assertEquals(0L, initialPoint.amount, "초기 포인트는 0이어야 합니다.")
 
         val numberOfThreads = 100
@@ -47,7 +47,7 @@ class UserPointFacadeConcurrencyTest {
         for (i in 1..numberOfThreads) {
             executor.submit {
                 try {
-                    userPointFacade.chargePoint(
+                    userPointApplication.chargePoint(
                         UserPointCriteria.Charge(
                             userId = userId,
                             amount = chargeAmount
@@ -70,7 +70,7 @@ class UserPointFacadeConcurrencyTest {
         executor.shutdown()
 
         // then: 최종 포인트 잔액 확인
-        val finalPoint: UserPointResult.Single = userPointFacade.getUserPoint(UserPointCriteria.GetByUserId(userId))
+        val finalPoint: UserPointResult.Single = userPointApplication.getUserPoint(UserPointCriteria.GetByUserId(userId))
         val expectedBalance = chargeAmount * successCount.get() // 성공한 만큼만 충전
 
         println("Total Attempts: $numberOfThreads")

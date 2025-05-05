@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.controller.couponuser
 
-import kr.hhplus.be.server.application.couponuser.CouponUserFacade
+import kr.hhplus.be.server.application.couponuser.CouponUserApplication
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import org.springframework.web.bind.annotation.*
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 class CouponUserController(
-    private val couponUserFacade: CouponUserFacade
+    private val couponUserApplication: CouponUserApplication
 ) : CouponUserControllerApi {
     /**
      * 모든 쿠폰 사용자를 조회합니다.
@@ -18,7 +18,7 @@ class CouponUserController(
      * @return 쿠폰 사용자 목록 응답
      */
     override fun getAllCouponUsers(): BaseResponse<List<CouponUserResponse.Single>> {
-        val result = couponUserFacade.getAllCoupons()
+        val result = couponUserApplication.getAllCoupons()
         
         val responseList = result.couponUsers.map { couponUserResult ->
             val type = when (couponUserResult.benefitMethod) {

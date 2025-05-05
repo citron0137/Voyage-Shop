@@ -2,10 +2,10 @@ package kr.hhplus.be.server.integration.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.order.OrderCriteria
-import kr.hhplus.be.server.application.order.OrderFacade
+import kr.hhplus.be.server.application.order.OrderApplication
 import kr.hhplus.be.server.application.product.ProductCriteria
-import kr.hhplus.be.server.application.product.ProductFacade
-import kr.hhplus.be.server.application.user.UserFacade
+import kr.hhplus.be.server.application.product.ProductApplication
+import kr.hhplus.be.server.application.user.UserApplication
 import kr.hhplus.be.server.domain.product.ProductException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
@@ -22,25 +22,25 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
-class OrderFacadeConcurrencyTest {
+class OrderApplicationConcurrencyTest {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
-    private lateinit var orderFacade: OrderFacade
+    private lateinit var orderApplication: OrderApplication
 
     @Autowired
-    private lateinit var productFacade: ProductFacade
+    private lateinit var productApplication: ProductApplication
 
     @Autowired
-    private lateinit var userFacade: UserFacade
+    private lateinit var userApplication: UserApplication
 
     @Test
     @DisplayName("동시에 주문을 생성해도 상품 재고가 정확히 차감된다")
     fun createOrderConcurrencyTest() {
         // given: 재고 10개인 상품 생성
         val initialStock = 10L
-        val product = productFacade.createProduct(
+        val product = productApplication.createProduct(
             ProductCriteria.Create(
                 name = "Test Product for Order Concurrency",
                 price = 1000,
@@ -58,13 +58,13 @@ class OrderFacadeConcurrencyTest {
         val stockUnderflowCount = AtomicInteger(0)
 
         // 여러 사용자 생성
-        val users = (1..numberOfThreads).map { userFacade.createUser() }
+        val users = (1..numberOfThreads).map { userApplication.createUser() }
 
         // when: 여러 사용자가 동시에 상품 1개 주문 시도
         users.forEach { user ->
             executor.submit {
                 try {
-                    orderFacade.createOrder(
+                    orderApplication.createOrder(
                         OrderCriteria.Create(
                             userId = user.userId,
                             items = listOf(
@@ -96,7 +96,7 @@ class OrderFacadeConcurrencyTest {
         executor.shutdown()
 
         // then: 최종 상품 재고 확인
-        val finalProduct = productFacade.getProduct(ProductCriteria.GetById(productId))
+        val finalProduct = productApplication.getProduct(ProductCriteria.GetById(productId))
         val expectedStock = initialStock - successCount.get() // 성공한 주문 만큼만 감소
 
         logger.info("Total Attempts: $numberOfThreads")

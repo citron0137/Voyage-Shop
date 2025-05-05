@@ -1,27 +1,19 @@
 package kr.hhplus.be.server.application.userpoint
 
 import kr.hhplus.be.server.domain.user.UserException
-import kr.hhplus.be.server.domain.user.UserQuery
-import kr.hhplus.be.server.domain.user.UserService
-import kr.hhplus.be.server.domain.userpoint.UserPointCommand
 import kr.hhplus.be.server.domain.userpoint.UserPointException
-import kr.hhplus.be.server.domain.userpoint.UserPointQuery
 import kr.hhplus.be.server.domain.userpoint.UserPointService
 import kr.hhplus.be.server.shared.lock.DistributedLock
 import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
-import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.annotation.Isolation
-import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.support.TransactionTemplate
 
 /**
- * 사용자 포인트 파사드
- * 사용자 포인트 관련 비즈니스 로직을 캡슐화하고 컨트롤러에서 사용할 수 있는 단순한 인터페이스를 제공합니다.
+ * 사용자 포인트 애플리케이션 서비스
+ * 여러 도메인 서비스를 조합하여 포인트 조회, 충전, 사용 등의 비즈니스 유스케이스를 구현하고 트랜잭션을 관리합니다.
  */
 @Component
-class UserPointFacade(
+class UserPointApplication(
     private val userPointService: UserPointService,
     private val transactionHelper: TransactionHelper,
 ) {

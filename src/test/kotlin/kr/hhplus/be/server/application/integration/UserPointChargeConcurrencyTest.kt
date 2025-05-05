@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.integration.userpoint
 
 import kr.hhplus.be.server.TestcontainersConfiguration
-import kr.hhplus.be.server.application.user.UserFacade
+import kr.hhplus.be.server.application.user.UserApplication
 import kr.hhplus.be.server.application.userpoint.UserPointCriteria
-import kr.hhplus.be.server.application.userpoint.UserPointFacade
+import kr.hhplus.be.server.application.userpoint.UserPointApplication
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,16 +20,16 @@ import java.util.concurrent.TimeUnit
 class UserPointChargeConcurrencyTest {
 
     @Autowired
-    private lateinit var userFacade: UserFacade
+    private lateinit var userApplication: UserApplication
 
     @Autowired
-    private lateinit var userPointFacade: UserPointFacade
+    private lateinit var userPointApplication: UserPointApplication
 
     @Test
     @DisplayName("여러 스레드에서 동시에 포인트를 충전해도 정확한 합계가 유지된다")
     fun `여러 스레드에서 동시에 포인트를 충전해도 정확한 합계가 유지된다`() {
         // given: 사용자 생성
-        val user = userFacade.createUser()
+        val user = userApplication.createUser()
         
         // given: 동시 충전 설정
         val threadCount = 10
@@ -44,7 +44,7 @@ class UserPointChargeConcurrencyTest {
             executorService.submit {
                 try {
                     val chargeCriteria = UserPointCriteria.Charge(user.userId, chargeAmount)
-                    userPointFacade.chargePoint(chargeCriteria)
+                    userPointApplication.chargePoint(chargeCriteria)
                 } finally {
                     latch.countDown()
                 }
@@ -57,7 +57,7 @@ class UserPointChargeConcurrencyTest {
         
         // then: 최종 포인트 잔액 확인
         val getCriteria = UserPointCriteria.GetByUserId(user.userId)
-        val userPoint = userPointFacade.getUserPoint(getCriteria)
+        val userPoint = userPointApplication.getUserPoint(getCriteria)
         
         // 모든 충전이 정확히 반영되었는지 검증
         assertThat(userPoint.amount).isEqualTo(expectedTotalAmount)
@@ -67,7 +67,7 @@ class UserPointChargeConcurrencyTest {
     @DisplayName("더 많은 스레드에서 소액 충전을 동시에 수행해도 정확한 합계가 유지된다")
     fun `더 많은 스레드에서 소액 충전을 동시에 수행해도 정확한 합계가 유지된다`() {
         // given: 사용자 생성
-        val user = userFacade.createUser()
+        val user = userApplication.createUser()
         
         // given: 더 많은 스레드로 동시 충전 설정
         val threadCount = 50
@@ -82,7 +82,7 @@ class UserPointChargeConcurrencyTest {
             executorService.submit {
                 try {
                     val chargeCriteria = UserPointCriteria.Charge(user.userId, chargeAmount)
-                    userPointFacade.chargePoint(chargeCriteria)
+                    userPointApplication.chargePoint(chargeCriteria)
                 } finally {
                     latch.countDown()
                 }
@@ -95,7 +95,7 @@ class UserPointChargeConcurrencyTest {
         
         // then: 최종 포인트 잔액 확인
         val getCriteria = UserPointCriteria.GetByUserId(user.userId)
-        val userPoint = userPointFacade.getUserPoint(getCriteria)
+        val userPoint = userPointApplication.getUserPoint(getCriteria)
         
         // 모든 충전이 정확히 반영되었는지 검증
         assertThat(userPoint.amount).isEqualTo(expectedTotalAmount)
@@ -105,7 +105,7 @@ class UserPointChargeConcurrencyTest {
     @DisplayName("여러 금액을 동시에 충전해도 정확한 합계가 유지된다")
     fun `여러 금액을 동시에 충전해도 정확한 합계가 유지된다`() {
         // given: 사용자 생성
-        val user = userFacade.createUser()
+        val user = userApplication.createUser()
         
         // given: 여러 금액으로 동시 충전 설정
         val threadCount = 10
@@ -121,7 +121,7 @@ class UserPointChargeConcurrencyTest {
             executorService.submit {
                 try {
                     val chargeCriteria = UserPointCriteria.Charge(user.userId, amount)
-                    userPointFacade.chargePoint(chargeCriteria)
+                    userPointApplication.chargePoint(chargeCriteria)
                 } finally {
                     latch.countDown()
                 }
@@ -134,7 +134,7 @@ class UserPointChargeConcurrencyTest {
         
         // then: 최종 포인트 잔액 확인
         val getCriteria = UserPointCriteria.GetByUserId(user.userId)
-        val userPoint = userPointFacade.getUserPoint(getCriteria)
+        val userPoint = userPointApplication.getUserPoint(getCriteria)
         
         // 모든 충전이 정확히 반영되었는지 검증
         assertThat(userPoint.amount).isEqualTo(expectedTotalAmount)
