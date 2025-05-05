@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(255) PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
-);
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 사용자 포인트 테이블 생성
 CREATE TABLE IF NOT EXISTS user_points (
@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS user_points (
     amount BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
-);
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -21,6 +21,72 @@ object LockKeyGenerator {
     }
     
     /**
+     * 도메인과 리소스 타입에 따라 특화된 락 키를 생성합니다.
+     * 각 도메인별 특화 메소드를 내부적으로 사용합니다.
+     *
+     * @param domainPrefix 도메인 접두사 (LockKeyConstants 상수 사용)
+     * @param resourceType 리소스 타입 (LockKeyConstants 상수 사용)
+     * @param resourceId 리소스의 고유 식별자
+     * @return 생성된 락 키
+     */
+    fun getDomainSpecificLockKey(
+        domainPrefix: String,
+        resourceType: String,
+        resourceId: String
+    ): String {
+        return when (domainPrefix) {
+            LockKeyConstants.ORDER_PREFIX -> {
+                when (resourceType) {
+                    LockKeyConstants.RESOURCE_ID -> Order.idLock(resourceId)
+                    LockKeyConstants.RESOURCE_USER -> Order.userLock(resourceId)
+                    LockKeyConstants.RESOURCE_PAYMENT -> Order.paymentLock(resourceId)
+                    LockKeyConstants.RESOURCE_STATUS -> Order.statusLock(resourceId)
+                    else -> generate(domainPrefix, resourceType, resourceId)
+                }
+            }
+            LockKeyConstants.PRODUCT_PREFIX -> {
+                when (resourceType) {
+                    LockKeyConstants.RESOURCE_ID -> Product.idLock(resourceId)
+                    LockKeyConstants.RESOURCE_STOCK -> Product.stockLock(resourceId)
+                    else -> generate(domainPrefix, resourceType, resourceId)
+                }
+            }
+            LockKeyConstants.USER_PREFIX -> {
+                when (resourceType) {
+                    LockKeyConstants.RESOURCE_ID -> User.idLock(resourceId)
+                    else -> generate(domainPrefix, resourceType, resourceId)
+                }
+            }
+            LockKeyConstants.COUPON_USER_PREFIX -> {
+                when (resourceType) {
+                    LockKeyConstants.RESOURCE_ID -> CouponUser.idLock(resourceId)
+                    LockKeyConstants.RESOURCE_USER -> CouponUser.userLock(resourceId)
+                    else -> generate(domainPrefix, resourceType, resourceId)
+                }
+            }
+            LockKeyConstants.COUPON_EVENT_PREFIX -> {
+                when (resourceType) {
+                    LockKeyConstants.RESOURCE_ID -> CouponEvent.idLock(resourceId)
+                    LockKeyConstants.RESOURCE_EVENT -> CouponEvent.eventLock(resourceId)
+                    else -> generate(domainPrefix, resourceType, resourceId)
+                }
+            }
+            LockKeyConstants.USER_POINT_PREFIX -> {
+                when (resourceType) {
+                    LockKeyConstants.RESOURCE_ID -> UserPoint.idLock(resourceId)
+                    LockKeyConstants.RESOURCE_USER -> UserPoint.userLock(resourceId)
+                    LockKeyConstants.RESOURCE_POINT -> UserPoint.pointLock(resourceId)
+                    else -> generate(domainPrefix, resourceType, resourceId)
+                }
+            }
+            LockKeyConstants.ORDER_ITEM_RANK_PREFIX -> {
+                OrderItemRank.updateLock(resourceId)
+            }
+            else -> generate(domainPrefix, resourceType, resourceId)
+        }
+    }
+    
+    /**
      * 주문 관련 락 키 생성
      */
     object Order {

@@ -39,4 +39,27 @@ interface OrderItemRankControllerApi {
     )
     @GetMapping("/order-item-rank")
     fun getOrderItemRank(): BaseResponse<List<OrderItemRankResponse.Rank>>
+    
+    /**
+     * 주문 상품 순위 데이터를 초기화합니다.
+     *
+     * @return 성공 여부
+     */
+    @Operation(
+        summary = "주문 상품 순위 초기화",
+        description = "저장된 주문 상품 순위 데이터를 모두 삭제합니다."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "초기화 성공",
+                content = [Content(
+                    mediaType = "application/json"
+                )]
+            )
+        ]
+    )
+    @DeleteMapping("/order-item-rank")
+    fun resetOrderItemRank(): BaseResponse<Unit>
 } 

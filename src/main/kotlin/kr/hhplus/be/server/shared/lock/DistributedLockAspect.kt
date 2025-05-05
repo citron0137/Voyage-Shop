@@ -9,6 +9,7 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  * 분산 락 어노테이션(@DistributedLock, @CompositeLock)을 처리하는 AOP Aspect
@@ -34,14 +35,11 @@ class DistributedLockAspect(private val lockManager: DistributedLockManager) {
 
         val resourceId = resolveResourceId(distributedLock.resourceIdExpression, joinPoint)
 
-        val lockKey = LockKeyGenerator.generate(
-            distributedLock.domain,
-            distributedLock.resourceType,
-            resourceId
-        )
-        
-        return lockManager.executeWithLock(
-            key = lockKey,
+        // LockKeyGenerator 활용 (executeWithDomainLock 사용)
+        return lockManager.executeWithDomainLock(
+            domainPrefix = distributedLock.domain,
+            resourceType = distributedLock.resourceType,
+            resourceId = resourceId,
             timeout = distributedLock.timeout,
             unit = distributedLock.timeUnit
         ) {
@@ -62,33 +60,16 @@ class DistributedLockAspect(private val lockManager: DistributedLockManager) {
         val method = methodSignature.method
         val compositeLock = method.getAnnotation(CompositeLock::class.java)
 
-
-        // 각 락에 대한 키와 타임아웃 준비
-        val lockKeys = compositeLock.locks.map { lock ->
+        // 각 락에 대한 도메인 리소스 준비
+        val domainResources = compositeLock.locks.map { lock ->
             val resourceId = resolveResourceId(lock.resourceIdExpression, joinPoint)
-            LockKeyGenerator.generate(lock.domain, lock.resourceType, resourceId)
+            Triple(lock.domain, lock.resourceType, resourceId)
         }
         
-        // 락 획득 순서 정렬 (필요시)
-        val orderedLockKeys = if (compositeLock.ordered) {
-            DistributedLockUtils.sortLockKeys(lockKeys)
-        } else {
-            lockKeys
-        }
-        
-        // 타임아웃 설정 (첫 번째 락은 EXTENDED_TIMEOUT, 나머지는 DEFAULT_TIMEOUT)
-        val timeouts = if (orderedLockKeys.isNotEmpty()) {
-            listOf(LockKeyConstants.EXTENDED_TIMEOUT) + 
-                List(orderedLockKeys.size - 1) { LockKeyConstants.DEFAULT_TIMEOUT }
-        } else {
-            emptyList()
-        }
-        
-        // 모든 락을 순서대로 획득하고 메서드 실행
-        return DistributedLockUtils.withOrderedLocks(
-            lockManager = lockManager,
-            keys = orderedLockKeys,
-            timeouts = timeouts,
+        // DistributedLockManager 확장 함수 활용
+        return lockManager.withDomainLocks(
+            domainResources = domainResources,
+            ordered = compositeLock.ordered,
             action = {
                 joinPoint.proceed()
             }
@@ -107,6 +88,16 @@ class DistributedLockAspect(private val lockManager: DistributedLockManager) {
         val methodSignature = joinPoint.signature as MethodSignature
         val parameterNames = methodSignature.parameterNames
         val args = joinPoint.args
+        
+        // 표현식이 상수 문자열인 경우 (따옴표로 시작하는 경우)
+        if (expression.startsWith("'") && expression.endsWith("'")) {
+            return expression.substring(1, expression.length - 1)
+        }
+        
+        // SpEL 표현식 처리 (예: #criteria.days)
+        if (expression.startsWith("#")) {
+            return resolveSpelExpression(expression.substring(1), parameterNames, args)
+        }
         
         // 표현식에서 파라미터 경로 파싱 (예: "criteria.userId")
         val parts = expression.split(".")
@@ -140,5 +131,71 @@ class DistributedLockAspect(private val lockManager: DistributedLockManager) {
         }
         
         return value?.toString() ?: throw IllegalArgumentException("표현식 '$expression'에서 null 값이 추출되었습니다")
+    }
+
+    /**
+     * SpEL 표현식을 해석합니다.
+     * 예: "#criteria.days + '_limit_' + #criteria.limit"와 같은 복합 표현식 처리
+     * 
+     * @param spelExpression SpEL 표현식
+     * @param parameterNames 메서드 파라미터 이름 배열
+     * @param args 메서드 파라미터 값 배열
+     * @return 해석된 문자열
+     */
+    private fun resolveSpelExpression(spelExpression: String, parameterNames: Array<String>, args: Array<Any>): String {
+        // + 연산자로 문자열 연결 처리
+        if (spelExpression.contains("+")) {
+            val parts = spelExpression.split("+").map { it.trim() }
+            return parts.joinToString("") {
+                if (it.startsWith("'") && it.endsWith("'")) {
+                    // 문자열 리터럴 처리
+                    it.substring(1, it.length - 1)
+                } else if (it.startsWith("#")) {
+                    // 재귀적으로 표현식 처리
+                    resolveSpelExpression(it.substring(1), parameterNames, args)
+                } else {
+                    // 단순 변수 참조
+                    resolveSimpleReference(it, parameterNames, args)
+                }
+            }
+        }
+        
+        // 단순 변수 참조 처리
+        return resolveSimpleReference(spelExpression, parameterNames, args)
+    }
+    
+    /**
+     * 단순 변수 참조를 해석합니다.
+     * 예: "criteria.days" 같은 단순 경로 표현식
+     */
+    private fun resolveSimpleReference(reference: String, parameterNames: Array<String>, args: Array<Any>): String {
+        val parts = reference.split(".")
+        val rootParamName = parts[0]
+        
+        val paramIndex = parameterNames.indexOf(rootParamName)
+        if (paramIndex == -1) {
+            throw IllegalArgumentException("파라미터 이름 '$rootParamName'을 찾을 수 없습니다: $reference")
+        }
+        
+        var value: Any? = args[paramIndex]
+        
+        for (i in 1 until parts.size) {
+            if (value == null) break
+            
+            val fieldName = parts[i]
+            val getterMethod = value::class.java.methods.find { 
+                it.name == "get${fieldName.capitalize()}" || 
+                it.name == fieldName || 
+                it.name == "is${fieldName.capitalize()}"
+            }
+            
+            if (getterMethod == null) {
+                throw IllegalArgumentException("필드 '$fieldName'을 클래스 '${value::class.java.simpleName}'에서 찾을 수 없습니다: $reference")
+            }
+            
+            value = getterMethod.invoke(value)
+        }
+        
+        return value?.toString() ?: throw IllegalArgumentException("표현식 '$reference'에서 null 값이 추출되었습니다")
     }
 } 

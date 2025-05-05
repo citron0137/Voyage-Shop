@@ -52,4 +52,17 @@ sealed class OrderQuery {
             if (orderId.isBlank()) throw OrderException.OrderIdShouldNotBlank("주문 ID는 비어있을 수 없습니다.")
         }
     }
+    
+    /**
+     * 최근 N일간의 상품별 주문 수량을 집계하는 쿼리
+     */
+    data class GetAggregatedOrderItems(
+        val days: Int = 3,
+        val limit: Int = 10
+    ) : OrderQuery() {
+        init {
+            require(days > 0) { "days must be positive" }
+            require(limit > 0) { "limit must be positive" }
+        }
+    }
 } 

@@ -14,9 +14,19 @@ class OrderItemRankController(
         val criteria = OrderItemRankCriteria.RecentTopRanks()
         val result = orderItemRankFacade.getRecentTopOrderItemRanks(criteria)
         
-        // 파사드 결과를 컨트롤러 응답 DTO로 변환
-        val responseItems = result.ranks.map { OrderItemRankResponse.Rank.from(it) }
+        // 파사드 결과를 컨트롤러 응답 DTO로 변환 (주문 수량 기준 내림차순 정렬 보장)
+        val responseItems = result.ranks
+            .map { OrderItemRankResponse.Rank.from(it) }
+            .sortedByDescending { it.orderCount }
+            .take(criteria.limit)
         
         return BaseResponse.success(responseItems)
+    }
+    
+    override fun resetOrderItemRank(): BaseResponse<Unit> {
+        // 파사드를 통해 orderItemRank 초기화
+        orderItemRankFacade.resetOrderItemRanks()
+        
+        return BaseResponse.success(Unit)
     }
 }
