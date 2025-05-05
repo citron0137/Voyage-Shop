@@ -1,13 +1,13 @@
 package kr.hhplus.be.server.controller.order
 
 import kr.hhplus.be.server.application.order.OrderCriteria
-import kr.hhplus.be.server.application.order.OrderFacade
+import kr.hhplus.be.server.application.order.OrderApplication
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
 @RestController()
 class OrderController(
-    private val orderFacade: OrderFacade
+    private val orderApplication: OrderApplication
 ) : OrderControllerApi {
     /**
      * 주문을 생성합니다.
@@ -29,7 +29,7 @@ class OrderController(
             },
             couponUserId = req.payment.couponId
         )
-        val result = orderFacade.createOrder(criteria)
+        val result = orderApplication.createOrder(criteria)
         
         return BaseResponse.success(OrderResponse.Order.from(result))
     }

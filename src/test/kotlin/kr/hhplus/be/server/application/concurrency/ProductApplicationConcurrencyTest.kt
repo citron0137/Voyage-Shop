@@ -2,7 +2,7 @@ package kr.hhplus.be.server.integration.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.product.ProductCriteria
-import kr.hhplus.be.server.application.product.ProductFacade
+import kr.hhplus.be.server.application.product.ProductApplication
 import kr.hhplus.be.server.domain.product.ProductException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
@@ -18,17 +18,17 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
-class ProductFacadeConcurrencyTest {
+class ProductApplicationConcurrencyTest {
 
     @Autowired
-    private lateinit var productFacade: ProductFacade
+    private lateinit var productApplication: ProductApplication
 
     @Test
     @DisplayName("동시에 상품 재고를 감소시켜도 정확한 재고가 유지된다")
     fun decreaseStockConcurrencyTest() {
         // given: 초기 재고 100개인 상품 생성
         val initialStock = 100L
-        val createdProduct = productFacade.createProduct(
+        val createdProduct = productApplication.createProduct(
             ProductCriteria.Create(
                 name = "Test Product for Concurrency",
                 price = 1000,
@@ -49,7 +49,7 @@ class ProductFacadeConcurrencyTest {
         for (i in 1..numberOfThreads) {
             executor.submit {
                 try {
-                    productFacade.decreaseStock(
+                    productApplication.decreaseStock(
                         ProductCriteria.DecreaseStock(
                             productId = productId,
                             amount = decreaseAmount
@@ -78,7 +78,7 @@ class ProductFacadeConcurrencyTest {
         executor.shutdown()
 
         // then: 최종 재고 확인
-        val finalProduct = productFacade.getProduct(ProductCriteria.GetById(productId))
+        val finalProduct = productApplication.getProduct(ProductCriteria.GetById(productId))
         val expectedStock = initialStock - successCount.get() // 성공한 만큼만 감소
 
         println("Total Attempts: $numberOfThreads")

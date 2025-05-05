@@ -2,9 +2,8 @@ package kr.hhplus.be.server.integration.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.couponuser.CouponUserCriteria
-import kr.hhplus.be.server.application.couponuser.CouponUserFacade
-import kr.hhplus.be.server.application.couponuser.CouponUserResult
-import kr.hhplus.be.server.application.user.UserFacade
+import kr.hhplus.be.server.application.couponuser.CouponUserApplication
+import kr.hhplus.be.server.application.user.UserApplication
 import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import kr.hhplus.be.server.domain.couponuser.CouponUserException
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -17,22 +16,21 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
-import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
-class CouponUserFacadeConcurrencyTest {
+class CouponUserApplicationConcurrencyTest {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
-    private lateinit var couponUserFacade: CouponUserFacade
+    private lateinit var couponUserApplication: CouponUserApplication
 
     @Autowired
-    private lateinit var userFacade: UserFacade
+    private lateinit var userApplication: UserApplication
 
     @Test
     @DisplayName("동시에 쿠폰 사용을 요청해도 쿠폰은 한 번만 사용 처리된다")
@@ -46,7 +44,7 @@ class CouponUserFacadeConcurrencyTest {
             benefitMethod = CouponUserBenefitMethod.DISCOUNT_FIXED_AMOUNT,
             benefitAmount = "1000"
         )
-        val couponResult = couponUserFacade.issueCoupon(createCriteria)
+        val couponResult = couponUserApplication.issueCoupon(createCriteria)
         val couponUserId = couponResult.couponUserId
         
         // 동시에 처리할 스레드 수
@@ -63,7 +61,7 @@ class CouponUserFacadeConcurrencyTest {
             executor.submit {
                 try {
                     val useCriteria = CouponUserCriteria.Use(couponUserId)
-                    val usedCouponResult = couponUserFacade.useCoupon(useCriteria)
+                    val usedCouponResult = couponUserApplication.useCoupon(useCriteria)
                     
                     // 사용된 쿠폰이면 성공 카운트 증가
                     if (usedCouponResult.usedAt != null) {
@@ -103,7 +101,7 @@ class CouponUserFacadeConcurrencyTest {
         
         // 최종 쿠폰 상태 확인
         val getCriteria = CouponUserCriteria.GetById(couponUserId)
-        val finalCouponState = couponUserFacade.getCouponUser(getCriteria)
+        val finalCouponState = couponUserApplication.getCouponUser(getCriteria)
         
         assertNotNull(finalCouponState.usedAt, "최종 쿠폰 상태는 사용됨 상태여야 합니다")
     }

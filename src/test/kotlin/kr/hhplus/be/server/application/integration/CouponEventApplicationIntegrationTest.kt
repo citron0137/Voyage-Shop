@@ -2,7 +2,7 @@ package kr.hhplus.be.server.integration.couponevent
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
-import kr.hhplus.be.server.application.couponevent.CouponEventFacade
+import kr.hhplus.be.server.application.couponevent.CouponEventApplication
 import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
@@ -22,10 +22,10 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
 @DisplayName("쿠폰 이벤트 통합 테스트")
-class CouponEventFacadeIntegrationTest {
+class CouponEventApplicationIntegrationTest {
 
     @Autowired
-    private lateinit var couponEventFacade: CouponEventFacade
+    private lateinit var couponEventApplication: CouponEventApplication
 
     @Autowired
     private lateinit var userService: UserService
@@ -56,7 +56,7 @@ class CouponEventFacadeIntegrationTest {
         )
 
         // when
-        val result = couponEventFacade.createCouponEvent(criteria)
+        val result = couponEventApplication.createCouponEvent(criteria)
 
         // then
         assertThat(result.id).isNotNull()
@@ -76,11 +76,11 @@ class CouponEventFacadeIntegrationTest {
             benefitAmount = "10",
             totalIssueAmount = 50
         )
-        val createdEvent = couponEventFacade.createCouponEvent(createCriteria)
+        val createdEvent = couponEventApplication.createCouponEvent(createCriteria)
         
         // when
         val getCriteria = CouponEventCriteria.GetById(createdEvent.id)
-        val result = couponEventFacade.getCouponEvent(getCriteria)
+        val result = couponEventApplication.getCouponEvent(getCriteria)
         
         // then
         assertThat(result.id).isEqualTo(createdEvent.id)
@@ -98,7 +98,7 @@ class CouponEventFacadeIntegrationTest {
         
         // when & then
         assertThrows<CouponEventException.NotFound> {
-            couponEventFacade.getCouponEvent(getCriteria)
+            couponEventApplication.getCouponEvent(getCriteria)
         }
     }
 
@@ -107,10 +107,10 @@ class CouponEventFacadeIntegrationTest {
     @Transactional
     fun getAllCouponEventsTest() {
         // given
-        val initialCount = couponEventFacade.getAllCouponEvents().couponEvents.size
+        val initialCount = couponEventApplication.getAllCouponEvents().couponEvents.size
         
         // 쿠폰 이벤트 2개 생성
-        couponEventFacade.createCouponEvent(
+        couponEventApplication.createCouponEvent(
             CouponEventCriteria.Create(
                 benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "2000",
@@ -118,7 +118,7 @@ class CouponEventFacadeIntegrationTest {
             )
         )
         
-        couponEventFacade.createCouponEvent(
+        couponEventApplication.createCouponEvent(
             CouponEventCriteria.Create(
                 benefitMethod = CouponEventBenefitMethod.DISCOUNT_PERCENTAGE,
                 benefitAmount = "20",
@@ -127,7 +127,7 @@ class CouponEventFacadeIntegrationTest {
         )
         
         // when
-        val result = couponEventFacade.getAllCouponEvents()
+        val result = couponEventApplication.getAllCouponEvents()
         
         // then
         assertThat(result.couponEvents.size).isEqualTo(initialCount + 2)
@@ -143,7 +143,7 @@ class CouponEventFacadeIntegrationTest {
             benefitAmount = "3000",
             totalIssueAmount = 5
         )
-        val createdEvent = couponEventFacade.createCouponEvent(createCriteria)
+        val createdEvent = couponEventApplication.createCouponEvent(createCriteria)
         val userId = testUsers[0].userId
         
         // when
@@ -151,14 +151,14 @@ class CouponEventFacadeIntegrationTest {
             couponEventId = createdEvent.id,
             userId = userId
         )
-        val result = couponEventFacade.issueCouponUser(issueCriteria)
+        val result = couponEventApplication.issueCouponUser(issueCriteria)
         
         // then
         // IssueCoupon 클래스는 couponUserId 필드만 있음
         assertThat(result.couponUserId).isNotNull()
         
         // 쿠폰 발급 후 이벤트의 남은 발급 수량 확인
-        val updatedEvent = couponEventFacade.getCouponEvent(CouponEventCriteria.GetById(createdEvent.id))
+        val updatedEvent = couponEventApplication.getCouponEvent(CouponEventCriteria.GetById(createdEvent.id))
         assertThat(updatedEvent.leftIssueAmount).isEqualTo(4) // 처음 5개에서 1개 발급했으므로
     }
 
@@ -172,14 +172,14 @@ class CouponEventFacadeIntegrationTest {
             benefitAmount = "15",
             totalIssueAmount = 1 // 재고를 1개만 설정
         )
-        val createdEvent = couponEventFacade.createCouponEvent(createCriteria)
+        val createdEvent = couponEventApplication.createCouponEvent(createCriteria)
         
         // 먼저 재고 1개 소진
         val issueCriteria1 = CouponEventCriteria.IssueCoupon(
             couponEventId = createdEvent.id,
             userId = testUsers[1].userId
         )
-        couponEventFacade.issueCouponUser(issueCriteria1)
+        couponEventApplication.issueCouponUser(issueCriteria1)
         
         // when & then - 두 번째 발급 시도에서 예외 발생
         val issueCriteria2 = CouponEventCriteria.IssueCoupon(
@@ -187,7 +187,7 @@ class CouponEventFacadeIntegrationTest {
             userId = testUsers[2].userId
         )
         assertThrows<CouponEventException.OutOfStock> {
-            couponEventFacade.issueCouponUser(issueCriteria2)
+            couponEventApplication.issueCouponUser(issueCriteria2)
         }
     }
 } 

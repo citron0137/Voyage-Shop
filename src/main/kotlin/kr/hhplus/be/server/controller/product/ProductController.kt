@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.controller.product
 
 import kr.hhplus.be.server.application.product.ProductCriteria
-import kr.hhplus.be.server.application.product.ProductFacade
+import kr.hhplus.be.server.application.product.ProductApplication
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 class ProductController(
-    private val productFacade: ProductFacade
+    private val productApplication: ProductApplication
 ) : ProductControllerApi {
     /**
      * 상품 목록을 조회합니다.
@@ -19,7 +19,7 @@ class ProductController(
      */
     override fun getAllProducts(): BaseResponse<ProductResponse.List> {
         val criteria = ProductCriteria.GetAll()
-        val result = productFacade.getAllProducts(criteria)
+        val result = productApplication.getAllProducts(criteria)
         return BaseResponse.success(ProductResponse.List.from(result))
     }
     
@@ -31,7 +31,7 @@ class ProductController(
      */
     override fun getProduct(@PathVariable productId: String): BaseResponse<ProductResponse.Single> {
         val criteria = ProductCriteria.GetById(productId)
-        val result = productFacade.getProduct(criteria)
+        val result = productApplication.getProduct(criteria)
         return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
@@ -47,7 +47,7 @@ class ProductController(
             price = request.price,
             stock = request.stock
         )
-        val result = productFacade.createProduct(criteria)
+        val result = productApplication.createProduct(criteria)
         return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
@@ -66,7 +66,7 @@ class ProductController(
             productId = productId,
             stock = request.stock
         )
-        val result = productFacade.updateStock(criteria)
+        val result = productApplication.updateStock(criteria)
         return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
@@ -85,7 +85,7 @@ class ProductController(
             productId = productId,
             amount = request.amount
         )
-        val result = productFacade.increaseStock(criteria)
+        val result = productApplication.increaseStock(criteria)
         return BaseResponse.success(ProductResponse.Single.from(result))
     }
     
@@ -104,7 +104,7 @@ class ProductController(
             productId = productId,
             amount = request.amount
         )
-        val result = productFacade.decreaseStock(criteria)
+        val result = productApplication.decreaseStock(criteria)
         return BaseResponse.success(ProductResponse.Single.from(result))
     }
 }

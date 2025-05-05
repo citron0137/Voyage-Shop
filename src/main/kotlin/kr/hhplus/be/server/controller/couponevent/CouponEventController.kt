@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.controller.couponevent
 
-import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
-import kr.hhplus.be.server.application.couponevent.CouponEventFacade
-import kr.hhplus.be.server.application.couponevent.CouponEventResult
+import kr.hhplus.be.server.application.couponevent.CouponEventApplication
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
@@ -11,7 +9,7 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 class CouponEventController(
-    private val couponEventFacade: CouponEventFacade
+    private val couponEventApplication: CouponEventApplication
 ) : CouponEventControllerApi {
     /**
      * 쿠폰 이벤트를 생성합니다.
@@ -23,7 +21,7 @@ class CouponEventController(
         req: CouponEventRequest.Create
     ): BaseResponse<CouponEventResponse.Event> {
         val criteria = req.toCriteria()
-        val result = couponEventFacade.createCouponEvent(criteria)
+        val result = couponEventApplication.createCouponEvent(criteria)
         return BaseResponse.success(CouponEventResponse.Event.from(result))
     }
 
@@ -33,7 +31,7 @@ class CouponEventController(
      * @return 쿠폰 이벤트 목록
      */
     override fun getAllCouponEvents(): BaseResponse<List<CouponEventResponse.Event>> {
-        val result = couponEventFacade.getAllCouponEvents()
+        val result = couponEventApplication.getAllCouponEvents()
         return BaseResponse.success(CouponEventResponse.List.from(result).items)
     }
 
@@ -49,7 +47,7 @@ class CouponEventController(
         req: CouponEventRequest.IssueCoupon
     ): BaseResponse<CouponEventResponse.IssueCoupon> {
         val criteria = req.toCriteria(couponEventId)
-        val result = couponEventFacade.issueCouponUser(criteria)
+        val result = couponEventApplication.issueCouponUser(criteria)
         return BaseResponse.success(CouponEventResponse.IssueCoupon.from(result))
     }
 }

@@ -2,7 +2,7 @@ package kr.hhplus.be.server.integration.user
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.user.UserCriteria
-import kr.hhplus.be.server.application.user.UserFacade
+import kr.hhplus.be.server.application.user.UserApplication
 import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.domain.userpoint.UserPointQuery
 import kr.hhplus.be.server.domain.userpoint.UserPointService
@@ -22,7 +22,7 @@ import java.util.UUID
 class UserRegistrationFlowIntegrationTest {
 
     @Autowired
-    private lateinit var userFacade: UserFacade
+    private lateinit var userApplication: UserApplication
     
     @Autowired
     private lateinit var userPointService: UserPointService
@@ -31,7 +31,7 @@ class UserRegistrationFlowIntegrationTest {
     @DisplayName("사용자 등록 시 사용자와 포인트 정보가 함께 생성된다")
     fun userRegistrationCreatesUserAndPoint() {
         // when: 사용자 생성
-        val user = userFacade.createUser()
+        val user = userApplication.createUser()
         
         // then: 사용자 정보 검증
         assertNotNull(user)
@@ -48,10 +48,10 @@ class UserRegistrationFlowIntegrationTest {
     @DisplayName("등록된 사용자는 ID로 조회할 수 있다")
     fun registeredUserCanBeFoundById() {
         // given: 등록된 사용자
-        val createdUser = userFacade.createUser()
+        val createdUser = userApplication.createUser()
         
         // when: ID로 사용자 조회
-        val foundUser = userFacade.findUserById(UserCriteria.GetById(createdUser.userId))
+        val foundUser = userApplication.findUserById(UserCriteria.GetById(createdUser.userId))
         
         // then: 조회된 사용자 정보 검증
         assertEquals(createdUser.userId, foundUser.userId)
@@ -65,7 +65,7 @@ class UserRegistrationFlowIntegrationTest {
         
         // when & then: 예외 발생 확인
         assertThrows<UserException.NotFound> {
-            userFacade.findUserById(UserCriteria.GetById(nonExistentUserId))
+            userApplication.findUserById(UserCriteria.GetById(nonExistentUserId))
         }
     }
     
@@ -73,11 +73,11 @@ class UserRegistrationFlowIntegrationTest {
     @DisplayName("등록된 사용자는 전체 목록에서 조회할 수 있다")
     fun registeredUsersCanBeFoundInList() {
         // given: 여러 사용자 등록
-        val user1 = userFacade.createUser()
-        val user2 = userFacade.createUser()
+        val user1 = userApplication.createUser()
+        val user2 = userApplication.createUser()
         
         // when: 모든 사용자 조회
-        val allUsers = userFacade.getAllUsers()
+        val allUsers = userApplication.getAllUsers()
         
         // then: 등록한 사용자들이 목록에 포함되어 있는지 확인
         assertTrue(allUsers.users.any { it.userId == user1.userId })

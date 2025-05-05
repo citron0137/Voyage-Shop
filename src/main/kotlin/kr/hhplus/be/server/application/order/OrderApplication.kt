@@ -16,11 +16,11 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 
 /**
- * 주문 파사드
- * 주문 관련 비즈니스 로직을 캡슐화하고 컨트롤러에서 사용할 수 있는 단순한 인터페이스를 제공합니다.
+ * 주문 애플리케이션 서비스
+ * 여러 도메인 서비스를 조합하여 주문 생성, 조회 등의 비즈니스 유스케이스를 구현하고 트랜잭션을 관리합니다.
  */
 @Component
-class OrderFacade(
+class OrderApplication(
     private val orderService: OrderService,
     private val productService: ProductService,
     private val paymentService: PaymentService,

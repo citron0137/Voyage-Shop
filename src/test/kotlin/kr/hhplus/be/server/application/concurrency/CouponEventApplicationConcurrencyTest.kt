@@ -2,11 +2,11 @@ package kr.hhplus.be.server.integration.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.couponevent.CouponEventCriteria
-import kr.hhplus.be.server.application.couponevent.CouponEventFacade
+import kr.hhplus.be.server.application.couponevent.CouponEventApplication
 import kr.hhplus.be.server.application.couponevent.CouponEventResult
-import kr.hhplus.be.server.application.couponuser.CouponUserFacade
+import kr.hhplus.be.server.application.couponuser.CouponUserApplication
 import kr.hhplus.be.server.application.couponuser.CouponUserResult
-import kr.hhplus.be.server.application.user.UserFacade
+import kr.hhplus.be.server.application.user.UserApplication
 import kr.hhplus.be.server.domain.couponevent.CouponEventBenefitMethod
 import kr.hhplus.be.server.domain.couponevent.CouponEventException
 import kr.hhplus.be.server.domain.couponuser.CouponUserException
@@ -25,25 +25,25 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
-class CouponEventFacadeConcurrencyTest {
+class CouponEventApplicationConcurrencyTest {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Autowired
-    private lateinit var couponEventFacade: CouponEventFacade
+    private lateinit var couponEventApplication: CouponEventApplication
 
     @Autowired
-    private lateinit var couponUserFacade: CouponUserFacade
+    private lateinit var couponUserApplication: CouponUserApplication
 
     @Autowired
-    private lateinit var userFacade: UserFacade
+    private lateinit var userApplication: UserApplication
 
     @Test
     @DisplayName("동시에 쿠폰 발급을 요청해도 이벤트의 총 발급 수량을 초과하지 않는다")
     fun issueCouponUserConcurrencyTest() {
         // given: 발급 수량 10개인 쿠폰 이벤트 생성
         val totalIssueAmount = 10L
-        val couponEvent: CouponEventResult.Single = couponEventFacade.createCouponEvent(
+        val couponEvent: CouponEventResult.Single = couponEventApplication.createCouponEvent(
             CouponEventCriteria.Create(
                 benefitMethod = CouponEventBenefitMethod.DISCOUNT_FIXED_AMOUNT,
                 benefitAmount = "1000",
@@ -61,13 +61,13 @@ class CouponEventFacadeConcurrencyTest {
         val soldOutCount = AtomicInteger(0)
 
         // 여러 사용자 생성
-        val users = (1..numberOfThreads).map { userFacade.createUser() }
+        val users = (1..numberOfThreads).map { userApplication.createUser() }
 
         // when: 여러 스레드에서 동시에 쿠폰 발급 시도
         users.forEach { user ->
             executor.submit {
                 try {
-                    couponEventFacade.issueCouponUser(
+                    couponEventApplication.issueCouponUser(
                         CouponEventCriteria.IssueCoupon(
                             userId = user.userId,
                             couponEventId = couponEventId
@@ -94,8 +94,8 @@ class CouponEventFacadeConcurrencyTest {
         executor.shutdown()
 
         // then: 최종 발급된 쿠폰 수량 및 이벤트 상태 확인
-        val finalCouponEvent: CouponEventResult.Single = couponEventFacade.getCouponEvent(CouponEventCriteria.GetById(couponEventId))
-        val issuedCouponUsers: CouponUserResult.List = couponUserFacade.getAllCoupons()
+        val finalCouponEvent: CouponEventResult.Single = couponEventApplication.getCouponEvent(CouponEventCriteria.GetById(couponEventId))
+        val issuedCouponUsers: CouponUserResult.List = couponUserApplication.getAllCoupons()
 
         // CouponUserResult.List 내부에 couponUsers 필드 사용 (coupons -> couponUsers)
         val issuedCountForThisEvent = issuedCouponUsers.couponUsers.size

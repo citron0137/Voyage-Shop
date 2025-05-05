@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.controller.userpoint
 
 import kr.hhplus.be.server.application.userpoint.UserPointCriteria
-import kr.hhplus.be.server.application.userpoint.UserPointFacade
+import kr.hhplus.be.server.application.userpoint.UserPointApplication
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.*
 
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 class UserPointController(
-    private val userPointFacade: UserPointFacade
+    private val userPointApplication: UserPointApplication
 ) : UserPointControllerApi {
     /**
      * 사용자의 포인트 정보를 조회합니다.
@@ -20,7 +20,7 @@ class UserPointController(
      */
     override fun getUserPoint(@PathVariable userId: String): BaseResponse<UserPointResponse.Single> {
         val criteria = UserPointCriteria.GetByUserId(userId)
-        val result = userPointFacade.getUserPoint(criteria)
+        val result = userPointApplication.getUserPoint(criteria)
         return BaseResponse.success(UserPointResponse.Single.from(result))
     }
 
@@ -36,7 +36,7 @@ class UserPointController(
         @RequestBody request: UserPointRequest.Charge
     ): BaseResponse<UserPointResponse.Single> {
         val criteria = UserPointCriteria.Charge(userId, request.amount)
-        val result = userPointFacade.chargePoint(criteria)
+        val result = userPointApplication.chargePoint(criteria)
         return BaseResponse.success(UserPointResponse.Single.from(result))
     }
 } 

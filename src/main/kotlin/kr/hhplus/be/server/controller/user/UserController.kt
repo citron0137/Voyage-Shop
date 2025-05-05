@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.controller.user
 
 import kr.hhplus.be.server.application.user.UserCriteria
-import kr.hhplus.be.server.application.user.UserFacade
+import kr.hhplus.be.server.application.user.UserApplication
 import kr.hhplus.be.server.controller.shared.BaseResponse
 import org.springframework.web.bind.annotation.RestController
 
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 class UserController(
-    private val userFacade: UserFacade
+    private val userApplication: UserApplication
 ) : UserControllerApi {
     
     /**
@@ -19,7 +19,7 @@ class UserController(
      * @return 생성된 사용자 정보
      */
     override fun createUser(): BaseResponse<UserResponse.Single> {
-        val result = userFacade.createUser()
+        val result = userApplication.createUser()
         return BaseResponse.success(UserResponse.Single.from(result))
     }
     
@@ -31,7 +31,7 @@ class UserController(
      */
     override fun getUserById(userId: String): BaseResponse<UserResponse.Single> {
         val criteria = UserCriteria.GetById(userId)
-        val result = userFacade.findUserById(criteria)
+        val result = userApplication.findUserById(criteria)
         return BaseResponse.success(UserResponse.Single.from(result))
     }
     
@@ -41,7 +41,7 @@ class UserController(
      * @return 사용자 목록
      */
     override fun getAllUsers(): BaseResponse<UserResponse.List> {
-        val result = userFacade.getAllUsers()
+        val result = userApplication.getAllUsers()
         return BaseResponse.success(UserResponse.List.from(result))
     }
 }

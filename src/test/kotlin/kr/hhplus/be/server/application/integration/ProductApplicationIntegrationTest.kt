@@ -2,12 +2,10 @@ package kr.hhplus.be.server.integration.product
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.product.ProductCriteria
-import kr.hhplus.be.server.application.product.ProductFacade
-import kr.hhplus.be.server.domain.product.ProductException
+import kr.hhplus.be.server.application.product.ProductApplication
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
@@ -20,10 +18,10 @@ import java.util.concurrent.TimeUnit
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
 @DisplayName("상품 Facade 통합 테스트")
-class ProductFacadeIntegrationTest {
+class ProductApplicationIntegrationTest {
 
     @Autowired
-    private lateinit var productFacade: ProductFacade
+    private lateinit var productApplication: ProductApplication
 
     @Test
     @DisplayName("새로운 상품을 생성할 수 있다")
@@ -36,7 +34,7 @@ class ProductFacadeIntegrationTest {
         )
 
         // when
-        val product = productFacade.createProduct(criteria)
+        val product = productApplication.createProduct(criteria)
 
         // then
         assertThat(product.name).isEqualTo("테스트 상품")
@@ -53,12 +51,12 @@ class ProductFacadeIntegrationTest {
             price = 5000,
             stock = 50
         )
-        val createdProduct = productFacade.createProduct(createCriteria)
+        val createdProduct = productApplication.createProduct(createCriteria)
 
         val getCriteria = ProductCriteria.GetById(createdProduct.productId)
 
         // when
-        val product = productFacade.getProduct(getCriteria)
+        val product = productApplication.getProduct(getCriteria)
 
         // then
         assertThat(product.productId).isEqualTo(createdProduct.productId)
@@ -71,16 +69,16 @@ class ProductFacadeIntegrationTest {
     @DisplayName("모든 상품을 조회할 수 있다")
     fun getAllProductsTest() {
         // given
-        val initialProducts = productFacade.getAllProducts()
+        val initialProducts = productApplication.getAllProducts()
         val initialSize = initialProducts.products.size
         
         // 테스트용 상품 추가
-        productFacade.createProduct(ProductCriteria.Create("상품1", 1000, 10))
-        productFacade.createProduct(ProductCriteria.Create("상품2", 2000, 20))
-        productFacade.createProduct(ProductCriteria.Create("상품3", 3000, 30))
+        productApplication.createProduct(ProductCriteria.Create("상품1", 1000, 10))
+        productApplication.createProduct(ProductCriteria.Create("상품2", 2000, 20))
+        productApplication.createProduct(ProductCriteria.Create("상품3", 3000, 30))
         
         // when
-        val products = productFacade.getAllProducts()
+        val products = productApplication.getAllProducts()
         
         // then
         assertThat(products.products.size).isEqualTo(initialSize + 3)
@@ -92,7 +90,7 @@ class ProductFacadeIntegrationTest {
     fun updateProductStockTest() {
         // given
         val createCriteria = ProductCriteria.Create("재고 갱신 테스트 상품", 15000, 150)
-        val createdProduct = productFacade.createProduct(createCriteria)
+        val createdProduct = productApplication.createProduct(createCriteria)
         
         val updateStockCriteria = ProductCriteria.UpdateStock(
             productId = createdProduct.productId,
@@ -100,7 +98,7 @@ class ProductFacadeIntegrationTest {
         )
         
         // when
-        val updatedProduct = productFacade.updateStock(updateStockCriteria)
+        val updatedProduct = productApplication.updateStock(updateStockCriteria)
         
         // then
         assertThat(updatedProduct.stock).isEqualTo(200)
@@ -111,7 +109,7 @@ class ProductFacadeIntegrationTest {
     fun decreaseProductStockTest() {
         // given
         val createCriteria = ProductCriteria.Create("재고 감소 테스트 상품", 30000, 300)
-        val createdProduct = productFacade.createProduct(createCriteria)
+        val createdProduct = productApplication.createProduct(createCriteria)
         
         val decreaseStockCriteria = ProductCriteria.DecreaseStock(
             productId = createdProduct.productId,
@@ -119,7 +117,7 @@ class ProductFacadeIntegrationTest {
         )
         
         // when
-        val updatedProduct = productFacade.decreaseStock(decreaseStockCriteria)
+        val updatedProduct = productApplication.decreaseStock(decreaseStockCriteria)
         
         // then
         assertThat(updatedProduct.stock).isEqualTo(250)
@@ -130,7 +128,7 @@ class ProductFacadeIntegrationTest {
     fun increaseProductStockTest() {
         // given
         val createCriteria = ProductCriteria.Create("재고 증가 테스트 상품", 50000, 500)
-        val createdProduct = productFacade.createProduct(createCriteria)
+        val createdProduct = productApplication.createProduct(createCriteria)
         
         val increaseStockCriteria = ProductCriteria.IncreaseStock(
             productId = createdProduct.productId,
@@ -138,7 +136,7 @@ class ProductFacadeIntegrationTest {
         )
         
         // when
-        val updatedProduct = productFacade.increaseStock(increaseStockCriteria)
+        val updatedProduct = productApplication.increaseStock(increaseStockCriteria)
         
         // then
         assertThat(updatedProduct.stock).isEqualTo(600)
@@ -150,7 +148,7 @@ class ProductFacadeIntegrationTest {
     fun decreaseProductStockConcurrencyTest() {
         // given: 테스트 상품 생성
         val createCriteria = ProductCriteria.Create("동시성 테스트 상품", 1000, 1000)
-        val product = productFacade.createProduct(createCriteria)
+        val product = productApplication.createProduct(createCriteria)
         
         // given: 동시 감소 설정
         val threadCount = 10
@@ -165,7 +163,7 @@ class ProductFacadeIntegrationTest {
             executorService.submit {
                 try {
                     val decreaseCriteria = ProductCriteria.DecreaseStock(product.productId, decreaseAmount)
-                    productFacade.decreaseStock(decreaseCriteria)
+                    productApplication.decreaseStock(decreaseCriteria)
                 } catch (e: Exception) {
                     println("Error in thread $i: ${e.message}")
                     throw e
@@ -180,7 +178,7 @@ class ProductFacadeIntegrationTest {
         executorService.shutdown()
         
         // then: 최종 재고 확인
-        val updatedProduct = productFacade.getProduct(ProductCriteria.GetById(product.productId))
+        val updatedProduct = productApplication.getProduct(ProductCriteria.GetById(product.productId))
         
         // 모든 감소가 정확히 반영되었는지 검증
         assertThat(updatedProduct.stock).isEqualTo(expectedRemainingStock)

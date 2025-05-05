@@ -2,7 +2,7 @@ package kr.hhplus.be.server.integration.order
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.order.OrderCriteria
-import kr.hhplus.be.server.application.order.OrderFacade
+import kr.hhplus.be.server.application.order.OrderApplication
 import kr.hhplus.be.server.domain.couponuser.CouponUserBenefitMethod
 import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
@@ -22,10 +22,10 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
 @DisplayName("주문 파사드 통합 테스트")
-class OrderFacadeIntegrationTest {
+class OrderApplicationIntegrationTest {
 
     @Autowired
-    private lateinit var orderFacade: OrderFacade
+    private lateinit var orderApplication: OrderApplication
 
     @Autowired
     private lateinit var userService: UserService
@@ -71,7 +71,7 @@ class OrderFacadeIntegrationTest {
         )
 
         // when
-        val result = orderFacade.createOrder(orderCriteria)
+        val result = orderApplication.createOrder(orderCriteria)
 
         // then
         assertThat(result.orderId).isNotBlank()
@@ -98,10 +98,10 @@ class OrderFacadeIntegrationTest {
                 )
             )
         )
-        val createdOrder = orderFacade.createOrder(createCriteria)
+        val createdOrder = orderApplication.createOrder(createCriteria)
 
         // when
-        val result = orderFacade.getOrder(OrderCriteria.GetById(createdOrder.orderId))
+        val result = orderApplication.getOrder(OrderCriteria.GetById(createdOrder.orderId))
 
         // then
         assertThat(result.orderId).isEqualTo(createdOrder.orderId)
@@ -116,7 +116,7 @@ class OrderFacadeIntegrationTest {
     fun getOrdersByUserIdTest() {
         // given
         // 첫 번째 주문 생성
-        orderFacade.createOrder(
+        orderApplication.createOrder(
             OrderCriteria.Create(
                 userId = testUserId,
                 items = listOf(
@@ -129,7 +129,7 @@ class OrderFacadeIntegrationTest {
         )
 
         // 두 번째 주문 생성
-        orderFacade.createOrder(
+        orderApplication.createOrder(
             OrderCriteria.Create(
                 userId = testUserId,
                 items = listOf(
@@ -142,7 +142,7 @@ class OrderFacadeIntegrationTest {
         )
 
         // when
-        val result = orderFacade.getOrdersByUserId(OrderCriteria.GetByUserId(testUserId))
+        val result = orderApplication.getOrdersByUserId(OrderCriteria.GetByUserId(testUserId))
 
         // then
         assertThat(result.orders).hasSize(2)
@@ -155,10 +155,10 @@ class OrderFacadeIntegrationTest {
     @Transactional
     fun getAllOrdersTest() {
         // given
-        val initialCount = orderFacade.getAllOrders(OrderCriteria.GetAll).orders.size
+        val initialCount = orderApplication.getAllOrders(OrderCriteria.GetAll).orders.size
 
         // 주문 생성
-        orderFacade.createOrder(
+        orderApplication.createOrder(
             OrderCriteria.Create(
                 userId = testUserId,
                 items = listOf(
@@ -171,7 +171,7 @@ class OrderFacadeIntegrationTest {
         )
 
         // when
-        val result = orderFacade.getAllOrders(OrderCriteria.GetAll)
+        val result = orderApplication.getAllOrders(OrderCriteria.GetAll)
 
         // then
         assertThat(result.orders.size).isEqualTo(initialCount + 1)
@@ -203,7 +203,7 @@ class OrderFacadeIntegrationTest {
         )
 
         // when
-        val result = orderFacade.createOrder(orderCriteria)
+        val result = orderApplication.createOrder(orderCriteria)
 
         // then
         assertThat(result.orderId).isNotBlank()

@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.application.user
 
-import kr.hhplus.be.server.domain.user.User
 import kr.hhplus.be.server.domain.user.UserException
 import kr.hhplus.be.server.domain.user.UserService
 import kr.hhplus.be.server.domain.userpoint.UserPointCommand
@@ -8,13 +7,13 @@ import kr.hhplus.be.server.domain.userpoint.UserPointException
 import kr.hhplus.be.server.domain.userpoint.UserPointService
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 /**
- * 사용자 관련 서비스를 조합하는 파사드 클래스
+ * 사용자 관련 애플리케이션 서비스 클래스
+ * 여러 도메인 서비스를 조합하여 사용자 생성, 조회 등의 비즈니스 유스케이스를 구현하고 트랜잭션을 관리합니다.
  */
 @Component
-class UserFacade(
+class UserApplication(
     private val userService: UserService,
     private val userPointService: UserPointService,
     private val transactionHelper: TransactionHelper

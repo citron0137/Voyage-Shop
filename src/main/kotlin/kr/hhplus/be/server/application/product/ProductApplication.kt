@@ -6,14 +6,13 @@ import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.support.TransactionTemplate
 
 /**
- * 상품 파사드
- * 상품 관련 비즈니스 로직을 캡슐화하고 컨트롤러에서 사용할 수 있는 단순한 인터페이스를 제공합니다.
+ * 상품 애플리케이션 서비스
+ * 여러 도메인 서비스를 조합하여 상품 조회, 생성, 재고 관리 등의 비즈니스 유스케이스를 구현하고 트랜잭션을 관리합니다.
  */
 @Component
-class ProductFacade(
+class ProductApplication(
     private val productService: ProductService,
     private val transactionManager: PlatformTransactionManager
 ) {

@@ -7,7 +7,6 @@ import kr.hhplus.be.server.domain.orderitemrank.OrderItemRankQuery
 import kr.hhplus.be.server.domain.orderitemrank.OrderItemRankService
 import kr.hhplus.be.server.shared.lock.DistributedLockManager
 import kr.hhplus.be.server.shared.lock.LockKeyConstants
-import kr.hhplus.be.server.shared.lock.LockKeyGenerator
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -15,17 +14,17 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 /**
- * 주문 아이템 순위 파사드
- * 주문 아이템 순위 관련 비즈니스 로직을 캡슐화하고 컨트롤러에서 사용할 수 있는 단순한 인터페이스를 제공합니다.
+ * 주문 아이템 순위 애플리케이션 서비스
+ * 여러 도메인 서비스를 조합하여 주문 아이템 순위 조회 및 캐싱 관리 등의 비즈니스 유스케이스를 구현합니다.
  */
 @Component
-class OrderItemRankFacade(
+class OrderItemRankApplication(
     private val orderService: OrderService,
     private val orderItemRankService: OrderItemRankService,
     private val transactionHelper: TransactionHelper,
     private val lockManager: DistributedLockManager
 ) {
-    private val logger = LoggerFactory.getLogger(OrderItemRankFacade::class.java)
+    private val logger = LoggerFactory.getLogger(OrderItemRankApplication::class.java)
 
     /**
      * 최근 N일간의 주문 아이템 중 상위 M개 순위를 조회합니다.
