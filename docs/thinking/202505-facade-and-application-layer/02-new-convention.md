@@ -65,21 +65,21 @@ kr.hhplus.be.server/
   │       └── {도메인}FacadeResult.kt
   ├── application/
   │   └── {도메인}/
-  │       ├── {도메인}Service.kt        # 애플리케이션 서비스
-  │       ├── {도메인}Criteria.kt       # 요청 기준 클래스
-  │       └── {도메인}Result.kt         # 응답 결과 클래스
+  │       ├── {도메인}ApplicationService.kt # 애플리케이션 서비스
+  │       ├── {도메인}Criteria.kt           # 요청 기준 클래스
+  │       └── {도메인}Result.kt             # 응답 결과 클래스
   ├── domain/
   │   └── {도메인}/
-  │       ├── {도메인}.kt               # 도메인 엔티티
-  │       ├── {도메인}Repository.kt     # 리포지토리 인터페이스
-  │       ├── {도메인}Service.kt        # 도메인 서비스
-  │       ├── {도메인}Command.kt        # 커맨드 클래스
-  │       └── {도메인}Exception.kt      # 도메인 예외
+  │       ├── {도메인}.kt                   # 도메인 엔티티
+  │       ├── {도메인}Repository.kt         # 리포지토리 인터페이스
+  │       ├── {도메인}Service.kt            # 도메인 서비스
+  │       ├── {도메인}Command.kt            # 커맨드 클래스
+  │       └── {도메인}Exception.kt          # 도메인 예외
   └── infrastructure/
       └── {도메인}/
-          ├── {도메인}RepositoryImpl.kt # 리포지토리 구현체
-          ├── {도메인}JpaRepository.kt  # JPA 리포지토리 인터페이스
-          └── {도메인}JpaEntity.kt      # JPA 엔티티
+          ├── {도메인}RepositoryImpl.kt     # 리포지토리 구현체
+          ├── {도메인}JpaRepository.kt      # JPA 리포지토리 인터페이스
+          └── {도메인}JpaEntity.kt          # JPA 엔티티
 ```
 
 ## 5. 파사드 레이어 컨벤션
@@ -89,8 +89,8 @@ kr.hhplus.be.server/
 ```kotlin
 @Component
 class UserFacade(
-    private val userService: UserService,  // 애플리케이션 서비스
-    private val userPointService: UserPointService  // 필요시 다른 애플리케이션 서비스
+    private val userApplicationService: UserApplicationService,  // 애플리케이션 서비스
+    private val userPointApplicationService: UserPointApplicationService  // 필요시 다른 애플리케이션 서비스
 ) {
     // 파사드 메서드 구현
 }
@@ -112,8 +112,8 @@ class UserFacade(
  */
 @Component
 class UserFacade(
-    private val userService: UserService,
-    private val userPointService: UserPointService
+    private val userApplicationService: UserApplicationService,
+    private val userPointApplicationService: UserPointApplicationService
 ) {
     /**
      * 사용자 등록 및 초기 포인트 지급
@@ -126,14 +126,14 @@ class UserFacade(
             email = criteria.email,
             password = criteria.password
         )
-        val user = userService.createUser(userCriteria)
+        val user = userApplicationService.createUser(userCriteria)
         
         // 초기 포인트 지급
         val pointCriteria = UserPointCriteria.Create(
             userId = user.userId,
             initialAmount = 1000L
         )
-        val userPoint = userPointService.createUserPoint(pointCriteria)
+        val userPoint = userPointApplicationService.createUserPoint(pointCriteria)
         
         // 결과 반환
         return UserFacadeResult.RegisteredUser(
@@ -149,7 +149,7 @@ class UserFacade(
      * 이런 경우 파사드를 구현하는 것이 불필요할 수 있음
      */
     fun getUserProfile(criteria: UserFacadeCriteria.GetProfile): UserFacadeResult.UserProfile {
-        val user = userService.getUserById(UserCriteria.GetById(userId = criteria.userId))
+        val user = userApplicationService.getUserById(UserCriteria.GetById(userId = criteria.userId))
         return UserFacadeResult.UserProfile(
             userId = user.userId,
             name = user.name,
@@ -214,8 +214,8 @@ class UserFacadeResult {
 
 ```kotlin
 @Service
-class UserService(
-    private val userDomainService: UserDomainService,
+class UserApplicationService(
+    private val userService: UserService,  // 도메인 서비스
     private val transactionManager: PlatformTransactionManager
 ) {
     // 애플리케이션 서비스 메서드 구현
@@ -238,8 +238,8 @@ class UserService(
  * 도메인 서비스를 조합하고 트랜잭션을 관리
  */
 @Service
-class UserService(
-    private val userDomainService: kr.hhplus.be.server.domain.user.UserService,
+class UserApplicationService(
+    private val userService: UserService,  // 도메인 서비스
     private val lockManager: DistributedLockManager,
     private val transactionManager: PlatformTransactionManager
 ) {
@@ -257,7 +257,7 @@ class UserService(
                 password = criteria.password
             )
             
-            val user = userDomainService.createUser(createCommand)
+            val user = userService.createUser(createCommand)
             UserResult.User.from(user)
         }
     }
@@ -271,14 +271,14 @@ class UserService(
             val transactionTemplate = TransactionTemplate(transactionManager)
             
             transactionTemplate.execute {
-                val user = userDomainService.getUser(UserCommand.GetById(criteria.userId))
+                val user = userService.getUser(UserCommand.GetById(criteria.userId))
                 
                 val chargeCommand = UserPointCommand.Charge(
                     userId = criteria.userId,
                     amount = criteria.amount
                 )
                 
-                val chargedPoint = userPointDomainService.chargePoint(chargeCommand)
+                val chargedPoint = userPointService.chargePoint(chargeCommand)
                 UserResult.Point.from(chargedPoint)
             }
         }
@@ -290,7 +290,7 @@ class UserService(
      */
     @Transactional(readOnly = true)
     fun getUserById(criteria: UserCriteria.GetById): UserResult.User {
-        val user = userDomainService.getUser(UserCommand.GetById(criteria.userId))
+        val user = userService.getUser(UserCommand.GetById(criteria.userId))
         return UserResult.User.from(user)
     }
 }
@@ -494,8 +494,8 @@ fun useUserPoint(criteria: UserCriteria.UsePoint): UserResult.Point {
    
    // 새 애플리케이션 서비스
    @Service
-   class UserService(
-       private val userDomainService: UserDomainService
+   class UserApplicationService(
+       private val userService: UserService  // 도메인 서비스
    ) {
        @Transactional
        fun createUser(criteria: UserCriteria.Create): UserResult.User {
@@ -509,11 +509,11 @@ fun useUserPoint(criteria: UserCriteria.UsePoint): UserResult.Point {
    // 리팩토링 후 파사드
    @Component
    class UserFacade(
-       private val userService: UserService
+       private val userApplicationService: UserApplicationService
    ) {
        fun createUser(name: String, email: String): User {
            val criteria = UserCriteria.Create(name = name, email = email)
-           return userService.createUser(criteria).toUser()
+           return userApplicationService.createUser(criteria).toUser()
        }
    }
    ```
@@ -547,7 +547,7 @@ fun useUserPoint(criteria: UserCriteria.UsePoint): UserResult.Point {
 파사드 레이어와 애플리케이션 레이어의 분리는 각 레이어의 책임과 역할을 명확히 하고, 코드의 유지보수성과 확장성을 향상시킵니다. 본 문서에서 정의한 컨벤션을 준수함으로써:
 
 1. 파사드는 클라이언트에게 단순화된 인터페이스를 제공하는 역할에 집중합니다.
-2. 애플리케이션 서비스는 비즈니스 로직, 트랜잭션 관리, 동시성 제어를 담당합니다.
-3. 도메인 서비스는 핵심 비즈니스 규칙을 구현하고 도메인 개념을 표현합니다.
+2. 애플리케이션 서비스(`{도메인}ApplicationService`)는 비즈니스 로직, 트랜잭션 관리, 동시성 제어를 담당합니다.
+3. 도메인 서비스(`{도메인}Service`)는 핵심 비즈니스 규칙을 구현하고 도메인 개념을 표현합니다.
 
 이러한 명확한 역할 분담을 통해 코드의 가독성, 유지보수성, 테스트 용이성이 향상되며, 변경에 강한 아키텍처를 구축할 수 있습니다. 

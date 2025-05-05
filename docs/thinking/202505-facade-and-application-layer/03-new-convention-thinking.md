@@ -177,3 +177,79 @@ class ProductQueryService(
 복잡한 조회 로직에 대해 애플리케이션 레이어에서 Repository를 직접 호출하는 것은, 읽기 전용 작업으로 제한하고 명확한 가이드라인을 설정한다면 실용적인 접근법이 될 수 있습니다. 다만, 이러한 예외는 성능이나 복잡성으로 인해 불가피한 경우로 제한하고, 가능한 한 도메인 레이어의 Repository 인터페이스를 확장하는 방향으로 먼저 접근하는 것이 바람직합니다.
 
 특히, EntityManager를 직접 사용하는 것보다 도메인 Repository를 사용하는 것이 아키텍처 일관성 유지, 도메인 규칙 준수, 테스트 용이성 측면에서 더 바람직합니다. EntityManager는 JPA라는 특정 기술에 직접적으로 의존하게 되어 기술적 세부사항이 애플리케이션 레이어로 누출되는 문제가 있습니다. 정말 특별한 성능 최적화가 필요한 경우에만 별도의 QueryService를 통해 EntityManager를 제한적으로 사용하고, 일반적인 경우에는 도메인 Repository 인터페이스를 확장하여 사용하는 것이 권장됩니다.
+
+## 2. 도메인 서비스와 어플리케이션레이어의 서비스의 클래스명이 동일해서 수정이 필요할 것 같아
+
+### 2.1. 커서 제시안
+
+도메인 서비스와 애플리케이션 서비스의 클래스명이 동일한 문제를 해결하기 위한 방안을 제시합니다:
+
+#### 애플리케이션 서비스 클래스명 변경 제안
+
+도메인 서비스는 시스템의 핵심이므로 더 간결한 이름을 유지하고, 대신 애플리케이션 서비스에 더 명시적인 네이밍을 부여하는 것이 좋습니다:
+
+```kotlin
+// 변경 전
+// 도메인 레이어
+class UserService { /* 도메인 로직 */ }
+// 애플리케이션 레이어
+class UserService { /* 애플리케이션 로직 */ }
+
+// 변경 후
+// 도메인 레이어 (유지)
+class UserService { /* 도메인 로직 */ }
+// 애플리케이션 레이어 (변경)
+class UserApplicationService { /* 애플리케이션 로직 */ }
+```
+
+이렇게 변경하면 의존성 주입 시 코드가 더 명확해집니다:
+
+```kotlin
+@RestController
+class UserController(
+    // 변경 전
+    private val userService: kr.hhplus.be.server.application.user.UserService,
+    
+    // 변경 후
+    private val userService: UserApplicationService,
+    // ...
+) { /* 컨트롤러 로직 */ }
+```
+
+#### 전체 클래스 네이밍 컨벤션 정립
+
+각 레이어별 클래스 네이밍을 일관되게 적용합니다:
+
+| 레이어 | 현재 | 제안 |
+|--------|------|------|
+| 컨트롤러 | `{도메인}Controller` | 유지 |
+| 파사드 | `{도메인}Facade` | 유지 |
+| 애플리케이션 | `{도메인}Service` | `{도메인}ApplicationService` |
+| 도메인 | `{도메인}Service` | `{도메인}Service` (유지) |
+| 인프라스트럭처 | `{도메인}RepositoryImpl` | 유지 |
+
+#### import alias 활용
+
+필요한 경우 코틀린의 import alias 기능을 활용하여 전환 기간 동안 호환성을 유지할 수 있습니다:
+
+```kotlin
+// 컨트롤러에서
+import kr.hhplus.be.server.application.user.UserApplicationService as UserService
+
+@RestController
+class UserController(
+    private val userService: UserService,
+    // ...
+) { /* 컨트롤러 로직 */ }
+```
+
+#### 구현 로드맵
+
+1. **애플리케이션 서비스 리네이밍**: 모든 애플리케이션 서비스를 `{도메인}ApplicationService`로 리네이밍
+2. **의존성 업데이트**: 파사드 및 컨트롤러에서 애플리케이션 서비스 참조를 업데이트
+3. **테스트 코드 수정**: 테스트 코드의 참조도 함께 업데이트
+4. **문서 업데이트**: 컨벤션 문서에 새로운 네이밍 규칙 반영
+
+#### 결론
+
+도메인 중심 설계 철학에 따라 도메인 서비스에는 더 간결한 네이밍(`{도메인}Service`)을 유지하고, 애플리케이션 서비스에 더 명시적인 네이밍(`{도메인}ApplicationService`)을 부여하는 것이 바람직합니다. 이는 도메인이 시스템의 핵심이라는 개념을 네이밍에도 반영하는 것이며, 코드의 의도를 더 명확하게 표현할 수 있습니다.
