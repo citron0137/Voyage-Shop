@@ -62,61 +62,24 @@ Voyage Shop은 다음 기술 스택을 사용하여 개발되었습니다.
 - JDK 17 이상
 - Docker 및 Docker Compose 또는 Kubernetes(kubectl, k8s 클러스터)
 
-### 실행 방법
+### 간단한 실행 방법
 
-프로젝트를 실행하는 여러 방법이 있습니다. 필요에 따라 선택하세요:
+프로젝트를 가장 빠르게 실행하는 방법은 제공된 도커 스크립트를 사용하는 것입니다:
 
-#### 방법 A: Docker Compose 사용 (권장)
-
-> **이 방법의 장점**: 단일 명령으로 전체 스택을 쉽게 설정할 수 있으며, 개발과 테스트에 일관된 환경을 제공합니다. 별도의 빌드 단계가 필요 없고, 애플리케이션과 데이터베이스가 자동으로 연결됩니다.
-
+#### Linux/Mac 환경
 ```bash
-# MySQL과 애플리케이션 모두 실행
-docker compose -f docker-compose.yml -f docker-compose.app.yml up -d
+# 프로젝트 루트 디렉토리에서 실행
+./run-docker.sh up -d
 ```
 
-필요한 경우 특정 버전을 지정할 수도 있습니다:
-
-```bash
-# Git 커밋 해시를 버전으로 사용하는 예
-docker build -t voyage-shop-app --build-arg VERSION=$(git rev-parse --short HEAD) .
-docker compose -f docker-compose.yml -f docker-compose.app.yml up -d
+#### Windows 환경
+```powershell
+# 프로젝트 루트 디렉토리에서 실행
+.\run-docker.ps1 up -d
 ```
 
-#### 방법 B: Kubernetes 사용
-
-> **이 방법의 장점**: 프로덕션 환경과 유사한 설정으로 애플리케이션을 실행하고 테스트할 수 있습니다. 확장성, 자동 복구, 롤링 업데이트 등 쿠버네티스의 다양한 기능을 활용할 수 있으며, 대규모 배포에 적합합니다.
-
-```bash
-# 도커 이미지 빌드
-docker build -t voyage-shop:latest .
-
-# Helm 차트를 사용한 배포
-# Windows PowerShell에서:
-cd helm-charts
-./deploy.ps1
-
-# Linux/macOS에서:
-# cd helm-charts
-# chmod +x deploy.sh
-# ./deploy.sh
-```
-
-> Helm 차트를 통해 애플리케이션과 데이터베이스를 더 쉽게 배포하고 관리할 수 있습니다. 편의성을 위해 배포 스크립트를 제공하며, 이 스크립트는 현재 작업 디렉토리를 자동으로 감지하여 환경에 맞게 설정합니다. 자세한 설정은 [helm-charts/README.md](./helm-charts/README.md)를 참조하세요.
-
-#### 방법 C: 로컬 환경에서 직접 실행
-
-> **이 방법의 장점**: 개발 중에 코드를 빠르게 변경하고 즉시 결과를 확인할 수 있습니다. IDE의 디버깅 기능을 활용할 수 있고, 빌드 과정이 간소화되어 반복적인 개발과 테스트에 최적화되어 있습니다.
-
-```bash
-# MySQL만 도커로 실행
-docker compose up -d
-
-# 애플리케이션 실행
-./gradlew bootRun
-```
-
-브라우저에서 `http://localhost:8080`으로 접속하여 API를 사용할 수 있습니다.
+이 명령은 필요한 모든 컨테이너(MySQL, 애플리케이션 등)를 백그라운드에서 실행합니다.
+실행 후 브라우저에서 `http://localhost:8080`으로 접속하여 API를 사용할 수 있습니다.
 Swagger UI는 `http://localhost:8080/swagger-ui/index.html#/`에서 확인할 수 있습니다.
 
 ## 스크립트 사용 설명서
@@ -224,7 +187,7 @@ src/main/kotlin/kr/hhplus/be/server/
 - 컨트롤러 레이어 API 테스트
 - 동시성 테스트
 
-자세한 테스트 방법 및 구조는 [테스트 컨벤션](./docs/conventions/09.test-conventions.md) 문서를 참조하세요.
+자세한 테스트 방법 및 구조는 [테스트 컨벤션](./docs/coventions-for-test/01.test-conventions.md) 문서를 참조하세요.
 
 ### 테스트 실행 방법
 
