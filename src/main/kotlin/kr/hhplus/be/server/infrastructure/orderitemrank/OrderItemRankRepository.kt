@@ -2,11 +2,15 @@ package kr.hhplus.be.server.infrastructure.orderitemrank
 
 import kr.hhplus.be.server.domain.orderitemrank.OrderItemRank
 import kr.hhplus.be.server.domain.orderitemrank.OrderItemRankRepository
+import kr.hhplus.be.server.domain.orderitemrank.OrderItemRankType
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Repository
 import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  * OrderItemRankRepository 인터페이스의 Redis 구현체
@@ -15,72 +19,53 @@ import java.time.Duration
 @Repository
 @Profile("!test", "!fake")
 class OrderItemRankRepository(
-    private val redisTemplate: RedisTemplate<String, OrderItemRankRedisEntity>
+    private val redisTemplate: RedisTemplate<String, String>
 ) : OrderItemRankRepository {
     
     // 키 접두사 상수
     private val KEY_PREFIX = "orderItemRank"
     
     // 캐시 만료 시간 (분)
-    private val CACHE_TTL_MINUTES = 15L
+    private val CACHE_TTL_FROM_STARTED_AT_MAP = mapOf(
+        Pair(OrderItemRankType.ONE_DAY, Duration.ofDays(7 + 1)),
+        Pair(OrderItemRankType.THREE_DAY,Duration.ofDays(7 + 3)),
+        Pair(OrderItemRankType.ONE_WEEK, Duration.ofDays(7 + 31))
+    )
     
-    /**
-     * 상위 랭킹 상품 컬렉션을 Redis에 저장합니다.
-     *
-     * @param orderItemRank 저장할 상품 랭킹 컬렉션
-     * @return 저장된 상품 랭킹 컬렉션
-     */
-    override fun saveRank(orderItemRank: OrderItemRank): OrderItemRank {
-        val key = generateKey(orderItemRank.periodInDays, orderItemRank.limit)
-        val valueOperations = redisTemplate.opsForValue()
-        
-        // 도메인 모델을 Redis 엔티티로 변환
-        val redisEntity = OrderItemRankRedisEntity.fromDomain(orderItemRank)
-        
-        // Redis에 저장
-        valueOperations.set(key, redisEntity)
-        redisTemplate.expire(key, Duration.ofMinutes(CACHE_TTL_MINUTES))
-        
-        return orderItemRank
+    private fun generateKey(type: OrderItemRankType, startedAt: LocalDate): String {
+        return "$KEY_PREFIX:type$type:startedAt$startedAt"
     }
-    
-    /**
-     * 상위 랭킹 상품 컬렉션을 Redis에서 조회합니다.
-     *
-     * @param days 최근 몇일 간의 데이터를 조회할지
-     * @param limit 몇 개의 상품을 조회할지
-     * @return 상위 랭킹 상품 컬렉션, 캐시에 없으면 null 반환
-     */
-    override fun getRank(days: Int, limit: Int): OrderItemRank? {
-        val key = generateKey(days, limit)
-        val valueOperations = redisTemplate.opsForValue()
-        
-        // Redis에서 엔티티 조회
-        val redisEntity = valueOperations.get(key) ?: return null
-        
-        // Redis 엔티티를 도메인 모델로 변환
-        return OrderItemRankRedisEntity.toDomain(redisEntity)
+
+    override fun addOrderCount(
+        rankType: OrderItemRankType,
+        startedAt: LocalDate,
+        productId: String,
+        orderCount: Long
+    ) {
+        val key = generateKey(rankType, startedAt)
+        redisTemplate.opsForZSet().incrementScore(
+            key,
+            productId,
+            orderCount.toDouble()
+        )
+        val expireAt = startedAt.atStartOfDay().plus(CACHE_TTL_FROM_STARTED_AT_MAP.getOrDefault(rankType, Duration.ofDays(7)))
+        val ttl = Duration.between( LocalDateTime.now(), expireAt)
+        redisTemplate.expire(key, ttl)
     }
-    
-    /**
-     * 저장된 모든 랭킹 데이터를 무효화합니다.
-     */
-    override fun invalidateCache() {
-        val pattern = "$KEY_PREFIX:*"
-        val keys = redisTemplate.keys(pattern)
-        if (keys.isNotEmpty()) {
-            redisTemplate.delete(keys)
-        }
+
+    override fun getRanks(
+        rankType: OrderItemRankType,
+        startedAt: LocalDate,
+        limit: Long
+    ): List<OrderItemRank> {
+        val key = generateKey(rankType, startedAt)
+        val result = redisTemplate.opsForZSet().reverseRangeWithScores(key, 0, limit-1) ?: return listOf()
+        return result.map { OrderItemRank(rankType, startedAt, it.value!!, it.score!!.toLong() ) }
     }
-    
-    /**
-     * 캐시 키를 생성합니다.
-     *
-     * @param days 최근 몇일 간의 데이터인지
-     * @param limit 몇 개의 상품인지
-     * @return 캐시 키
-     */
-    private fun generateKey(days: Int, limit: Int): String {
-        return "$KEY_PREFIX:days$days:limit$limit"
+
+    override fun deleteRanks(rankType: OrderItemRankType, startedAt: LocalDate) {
+        val key = generateKey(rankType, startedAt)
+        redisTemplate.delete(key)
     }
-} 
+
+}
