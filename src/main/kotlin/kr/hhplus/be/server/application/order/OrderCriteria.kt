@@ -1,10 +1,12 @@
 package kr.hhplus.be.server.application.order
 
 import kr.hhplus.be.server.domain.order.*
+import kr.hhplus.be.server.domain.orderitemrank.OrderItemRankCommand
 import kr.hhplus.be.server.domain.payment.PaymentCommand
 import kr.hhplus.be.server.domain.product.ProductException
 import kr.hhplus.be.server.domain.product.ProductCommand
 import kr.hhplus.be.server.domain.product.ProductQuery
+import java.time.LocalDateTime
 
 /**
  * 주문 관련 요청 기준을 담는 클래스
@@ -150,6 +152,15 @@ sealed class OrderCriteria {
 
         fun toPaymentCommand(totalPrice: Long, discountPrice: Long): PaymentCommand.Create {
             return PaymentCommand.Create(this.userId, totalPrice - discountPrice)
+        }
+
+        fun toReflectNewOrder(createdAt: LocalDateTime): OrderItemRankCommand.ReflectNewOrder {
+            return OrderItemRankCommand.ReflectNewOrder(
+                createdAt,
+                this.items.map {
+                    OrderItemRankCommand.ReflectNewOrder.OrderItem(it.productId, it.amount)
+                }
+            )
         }
     }
 } 
