@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.domain.orderitemrank
 
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 /**
  * 주문 상품 순위 서비스
@@ -9,37 +9,59 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Service
 class OrderItemRankService(
-    private val orderItemRankRepository: OrderItemRankRepository
-) {
-    /**
-     * 상위 랭킹 상품들을 조회합니다.
-     * 캐시에서 조회합니다. 캐시에 없는 경우 빈 컬렉션을 반환합니다.
-     *
-     * @param query 순위 조회 쿼리
-     * @return 상위 랭킹 상품 컬렉션
-     */
-    @Transactional(readOnly = true)
-    fun getTopOrderItemRank(query: OrderItemRankQuery.GetTopRank): OrderItemRank? {
-        return orderItemRankRepository.getRank(query.days, query.limit)
+    private val repository: OrderItemRankRepository,
+){
+
+    fun getTopOrderItemRank(query: OrderItemRankQuery.GetTopRanks): List<OrderItemRank> {
+        return this.repository.getRanks(
+            rankType = query.type,
+            startedAt = query.date,
+            limit = query.limit
+        )
     }
-    
-    /**
-     * 상위 랭킹 상품들을 저장합니다.
-     *
-     * @param command 저장할 랭킹 상품 정보를 담은 명령 객체
-     * @return 저장된 랭킹 상품 컬렉션
-     */
-    @Transactional
-    fun saveTopOrderItemRank(command: OrderItemRankCommand.SaveTopRank): OrderItemRank {
-        return orderItemRankRepository.saveRank(command.toDomain())
+
+    fun reflectNewOrder(command: OrderItemRankCommand.ReflectNewOrder) {
+        val now = LocalDateTime.now()
+
+        // 1일짜리
+        command.orderItems.forEach {
+            this.repository.addOrderCount(
+                rankType = OrderItemRankType.ONE_DAY,
+                startedAt = now.toLocalDate(),
+                productId = it.productId,
+                orderCount = it.orderCount
+            )
+        }
+
+        // 3일짜리 3개
+        for(i in 0L..2L){
+            command.orderItems.forEach {
+                this.repository.addOrderCount(
+                    rankType = OrderItemRankType.THREE_DAY,
+                    startedAt = now.toLocalDate().minusDays(i),
+                    productId = it.productId,
+                    orderCount = it.orderCount
+                )
+            }
+
+        }
+
+        // 일주일짜리 1개
+        val monday = now.toLocalDate().minusDays(now.dayOfWeek.value.toLong()+1)
+        command.orderItems.forEach {
+            this.repository.addOrderCount(
+                rankType = OrderItemRankType.ONE_WEEK,
+                startedAt = monday,
+                productId = it.productId,
+                orderCount = it.orderCount
+            )
+        }
     }
-    
-    /**
-     * 캐시된 베스트셀러 데이터를 무효화합니다.
-     * 주문 패턴이 변경되어 캐시 갱신이 필요할 때 호출합니다.
-     */
-    @Transactional
-    fun invalidateRankCache() {
-        orderItemRankRepository.invalidateCache()
+
+    fun deleteRank(command: OrderItemRankCommand.DeleteRanks){
+        this.repository.deleteRanks(
+            rankType = command.type,
+            startedAt = command.date,
+        )
     }
-} 
+}
