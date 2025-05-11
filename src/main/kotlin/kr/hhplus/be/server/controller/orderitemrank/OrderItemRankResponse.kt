@@ -30,7 +30,7 @@ class OrderItemRankResponse {
         val items: kotlin.collections.List<Rank>
     ) {
         companion object {
-            fun from(result: OrderItemRankResult.List): RankList {
+            fun from(result: OrderItemRankResult.Rank): RankList {
                 return RankList(
                     items = result.ranks.map { Rank.from(it) }
                 )
