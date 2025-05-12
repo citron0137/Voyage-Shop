@@ -89,4 +89,6 @@ class CouponEventApplication(
             CouponEventResult.IssueCoupon.from(couponUser)
         }
     }
-} 
+
+    fun updateRdb(){ couponEventService.updateRdb() }
+}

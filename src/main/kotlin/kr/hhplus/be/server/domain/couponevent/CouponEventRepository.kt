@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository
 interface CouponEventRepository {
     fun create(couponEvent: CouponEvent): CouponEvent
     fun findById(id: String): CouponEvent?
-    fun findByIdWithLock(id: String): CouponEvent?
     fun findAll(): List<CouponEvent>
     fun save(couponEvent: CouponEvent): CouponEvent
+    fun updateRdb()
 }

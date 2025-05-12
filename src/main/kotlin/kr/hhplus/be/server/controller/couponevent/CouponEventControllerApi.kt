@@ -105,4 +105,8 @@ interface CouponEventControllerApi {
         @Parameter(description = "쿠폰 발급 요청 정보", required = true)
         @RequestBody req: CouponEventRequest.IssueCoupon
     ): BaseResponse<CouponEventResponse.IssueCoupon>
+
+    @PutMapping("/coupon-events")
+    fun updateRdb(): BaseResponse<String>
+
 } 
