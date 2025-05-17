@@ -80,14 +80,14 @@ class CouponEventApplication(
     //     timeout = LockKeyConstants.EXTENDED_TIMEOUT
     // )
     fun issueCouponUser(criteria: CouponEventCriteria.IssueCoupon): CouponEventResult.IssueCoupon {
-         // 재고 감소 - 분산 락으로 동시성 제어
-        lockManager.executeWithDomainLock(
+        // 재고 감소 - 분산 락으로 동시성 제어
+        val updatedCouponEvent = lockManager.executeWithDomainLock(
             domainPrefix = LockKeyConstants.COUPON_EVENT_PREFIX,
             resourceType = LockKeyConstants.RESOURCE_ID,
             resourceId = criteria.couponEventId
         )  {
             transactionHelper.executeInTransaction {              
-                val updatedCouponEvent = couponEventService.decreaseStock(CouponEventCommand.Issue(criteria.couponEventId))
+                couponEventService.decreaseStock(CouponEventCommand.Issue(criteria.couponEventId))
             }
         }
         // 쿠폰 유저 생성
