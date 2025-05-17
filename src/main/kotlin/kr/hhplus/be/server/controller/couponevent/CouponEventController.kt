@@ -50,4 +50,9 @@ class CouponEventController(
         val result = couponEventApplication.issueCouponUser(criteria)
         return BaseResponse.success(CouponEventResponse.IssueCoupon.from(result))
     }
+
+    override fun updateRdb(): BaseResponse<String>{
+        couponEventApplication.updateRdb()
+        return BaseResponse.success("")
+    }
 }
