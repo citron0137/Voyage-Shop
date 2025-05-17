@@ -3,6 +3,7 @@ package kr.hhplus.be.server.application.couponevent
 import kr.hhplus.be.server.domain.couponevent.*
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.shared.lock.DistributedLock
+import kr.hhplus.be.server.shared.lock.DistributedLockManager
 import kr.hhplus.be.server.shared.lock.LockKeyConstants
 import kr.hhplus.be.server.shared.transaction.TransactionHelper
 import org.springframework.stereotype.Component
@@ -15,7 +16,8 @@ import org.springframework.stereotype.Component
 class CouponEventApplication(
     private val couponEventService: CouponEventService,
     private val couponUserService: CouponUserService,
-    private val transactionHelper: TransactionHelper
+    private val transactionHelper: TransactionHelper,
+    private val lockManager: DistributedLockManager
 ) {
     /**
      * 쿠폰 이벤트를 생성합니다.
@@ -70,24 +72,29 @@ class CouponEventApplication(
      * @throws CouponEventException.OutOfStock 쿠폰 재고가 없는 경우
      * @throws kr.hhplus.be.server.domain.coupon.CouponUserException.AlreadyIssuedException 이미 발급된 쿠폰인 경우
      */
-    @DistributedLock(
-        domain = LockKeyConstants.COUPON_EVENT_PREFIX,
-        resourceType = LockKeyConstants.RESOURCE_ID,
-        resourceIdExpression = "criteria.couponEventId",
-        timeout = LockKeyConstants.EXTENDED_TIMEOUT
-    )
+     
+    // @DistributedLock(
+    //     domain = LockKeyConstants.COUPON_EVENT_PREFIX,
+    //     resourceType = LockKeyConstants.RESOURCE_ID,
+    //     resourceIdExpression = "criteria.couponEventId",
+    //     timeout = LockKeyConstants.EXTENDED_TIMEOUT
+    // )
     fun issueCouponUser(criteria: CouponEventCriteria.IssueCoupon): CouponEventResult.IssueCoupon {
-        return transactionHelper.executeInTransaction {
-            // 재고 감소 - 비관적 락으로 동시성 제어
-            val updatedCouponEvent = couponEventService.decreaseStock(CouponEventCommand.Issue(criteria.couponEventId))
-
-            // 쿠폰 유저 생성
-            val createCommand =
-                criteria.toCommand(updatedCouponEvent.benefitMethod, updatedCouponEvent.benefitAmount)
-            val couponUser = couponUserService.create(createCommand)
-
-            CouponEventResult.IssueCoupon.from(couponUser)
+         // 재고 감소 - 분산 락으로 동시성 제어
+        lockManager.executeWithDomainLock(
+            domainPrefix = LockKeyConstants.COUPON_EVENT_PREFIX,
+            resourceType = LockKeyConstants.RESOURCE_ID,
+            resourceId = criteria.couponEventId
+        )  {
+            transactionHelper.executeInTransaction {              
+                val updatedCouponEvent = couponEventService.decreaseStock(CouponEventCommand.Issue(criteria.couponEventId))
+            }
         }
+        // 쿠폰 유저 생성
+        val createCommand =
+            criteria.toCommand(updatedCouponEvent.benefitMethod, updatedCouponEvent.benefitAmount)
+        val couponUser = couponUserService.create(createCommand)
+        return  CouponEventResult.IssueCoupon.from(couponUser)
     }
 
     fun updateRdb(){ couponEventService.updateRdb() }
