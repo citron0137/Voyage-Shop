@@ -280,7 +280,8 @@ class CouponEventApiTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").exists())
                 .andReturn()
-            
+
+
             // 생성된 이벤트 ID 추출
             val createEventResponse = createEventResult.response.contentAsString
             val eventResponseObj = objectMapper.readValue(createEventResponse, BaseResponse::class.java)
@@ -320,7 +321,13 @@ class CouponEventApiTest {
             val couponResponseObj = objectMapper.readValue(issueCouponResponse, BaseResponse::class.java)
             val couponData = couponResponseObj.data as Map<*, *>
             val newCouponUserId = couponData["couponUserId"] as String
-            
+
+            mockMvc.perform(
+                put("/api/v1/coupon-events")
+            )
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
+
             // 4. 이벤트 목록 다시 조회하여 재고 감소 확인
             mockMvc.perform(
                 get("/api/v1/coupon-events")

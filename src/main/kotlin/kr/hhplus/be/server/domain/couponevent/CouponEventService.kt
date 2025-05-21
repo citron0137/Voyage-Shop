@@ -64,4 +64,7 @@ class CouponEventService(
         // 리포지토리를 통해 업데이트
         return repository.save(updatedCouponEvent)
     }
+
+    @Transactional
+    fun updateRdb(){ repository.updateRdb() }
 } 
