@@ -7,14 +7,14 @@ import org.springframework.web.client.RestTemplate
 import org.slf4j.LoggerFactory
 
 @Component
-class OrderApplicationEventListener(
+class OrderCompletedInfraEventListener(
     private val restTemplate: RestTemplate
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     @Async
     @EventListener
-    fun handleOrderCompleted(event: OrderApplicationEvent.OrderCompleted) {
+    fun callExternalApiWhenOrderCompleted(event: OrderApplicationEvent.OrderCompleted) {
         logger.info("Order completed event received: {}", event)
         logger.info("Send order completed event to external API: {}", event)
     }
