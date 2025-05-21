@@ -3,6 +3,7 @@ package kr.hhplus.be.server.application.order
 import kr.hhplus.be.server.domain.couponuser.CouponUserCommand
 import kr.hhplus.be.server.domain.couponuser.CouponUserService
 import kr.hhplus.be.server.domain.order.*
+import kr.hhplus.be.server.domain.orderitemrank.OrderItemRankService
 import kr.hhplus.be.server.domain.payment.PaymentService
 import kr.hhplus.be.server.domain.product.ProductException
 import kr.hhplus.be.server.domain.product.ProductQuery
@@ -26,7 +27,8 @@ class OrderApplication(
     private val paymentService: PaymentService,
     private val couponUserService: CouponUserService,
     private val lockManager: DistributedLockManager,
-    private val transactionManager: PlatformTransactionManager
+    private val transactionManager: PlatformTransactionManager,
+    private val orderItemRankService: OrderItemRankService,
 ) {
 
     /**
@@ -160,7 +162,7 @@ class OrderApplication(
             List(allKeys.size - 1) { LockKeyConstants.DEFAULT_TIMEOUT }
         
         // 모든 락을 순서대로 획득
-        return lockManager.withOrderedLocks(
+        val result = lockManager.withOrderedLocks(
             keys = allKeys,
             timeouts = timeouts,
             action = {
@@ -212,5 +214,7 @@ class OrderApplication(
                 }!!
             }
         )
+        orderItemRankService.reflectNewOrder(criteria.toReflectNewOrder(result.createdAt))
+        return result
     }
 }

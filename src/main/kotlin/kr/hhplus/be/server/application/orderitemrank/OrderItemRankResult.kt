@@ -23,21 +23,6 @@ class OrderItemRankResult {
         }
     }
     
-    /**
-     * 주문 아이템 순위 목록 결과
-     */
-    data class List(
-        val ranks: kotlin.collections.List<Single>
-    ) {
-        companion object {
-            /**
-             * 개별 순위 항목들을 리스트로 변환합니다.
-             */
-            fun from(ranks: kotlin.collections.List<Single>): List {
-                return List(ranks)
-            }
-        }
-    }
 
     data class Rank(
         val ranks: kotlin.collections.List<Single>,
@@ -45,11 +30,11 @@ class OrderItemRankResult {
         val limit: Int,
     ){
         companion object {
-            fun from(rank: OrderItemRank): Rank {
+            fun from(rank: List<OrderItemRank>, period: Int, limit: Int): Rank {
                 return Rank(
-                    ranks = rank.items.map { Single.from(productId = it.productId, orderCount = it.orderCount) },
-                    period = rank.periodInDays,
-                    limit = rank.limit
+                    ranks = rank.map { Single(it.productId, it.orderCount) },
+                    period = period,
+                    limit = limit
                 )
             }
         }
