@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.domain.order
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.context.ApplicationEventPublisher
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -8,8 +10,10 @@ import java.util.UUID
 class OrderService(
     private val orderRepository: OrderRepository,
     private val orderItemRepository: OrderItemRepository,
-    private val orderDiscountRepository: OrderDiscountRepository
+    private val orderDiscountRepository: OrderDiscountRepository,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
+    @Transactional
     fun createOrder(command: OrderCommand.Create): Order {
         val orderId = UUID.randomUUID().toString()
         
@@ -49,6 +53,17 @@ class OrderService(
             }
             orderDiscountRepository.createAll(orderDiscounts)
         }
+        
+        // 도메인 이벤트 발행
+        eventPublisher.publishEvent(
+            OrderDomainEvent.OrderCompleted(
+                orderId = savedOrder.orderId,
+                userId = savedOrder.userId,
+                totalAmount = savedOrder.totalAmount,
+                finalAmount = savedOrder.finalAmount,
+                paymentId = savedOrder.paymentId
+            )
+        )
         
         return savedOrder
     }
