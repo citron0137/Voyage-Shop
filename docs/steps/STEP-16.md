@@ -823,8 +823,7 @@ data class SagaStep(
     val eventType: String,      // 이벤트 유형
     val intent: String,         // 의도
     val compensating: Boolean,  // 보상 트랜잭션 여부
-    val nextStep: String?,      // 다음 단계
-    val rollbackStep: String?   // 롤백 단계
+    val nextStep: String?      // 다음 단계
 )
 
 val ORDER_CREATION_SAGA = listOf(
@@ -833,82 +832,42 @@ val ORDER_CREATION_SAGA = listOf(
         eventType = "OrderCreatedEvent",
         intent = "CREATE_ORDER",
         compensating = false,
-        nextStep = "DECREASE_STOCK",
-        rollbackStep = null
+        nextStep = "DECREASE_STOCK"
     ),
     SagaStep(
         step = "DECREASE_STOCK",
         eventType = "StockDecreasedEvent",
         intent = "DECREASE_STOCK",
         compensating = false,
-        nextStep = "USE_COUPON",
-        rollbackStep = "FAIL_ORDER"
+        nextStep = "USE_COUPON"
     ),
     SagaStep(
         step = "USE_COUPON",
         eventType = "CouponUsedEvent",
         intent = "USE_COUPON",
         compensating = false,
-        nextStep = "USE_POINT",
-        rollbackStep = "ROLLBACK_STOCK"
+        nextStep = "USE_POINT"
     ),
     SagaStep(
         step = "USE_POINT",
         eventType = "PointUsedEvent",
         intent = "USE_POINT",
         compensating = false,
-        nextStep = "PROCESS_PAYMENT",
-        rollbackStep = "ROLLBACK_COUPON"
+        nextStep = "PROCESS_PAYMENT"
     ),
     SagaStep(
         step = "PROCESS_PAYMENT",
         eventType = "PaymentCompletedEvent",
         intent = "PROCESS_PAYMENT",
         compensating = false,
-        nextStep = "COMPLETE_ORDER",
-        rollbackStep = "ROLLBACK_POINT"
+        nextStep = "COMPLETE_ORDER"
     ),
     SagaStep(
         step = "COMPLETE_ORDER",
         eventType = "OrderCompletedEvent",
         intent = "COMPLETE_ORDER",
         compensating = false,
-        nextStep = null,
-        rollbackStep = null
-    ),
-
-    // 롤백 흐름
-    SagaStep(
-        step = "ROLLBACK_POINT",
-        eventType = "OrderPointRollbackRequestedEvent",
-        intent = "ROLLBACK_POINT",
-        compensating = true,
-        nextStep = "ROLLBACK_COUPON",
-        rollbackStep = null
-    ),
-    SagaStep(
-        step = "ROLLBACK_COUPON",
-        eventType = "OrderCouponRollbackRequestedEvent",
-        intent = "ROLLBACK_COUPON",
-        compensating = true,
-        nextStep = "ROLLBACK_STOCK",
-        rollbackStep = null
-    ),
-    SagaStep(
-        step = "ROLLBACK_STOCK",
-        eventType = "OrderStockRollbackRequestedEvent",
-        intent = "ROLLBACK_STOCK",
-        compensating = true,
-        nextStep = "FAIL_ORDER",
-        rollbackStep = null
-    ),
-    SagaStep(
-        step = "FAIL_ORDER",
-        eventType = "OrderFailedEvent",
-        intent = "FAIL_ORDER",
-        compensating = false,
-        nextStep = null,
-        rollbackStep = null
+        nextStep = null
     )
 )
 ```
@@ -923,11 +882,12 @@ src/main/kotlin/kr/hhplus/be/server/
 │   └── order/
 │       ├── OrderApplicationEvent.kt  # 이벤트 선언
 │       └── OrderService.kt           # 이벤트 발행 호출
-├── eventlistener/                    # 컨트롤러와 동일 계층
+├── eventorchestrator/                # 컨트롤러와 동일 계층
 │   └── order/                        
-│       ├── OrderCreatedEventHandler.kt
-│       ├── StockDecreasedEventHandler.kt
-│       └── ...
+│       └── saga/                     # SAGA별 이벤트 오케스트레이터
+│           ├── OrderCreationSagaOrchestrator.kt    # 주문 생성 SAGA
+│           ├── OrderCancellationSagaOrchestrator.kt # 주문 취소 SAGA
+│           └── OrderRefundSagaOrchestrator.kt      # 주문 환불 SAGA
 └── domain/
     └── order/                        
         └── Order.kt                  # 도메인 모델
@@ -1019,7 +979,7 @@ class OrderApplicationEvent {
         val orderItems: List<StockDecreasedOrderItem>
     ) : SagaEvent<StockRollbackRequested>(
         sagaType = "ORDER_CREATION",
-        eventType = "StockRollbackRequestedEvent",
+        eventType = "OrderStockRollbackRequestedEvent",
         intent = "ROLLBACK_STOCK",
         compensating = true,
         payload = this
@@ -1032,7 +992,7 @@ class OrderApplicationEvent {
         val couponId: String?
     ) : SagaEvent<CouponRollbackRequested>(
         sagaType = "ORDER_CREATION",
-        eventType = "CouponRollbackRequestedEvent",
+        eventType = "OrderCouponRollbackRequestedEvent",
         intent = "ROLLBACK_COUPON",
         compensating = true,
         payload = this
@@ -1046,7 +1006,7 @@ class OrderApplicationEvent {
         val pointUsed: Int?
     ) : SagaEvent<PointRollbackRequested>(
         sagaType = "ORDER_CREATION",
-        eventType = "PointRollbackRequestedEvent",
+        eventType = "OrderPointRollbackRequestedEvent",
         intent = "ROLLBACK_POINT",
         compensating = true,
         payload = this
@@ -1103,16 +1063,6 @@ sealed class ProductCommand {
             if (orderId.isBlank()) throw ProductException.OrderIdShouldNotBlank("주문 ID는 비어있을 수 없습니다.")
             if (orderItems.isEmpty()) throw ProductException.OrderItemRequired("최소 1개 이상의 주문 상품이 필요합니다.")
         }
-
-        data class OrderItem(
-            val productId: String,
-            val quantity: Int
-        ) {
-            init {
-                if (productId.isBlank()) throw ProductException.ProductIdShouldNotBlank("상품 ID는 비어있을 수 없습니다.")
-                if (quantity <= 0) throw ProductException.QuantityShouldMoreThan0("주문 수량은 0보다 커야합니다.")
-            }
-        }
     }
 
     data class RollbackStock(
@@ -1122,16 +1072,6 @@ sealed class ProductCommand {
         init {
             if (orderId.isBlank()) throw ProductException.OrderIdShouldNotBlank("주문 ID는 비어있을 수 없습니다.")
             if (orderItems.isEmpty()) throw ProductException.OrderItemRequired("최소 1개 이상의 주문 상품이 필요합니다.")
-        }
-
-        data class OrderItem(
-            val productId: String,
-            val quantity: Int
-        ) {
-            init {
-                if (productId.isBlank()) throw ProductException.ProductIdShouldNotBlank("상품 ID는 비어있을 수 없습니다.")
-                if (quantity <= 0) throw ProductException.QuantityShouldMoreThan0("주문 수량은 0보다 커야합니다.")
-            }
         }
     }
 }
@@ -1397,4 +1337,945 @@ class PaymentService(
 }
 ```
 
-// ... existing code ...
+### 4.7 어플리케이션 레이어 예시
+
+어플리케이션 레이어는 도메인 서비스의 비즈니스 로직을 호출하고, 트랜잭션 및 락과 같은 기술적 제어(ACID, 동시성 등)만 담당합니다. 아래는 주문(Order) 어플리케이션 레이어의 예시 코드입니다.
+
+```kotlin
+package kr.hhplus.be.server.application.order
+
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import kr.hhplus.be.server.domain.order.OrderCommand
+import kr.hhplus.be.server.domain.order.OrderService
+import kr.hhplus.be.server.domain.lock.LockManager
+import kr.hhplus.be.server.domain.event.EventPublisher
+
+@Service
+class OrderApplicationService(
+    private val orderService: OrderService,
+    private val eventPublisher: EventPublisher
+) {
+    @Transactional
+    fun createOrder(criteria: OrderCreateCriteria): String {
+        // 주문 생성은 단순히 주문 엔티티를 생성하고 저장하는 작업이므로 락이 필요하지 않습니다.
+        val command = OrderCommand.Create(
+            userId = criteria.userId,
+            orderItems = criteria.orderItems.map { 
+                OrderCommand.Create.OrderItem(
+                    productId = it.productId,
+                    quantity = it.quantity
+                )
+            },
+            couponId = criteria.couponId
+        )
+        val orderId = orderService.createOrder(command)
+        
+        // 주문 생성 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.Created(
+            orderId = orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems,
+            couponId = criteria.couponId
+        ))
+        
+        return orderId
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_STOCK,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun updateOrderWithStockInfo(criteria: OrderStockInfoUpdateCriteria) {
+        val command = OrderCommand.UpdateStockInfo(
+            orderId = criteria.orderId,
+            orderItems = criteria.orderItems.map {
+                OrderCommand.UpdateStockInfo.OrderItem(
+                    productId = it.productId,
+                    quantity = it.quantity,
+                    unitPrice = it.unitPrice
+                )
+            }
+        )
+        orderService.updateOrderWithStockInfo(command)
+        
+        // 재고 정보 업데이트 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.StockDecreased(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_COUPON,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun updateOrderWithCouponInfo(criteria: OrderCouponInfoUpdateCriteria) {
+        val command = OrderCommand.UpdateCouponInfo(
+            orderId = criteria.orderId,
+            couponId = criteria.couponId,
+            discountType = criteria.discountType,
+            discountValue = criteria.discountValue,
+            discountAmount = criteria.discountAmount
+        )
+        orderService.updateOrderWithCouponInfo(command)
+        
+        // 쿠폰 정보 업데이트 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.CouponUsed(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems,
+            couponId = criteria.couponId,
+            discountType = criteria.discountType,
+            discountValue = criteria.discountValue
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_POINT,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun updateOrderWithPointInfo(criteria: OrderPointInfoUpdateCriteria) {
+        val command = OrderCommand.UpdatePointInfo(
+            orderId = criteria.orderId,
+            usedPoints = criteria.usedPoints
+        )
+        orderService.updateOrderWithPointInfo(command)
+        
+        // 포인트 정보 업데이트 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.PointUsed(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems,
+            couponId = criteria.couponId,
+            discountType = criteria.discountType,
+            discountValue = criteria.discountValue,
+            pointUsed = criteria.usedPoints
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_STATUS,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun completeOrder(criteria: OrderCompleteCriteria) {
+        val command = OrderCommand.Complete(
+            orderId = criteria.orderId
+        )
+        orderService.completeOrder(command)
+        
+        // 주문 완료 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.Completed(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            paymentId = criteria.paymentId
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_STATUS,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun failOrder(criteria: OrderFailCriteria) {
+        val command = OrderCommand.Fail(
+            orderId = criteria.orderId,
+            failureReason = criteria.failureReason
+        )
+        orderService.failOrder(command)
+        
+        // 주문 실패 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.Failed(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems,
+            couponId = criteria.couponId,
+            failureReason = criteria.failureReason
+        ))
+    }
+
+    // 롤백 관련 메서드도 동일하게 수정
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_STOCK,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun rollbackStock(criteria: OrderStockRollbackCriteria) {
+        val command = OrderCommand.RollbackStock(
+            orderId = criteria.orderId,
+            orderItems = criteria.orderItems.map {
+                OrderCommand.RollbackStock.OrderItem(
+                    productId = it.productId,
+                    quantity = it.quantity
+                )
+            }
+        )
+        orderService.rollbackStock(command)
+        
+        // 재고 롤백 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.StockRollbackRequested(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_COUPON,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun rollbackCoupon(criteria: OrderCouponRollbackCriteria) {
+        val command = OrderCommand.RollbackCoupon(
+            orderId = criteria.orderId,
+            couponId = criteria.couponId
+        )
+        orderService.rollbackCoupon(command)
+        
+        // 쿠폰 롤백 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.CouponRollbackRequested(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems,
+            couponId = criteria.couponId
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_POINT,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun rollbackPoint(criteria: OrderPointRollbackCriteria) {
+        val command = OrderCommand.RollbackPoint(
+            orderId = criteria.orderId,
+            usedPoints = criteria.usedPoints
+        )
+        orderService.rollbackPoint(command)
+        
+        // 포인트 롤백 이벤트 발행
+        eventPublisher.publish(OrderApplicationEvent.PointRollbackRequested(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            orderItems = criteria.orderItems,
+            couponId = criteria.couponId,
+            pointUsed = criteria.usedPoints
+        ))
+    }
+}
+```
+
+### 4.8 다른 도메인의 어플리케이션 서비스
+
+#### 4.8.1 ProductApplicationService
+
+```kotlin
+@Service
+class ProductApplicationService(
+    private val productService: ProductService,
+    private val eventOrchestrator: EventOrchestrator
+) {
+    fun decreaseMultipleStocks(criteria: ProductMultipleStockDecreaseCriteria) {
+        // 상품 ID 기준으로 정렬된 도메인 리소스 목록 생성
+        val domainResources = criteria.orderItems
+            .map { Triple(LockKeyConstants.PRODUCT_PREFIX, LockKeyConstants.RESOURCE_STOCK, it.productId) }
+            .sortedBy { it.third }
+
+        eventOrchestrator.executeWithLockAndTransaction(
+            domainResources = domainResources,
+            businessLogic = {
+                val command = ProductCommand.DecreaseStock(
+                    orderId = criteria.orderId,
+                    orderItems = criteria.orderItems.map {
+                        ProductCommand.DecreaseStock.OrderItem(
+                            productId = it.productId,
+                            quantity = it.quantity
+                        )
+                    }
+                )
+                productService.decreaseStock(command)
+            },
+            eventCreator = { _ ->
+                ProductApplicationEvent.StockDecreased(
+                    orderId = criteria.orderId,
+                    orderItems = criteria.orderItems
+                )
+            }
+        )
+    }
+
+    fun decreaseStock(criteria: ProductStockDecreaseCriteria) {
+        eventOrchestrator.executeWithSingleLockAndTransaction(
+            domainResources = listOf(Triple(LockKeyConstants.PRODUCT_PREFIX, LockKeyConstants.RESOURCE_STOCK, criteria.productId)),
+            businessLogic = {
+                val command = ProductCommand.DecreaseStock(
+                    orderId = criteria.orderId,
+                    orderItems = listOf(
+                        ProductCommand.DecreaseStock.OrderItem(
+                            productId = criteria.productId,
+                            quantity = criteria.quantity
+                        )
+                    )
+                )
+                productService.decreaseStock(command)
+            },
+            eventCreator = { _ ->
+                ProductApplicationEvent.StockDecreased(
+                    orderId = criteria.orderId,
+                    orderItems = listOf(
+                        OrderItem(
+                            productId = criteria.productId,
+                            quantity = criteria.quantity
+                        )
+                    )
+                )
+            }
+        )
+    }
+
+    fun rollbackMultipleStocks(criteria: ProductMultipleStockRollbackCriteria) {
+        val domainResources = criteria.orderItems
+            .map { Triple(LockKeyConstants.PRODUCT_PREFIX, LockKeyConstants.RESOURCE_STOCK, it.productId) }
+            .sortedBy { it.third }
+
+        eventOrchestrator.executeWithLockAndTransaction(
+            domainResources = domainResources,
+            businessLogic = {
+                val command = ProductCommand.RollbackStock(
+                    orderId = criteria.orderId,
+                    orderItems = criteria.orderItems.map {
+                        ProductCommand.RollbackStock.OrderItem(
+                            productId = it.productId,
+                            quantity = it.quantity
+                        )
+                    }
+                )
+                productService.rollbackStock(command)
+            },
+            eventCreator = { _ ->
+                ProductApplicationEvent.StockRollbackCompleted(
+                    orderId = criteria.orderId,
+                    orderItems = criteria.orderItems
+                )
+            }
+        )
+    }
+
+    fun rollbackStock(criteria: ProductStockRollbackCriteria) {
+        eventOrchestrator.executeWithSingleLockAndTransaction(
+            domainPrefix = LockKeyConstants.PRODUCT_PREFIX,
+            resourceType = LockKeyConstants.RESOURCE_STOCK,
+            resourceId = criteria.productId,
+            businessLogic = {
+                val command = ProductCommand.RollbackStock(
+                    orderId = criteria.orderId,
+                    orderItems = listOf(
+                        ProductCommand.RollbackStock.OrderItem(
+                            productId = criteria.productId,
+                            quantity = criteria.quantity
+                        )
+                    )
+                )
+                productService.rollbackStock(command)
+            },
+            eventCreator = { _ ->
+                ProductApplicationEvent.StockRollbackCompleted(
+                    orderId = criteria.orderId,
+                    orderItems = listOf(
+                        OrderItem(
+                            productId = criteria.productId,
+                            quantity = criteria.quantity
+                        )
+                    )
+                )
+            }
+        )
+    }
+}
+```
+
+#### 4.8.2 CouponApplicationService
+
+```kotlin
+@Service
+class CouponApplicationService(
+    private val couponService: CouponService,
+    private val eventPublisher: EventPublisher
+) {
+    @DistributedLock(
+        domain = LockKeyConstants.COUPON_USER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_ID,
+        resourceIdExpression = "criteria.couponId"
+    )
+    @Transactional
+    fun useCoupon(criteria: CouponUseCriteria) {
+        val command = CouponCommand.Use(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            couponId = criteria.couponId
+        )
+        couponService.useCoupon(command)
+        
+        // 쿠폰 사용 이벤트 발행
+        eventPublisher.publish(CouponApplicationEvent.CouponUsed(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            couponId = criteria.couponId,
+            discountType = criteria.discountType,
+            discountValue = criteria.discountValue
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.COUPON_USER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_ID,
+        resourceIdExpression = "criteria.couponId"
+    )
+    @Transactional
+    fun rollbackCoupon(criteria: CouponRollbackCriteria) {
+        val command = CouponCommand.Rollback(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            couponId = criteria.couponId
+        )
+        couponService.rollbackCoupon(command)
+        
+        // 쿠폰 롤백 이벤트 발행
+        eventPublisher.publish(CouponApplicationEvent.CouponRollbackCompleted(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            couponId = criteria.couponId
+        ))
+    }
+}
+```
+
+#### 4.8.3 PointApplicationService
+
+```kotlin
+@Service
+class PointApplicationService(
+    private val pointService: PointService,
+    private val eventPublisher: EventPublisher
+) {
+    @DistributedLock(
+        domain = LockKeyConstants.USER_POINT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_POINT,
+        resourceIdExpression = "criteria.userId"
+    )
+    @Transactional
+    fun usePoint(criteria: PointUseCriteria) {
+        val command = PointCommand.Use(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            points = criteria.points
+        )
+        pointService.usePoint(command)
+        
+        // 포인트 사용 이벤트 발행
+        eventPublisher.publish(PointApplicationEvent.PointUsed(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            usedPoints = criteria.points
+        ))
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.USER_POINT_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_POINT,
+        resourceIdExpression = "criteria.userId"
+    )
+    @Transactional
+    fun rollbackPoint(criteria: PointRollbackCriteria) {
+        val command = PointCommand.Rollback(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            points = criteria.points
+        )
+        pointService.rollbackPoint(command)
+        
+        // 포인트 롤백 이벤트 발행
+        eventPublisher.publish(PointApplicationEvent.PointRollbackCompleted(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            rolledBackPoints = criteria.points
+        ))
+    }
+}
+```
+
+#### 4.8.4 PaymentApplicationService
+
+```kotlin
+@Service
+class PaymentApplicationService(
+    private val paymentService: PaymentService,
+    private val eventPublisher: EventPublisher
+) {
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_PAYMENT,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun processPayment(criteria: PaymentProcessCriteria): String {
+        val command = PaymentCommand.Process(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            amount = criteria.amount,
+            paymentMethod = criteria.paymentMethod
+        )
+        val paymentId = paymentService.processPayment(command)
+        
+        // 결제 완료 이벤트 발행
+        eventPublisher.publish(PaymentApplicationEvent.PaymentCompleted(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            paymentId = paymentId,
+            paidAmount = criteria.amount
+        ))
+        
+        return paymentId
+    }
+
+    @DistributedLock(
+        domain = LockKeyConstants.ORDER_PREFIX,
+        resourceType = LockKeyConstants.RESOURCE_PAYMENT,
+        resourceIdExpression = "criteria.orderId"
+    )
+    @Transactional
+    fun cancelPayment(criteria: PaymentCancelCriteria) {
+        val command = PaymentCommand.Cancel(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            paymentId = criteria.paymentId
+        )
+        paymentService.cancelPayment(command)
+        
+        // 결제 취소 이벤트 발행
+        eventPublisher.publish(PaymentApplicationEvent.PaymentCanceled(
+            orderId = criteria.orderId,
+            userId = criteria.userId,
+            paymentId = criteria.paymentId
+        ))
+    }
+}
+```
+
+### 4.9 이벤트 오케스트레이션
+
+#### 4.9.1 SagaEventOrchestrator
+
+```kotlin
+// SagaEventOrchestrator.kt
+package kr.hhplus.be.server.shared.saga
+
+import org.springframework.stereotype.Component
+import kr.hhplus.be.server.event.publisher.EventPublisher
+
+@Component
+class SagaEventOrchestrator(
+    private val eventPublisher: EventPublisher
+) {
+    /**
+     * 비즈니스 로직 실행 후 이벤트를 발행합니다.
+     * 성공 시 successEventCreator로 생성된 이벤트를,
+     * 실패 시 failureEventCreator로 생성된 이벤트를 발행합니다.
+     */
+    fun <T, S, F> executeAndPublish(
+        businessLogic: () -> T,
+        successEventCreator: (T) -> S,
+        failureEventCreator: (Throwable) -> F
+    ): T {
+        return try {
+            // 1. 비즈니스 로직 실행
+            val result = businessLogic()
+
+            // 2. 성공 이벤트 발행
+            eventPublisher.publish(successEventCreator(result))
+            
+            result
+        } catch (e: Exception) {
+            // 3. 실패 이벤트 발행
+            eventPublisher.publish(failureEventCreator(e))
+            
+            // 4. 예외를 다시 던져서 상위에서 처리할 수 있도록 함
+            throw e
+        }
+    }
+
+    /**
+     * 이벤트를 발행합니다.
+     */
+    fun <T> publish(event: T) {
+        eventPublisher.publish(event)
+    }
+}
+```
+
+#### 4.9.2 OrderCreationSagaOrchestrator
+
+```kotlin
+// OrderCreationSagaOrchestrator.kt
+package kr.hhplus.be.server.eventorchestrator.order.saga
+
+import org.springframework.stereotype.Component
+import kr.hhplus.be.server.shared.saga.SagaEventOrchestrator
+import kr.hhplus.be.server.application.order.OrderApplicationService
+import kr.hhplus.be.server.application.product.ProductApplicationService
+import kr.hhplus.be.server.application.coupon.CouponApplicationService
+import kr.hhplus.be.server.application.point.PointApplicationService
+import kr.hhplus.be.server.application.payment.PaymentApplicationService
+import kr.hhplus.be.server.application.order.OrderApplicationEvent
+import kr.hhplus.be.server.application.product.ProductApplicationEvent
+import kr.hhplus.be.server.application.coupon.CouponApplicationEvent
+import kr.hhplus.be.server.application.point.PointApplicationEvent
+import kr.hhplus.be.server.application.payment.PaymentApplicationEvent
+
+@Component
+class OrderCreationSagaOrchestrator(
+    private val sagaEventOrchestrator: SagaEventOrchestrator,
+    private val orderApplicationService: OrderApplicationService,
+    private val productApplicationService: ProductApplicationService,
+    private val couponApplicationService: CouponApplicationService,
+    private val pointApplicationService: PointApplicationService,
+    private val paymentApplicationService: PaymentApplicationService
+) {
+    @EventHandler
+    fun onOrderCreated(event: OrderApplicationEvent.Created) {
+        sagaEventOrchestrator.publish(
+            ProductApplicationEvent.DecreaseStockRequested(
+                orderId = event.orderId,
+                orderItems = event.orderItems
+            )
+        )
+    }
+
+    @EventHandler
+    fun onStockDecreased(event: ProductApplicationEvent.StockDecreased) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                orderApplicationService.updateOrderWithStockInfo(
+                    OrderStockInfoUpdateCriteria(
+                        orderId = event.orderId,
+                        orderItems = event.orderItems.map {
+                            OrderStockInfoUpdateCriteria.OrderItem(
+                                productId = it.productId,
+                                quantity = it.quantity,
+                                unitPrice = it.unitPrice
+                            )
+                        }
+                    )
+                )
+            },
+            successEventCreator = { _ ->
+                OrderApplicationEvent.StockInfoUpdated(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    orderItems = event.orderItems
+                )
+            },
+            failureEventCreator = { e ->
+                ProductApplicationEvent.RollbackStockRequested(
+                    orderId = event.orderId,
+                    orderItems = event.orderItems
+                )
+            }
+        )
+    }
+
+    @EventHandler
+    fun onCouponUsed(event: CouponApplicationEvent.CouponUsed) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                pointApplicationService.usePoint(
+                    PointUseCriteria(
+                        orderId = event.orderId,
+                        userId = event.userId,
+                        points = event.points
+                    )
+                )
+            },
+            successEventCreator = { _ ->
+                PointApplicationEvent.UsePointRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    points = event.points
+                )
+            },
+            failureEventCreator = { e ->
+                CouponApplicationEvent.RollbackCouponRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    couponId = event.couponId
+                )
+            }
+        )
+    }
+
+    @EventHandler
+    fun onPointUsed(event: PointApplicationEvent.PointUsed) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                paymentApplicationService.processPayment(
+                    PaymentProcessCriteria(
+                        orderId = event.orderId,
+                        userId = event.userId,
+                        amount = event.amount,
+                        paymentMethod = event.paymentMethod
+                    )
+                )
+            },
+            successEventCreator = { paymentId ->
+                PaymentApplicationEvent.ProcessPaymentRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    amount = event.amount,
+                    paymentId = paymentId
+                )
+            },
+            failureEventCreator = { e ->
+                PointApplicationEvent.RollbackPointRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    points = event.points
+                )
+            }
+        )
+    }
+
+    @EventHandler
+    fun onPaymentCompleted(event: PaymentApplicationEvent.PaymentCompleted) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                orderApplicationService.completeOrder(
+                    OrderCompleteCriteria(
+                        orderId = event.orderId,
+                        userId = event.userId,
+                        paymentId = event.paymentId
+                    )
+                )
+            },
+            successEventCreator = { _ ->
+                OrderApplicationEvent.Completed(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    paymentId = event.paymentId
+                )
+            },
+            failureEventCreator = { e ->
+                PaymentApplicationEvent.CancelPaymentRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    paymentId = event.paymentId
+                )
+            }
+        )
+    }
+}
+```
+
+#### 4.9.2 OrderCreationSagaOrchestrators
+
+```kotlin
+// OrderCreationStockSagaOrchestrator.kt
+package kr.hhplus.be.server.eventorchestrator.order.saga
+
+import org.springframework.stereotype.Component
+import kr.hhplus.be.server.shared.saga.SagaEventOrchestrator
+import kr.hhplus.be.server.application.product.ProductApplicationService
+import kr.hhplus.be.server.application.order.OrderApplicationEvent
+import kr.hhplus.be.server.application.product.ProductApplicationEvent
+
+@Component
+class OrderCreationStockSagaOrchestrator(
+    private val sagaEventOrchestrator: SagaEventOrchestrator,
+    private val productApplicationService: ProductApplicationService
+) {
+    @EventHandler
+    fun onOrderCreated(event: OrderApplicationEvent.Created) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                productApplicationService.decreaseMultipleStocks(
+                    ProductMultipleStockDecreaseCriteria(
+                        orderId = event.orderId,
+                        orderItems = event.orderItems
+                    )
+                )
+            },
+            successEventCreator = { _ ->
+                ProductApplicationEvent.DecreaseStockRequested(
+                    orderId = event.orderId,
+                    orderItems = event.orderItems
+                )
+            },
+            failureEventCreator = { e ->
+                OrderApplicationEvent.Failed(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    failureReason = "재고 차감 실패: ${e.message}",
+                    failureStep = "STOCK_DECREASE"
+                )
+            }
+        )
+    }
+}
+
+// OrderCreationCouponSagaOrchestrator.kt
+@Component
+class OrderCreationCouponSagaOrchestrator(
+    private val sagaEventOrchestrator: SagaEventOrchestrator,
+    private val couponApplicationService: CouponApplicationService
+) {
+    @EventHandler
+    fun onStockDecreased(event: ProductApplicationEvent.StockDecreased) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                couponApplicationService.useCoupon(
+                    CouponUseCriteria(
+                        orderId = event.orderId,
+                        userId = event.userId,
+                        couponId = event.couponId
+                    )
+                )
+            },
+            successEventCreator = { _ ->
+                CouponApplicationEvent.UseCouponRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    couponId = event.couponId
+                )
+            },
+            failureEventCreator = { e ->
+                ProductApplicationEvent.RollbackStockRequested(
+                    orderId = event.orderId,
+                    orderItems = event.orderItems
+                )
+            }
+        )
+    }
+}
+
+// OrderCreationPointSagaOrchestrator.kt
+@Component
+class OrderCreationPointSagaOrchestrator(
+    private val sagaEventOrchestrator: SagaEventOrchestrator,
+    private val pointApplicationService: PointApplicationService
+) {
+    @EventHandler
+    fun onCouponUsed(event: CouponApplicationEvent.CouponUsed) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                pointApplicationService.usePoint(
+                    PointUseCriteria(
+                        orderId = event.orderId,
+                        userId = event.userId,
+                        points = event.points
+                    )
+                )
+            },
+            successEventCreator = { _ ->
+                PointApplicationEvent.UsePointRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    points = event.points
+                )
+            },
+            failureEventCreator = { e ->
+                CouponApplicationEvent.RollbackCouponRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    couponId = event.couponId
+                )
+            }
+        )
+    }
+}
+
+// OrderCreationPaymentSagaOrchestrator.kt
+@Component
+class OrderCreationPaymentSagaOrchestrator(
+    private val sagaEventOrchestrator: SagaEventOrchestrator,
+    private val paymentApplicationService: PaymentApplicationService
+) {
+    @EventHandler
+    fun onPointUsed(event: PointApplicationEvent.PointUsed) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                paymentApplicationService.processPayment(
+                    PaymentProcessCriteria(
+                        orderId = event.orderId,
+                        userId = event.userId,
+                        amount = event.amount,
+                        paymentMethod = event.paymentMethod
+                    )
+                )
+            },
+            successEventCreator = { paymentId ->
+                PaymentApplicationEvent.ProcessPaymentRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    amount = event.amount,
+                    paymentId = paymentId
+                )
+            },
+            failureEventCreator = { e ->
+                PointApplicationEvent.RollbackPointRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    points = event.points
+                )
+            }
+        )
+    }
+}
+
+// OrderCreationCompleteSagaOrchestrator.kt
+@Component
+class OrderCreationCompleteSagaOrchestrator(
+    private val sagaEventOrchestrator: SagaEventOrchestrator,
+    private val orderApplicationService: OrderApplicationService
+) {
+    @EventHandler
+    fun onPaymentCompleted(event: PaymentApplicationEvent.PaymentCompleted) {
+        sagaEventOrchestrator.executeAndPublish(
+            businessLogic = {
+                orderApplicationService.completeOrder(
+                    OrderCompleteCriteria(
+                        orderId = event.orderId,
+                        userId = event.userId,
+                        paymentId = event.paymentId
+                    )
+                )
+            },
+            successEventCreator = { _ ->
+                OrderApplicationEvent.Completed(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    paymentId = event.paymentId
+                )
+            },
+            failureEventCreator = { e ->
+                PaymentApplicationEvent.CancelPaymentRequested(
+                    orderId = event.orderId,
+                    userId = event.userId,
+                    paymentId = event.paymentId
+                )
+            }
+        )
+    }
+}
+```
